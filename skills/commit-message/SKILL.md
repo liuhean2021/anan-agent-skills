@@ -28,9 +28,8 @@ description: 根据 git diff 生成符合规范的 commit message；生成后提
    - 不自动执行 `git commit`，等待用户确认。
 5. **用户确认后执行**
    - 仅当用户明确确认（如回复「确认」「是」「执行」「可以」等）后，才执行 `git commit`，将生成的 message 作为提交说明（多行时用 `git commit -F -` 或写入临时文件后 `git commit -F <文件>`）。
-   - 提交时仅使用生成的 message，不要追加任何 trailer（例如不要追加 Co-authored-by: Cursor cursoragent@cursor.com）。
+   - 提交时仅使用生成的 message，不要追加任何其他信息。**说明**：这条说明只针对Cursor软件生效，若用户已确认关闭 Cursor Settings > Attribution 下的 Commit Attribution 与 PR Attribution，则无需每次再提示，否则需要提示确认；提交由终端执行时可避免被自动追加 Co-authored-by。
    - 不执行 `git push`。
-**说明**：若用户已确认关闭 Cursor Settings > Attribution 下的 Commit Attribution 与 PR Attribution，则无需每次再提示；提交由终端执行时可避免被自动追加 Co-authored-by。
 ## 输出格式（严格遵循）
 ```
 <type>: <分支名> <一句话摘要>
@@ -61,4 +60,4 @@ Authored-by: example-user dev@example.com
 - 提交信息全文无空白行。
 - 不输出解释、命令、提示语或多余信息，只输出可直接粘贴到编辑器作为 commit message 的正文。
 - 提交信息输出后必须提示「是否发起 commit（不 push）？确认后执行 git commit。」仅在用户确认后才执行 `git commit`，不执行 `git push`。
-- 执行 `git commit` 时仅使用生成的提交信息，不要追加 Co-authored-by: Cursor cursoragent@cursor.com 或任何其他 trailer。
+- 执行 `git commit` 时仅使用生成的提交信息，不要追加任何其他信息。
