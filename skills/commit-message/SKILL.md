@@ -1,6 +1,6 @@
 ---
 name: commit-message
-description: 根据 git diff 生成符合规范的 commit message；生成后提示用户确认是否发起 commit（不 push），确认后再执行 git commit。当用户说「提交」「commit」或要求生成提交信息时使用。输出格式为：提交类型 + 分支名 + 摘要，正文说明原因与改动，结尾带 Authored-by 署名，无多余内容、无空白行。
+description: 根据 git diff 生成符合规范的 commit message；生成后提示用户确认是否发起 commit（不 push），确认后再执行 git commit。当用户说「提交」「commit」或要求生成提交信息时使用。输出格式为：提交类型 + 分支名 + 摘要，缩进列表说明改动，结尾带 Authored-by 署名，无多余内容、无空白行。
 ---
 # 根据 git diff 生成 commit message
 ## 触发条件
@@ -34,14 +34,12 @@ description: 根据 git diff 生成符合规范的 commit message；生成后提
 ## 输出格式（严格遵循）
 ```
 <type>: <分支名> <一句话摘要>
-原因：
-  - <第一条原因说明>
-  - <第二条原因说明>
-  - <更多原因，可选>
+  - <第一条说明>
+  - <第二条说明>
+  - <更多说明，可选>
 Authored-by: <git user.name> <git user.email>
 ```
 - 第一行：`<type>: <分支名> <摘要>`，例如 `chore: feature-xyz 统一编辑器配置并更新 gitignore`
-- 第二行：`原因：`，紧跟第一行，不空行
 - 中间：原因说明使用列表格式，每条原因前加 `  - `（两个空格 + 短横线 + 空格），每条一行
 - 原因列表与署名之间：不空行，直接写 `Authored-by`
 - 最后一行：`Authored-by: ` + `git config user.name` 结果 + 空格 + `git config user.email` 结果
@@ -51,7 +49,6 @@ Authored-by: <git user.name> <git user.email>
 **输出**（仅此一段，无前后废话）：
 ```
 chore: feature-xyz 统一编辑器配置并更新 gitignore
-原因：
   - 新增 .editorconfig 统一缩进与换行符
   - .gitignore 增加 dist、.cache 等构建产物目录
 Authored-by: example-user dev@example.com
@@ -59,8 +56,8 @@ Authored-by: example-user dev@example.com
 其中示例中的 `example-user` 与 `dev@example.com` 仅为占位；实际输出时须使用当前仓库 `git config user.name` 与 `git config user.email` 的真实值。
 ## 约束
 - 开头必须是上述提交类型之一（fix/feat/refactor/chore/docs/style/test/perf）。
-- 原因说明使用列表格式：`原因：` 紧跟第一行，每条原因前加 `  - `（两个空格 + 短横线 + 空格）。
-- 原因列表与署名之间不空行，直接写 `Authored-by: <用户名> <邮箱>`（首字母大写），由本地 git 配置读取，不要编造。
+- 第一行下方直接为缩进列表（`  - ...`），不写「原因」或「原因：」，每条原因前加 `  - `（两个空格 + 短横线 + 空格）。
+- 列表与署名之间不空行，直接写 `Authored-by: <用户名> <邮箱>`（首字母大写），由本地 git 配置读取，不要编造。
 - 提交信息全文无空白行。
 - 不输出解释、命令、提示语或多余信息，只输出可直接粘贴到编辑器作为 commit message 的正文。
 - 提交信息输出后必须提示「是否发起 commit（不 push）？确认后执行 git commit。」仅在用户确认后才执行 `git commit`，不执行 `git push`。
