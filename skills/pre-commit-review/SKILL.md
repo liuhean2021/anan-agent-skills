@@ -74,9 +74,10 @@ description: Summarizes modified files in detail and reviews code to ensure chan
 ### 5. 输出审查文档
 
 - **必须**将本次「修改总结 + 场景矩阵 + 审查结论」写入项目 **`docs/review/`** 下的审查文档。
-- 文件名建议：`<需求或需求标识>-review.md` 或 `<日期或主题>-review.md`（如 `AI-748-review.md`、`wechat-login-prompt-fix-review.md`）。
+- **一个分支只需要一个 review 文档**：若当前分支已有对应审查文档（如 `<需求标识>-review.md`），在**原有文档基础上更新**本次变更的修改总结、场景矩阵与审查结论，不新建重复文档；若无，则新建 `<需求或需求标识>-review.md`。
+- 文件名建议：`<需求或需求标识>-review.md`（如 `AI-748-review.md`），同一分支后续审查只更新该文件，不新增 `*-re-review.md`、`*-code-review.md` 等分散文档。
 - 文档内容至少包含：修改文件列表与要点、场景矩阵（场景 → 预期 → 结论）、审查结论（通过/不通过及原因）、不影响其他功能检查清单（可选但推荐）。
-- 若项目根目录下无 `docs/review/`，先创建该目录再写入；若已有 `docs/review/README.md`，可仅在 README 中补充本次审查文档的索引或说明（可选）。
+- 若项目根目录下无 `docs/review/`，先创建该目录再写入；若已有 `docs/review/README.md`，在 README 中维护审查文档索引（每个需求/分支对应一条）。
 
 ## 审查不通过时的处理
 
@@ -90,7 +91,7 @@ description: Summarizes modified files in detail and reviews code to ensure chan
 2. **平台/入口显式限制**：凡「仅某平台或某入口」才生效的逻辑，用显式条件（如 isWechat、route.query.xxx、配置开关）包裹，避免其他平台误走。
 3. **场景矩阵**：对登录、平台、URL、配置等做一张「场景 → 预期 → 结论」表，避免漏掉边界。
 4. **关联代码看一眼**：修改了 layout/请求/路由相关逻辑时，顺带确认 permission、request 拦截、401 处理未改且兼容。
-5. **审查文档沉淀**：每次审查都将「修改总结 + 场景矩阵 + 审查结论」写入 `docs/review/`，便于后续回归和排查（本技能执行步骤 5 已规定必须写入）。
+5. **审查文档沉淀**：每个分支只维护一个 review 文档，后续审查在原有文档上更新变更部分，避免同一需求多份重复文档；每次审查都将「修改总结 + 场景矩阵 + 审查结论」写入/更新 `docs/review/`，便于后续回归和排查（本技能执行步骤 5 已规定必须写入）。
 
 ## 输出约定
 
