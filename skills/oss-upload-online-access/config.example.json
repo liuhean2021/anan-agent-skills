@@ -1,0 +1,16 @@
+{
+  "aliyun": {
+    "region": "",
+    "bucket": "",
+    "accessKeyId": "",
+    "accessKeySecret": "",
+    "customDomain": ""
+  },
+  "tencent": {
+    "bucket": "",
+    "region": "",
+    "secretId": "",
+    "secretKey": "",
+    "acceleratedDomain": ""
+  }
+}
