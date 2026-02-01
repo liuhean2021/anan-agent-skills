@@ -71,6 +71,15 @@ node scripts/upload.js ./image.jpg --provider tencent
 - 用户明确指定 `--provider` 时，以用户为准
 - 配置异常时，输出缺失的 key 并提示用户填写
 
+## 存储路径格式
+
+上传文件的 Object Key 格式：`skill/YYYY/MM/DD/<类型>/文件名`
+
+- 日期目录：按上传日期 `年/月/日` 分层
+- 类型目录：按文件扩展名（如 txt、pdf、png），无扩展名则为 `other`
+
+示例：`skill/2026/02/01/txt/test-upload.txt`
+
 ## 约束
 
 - 单文件 < 100MB

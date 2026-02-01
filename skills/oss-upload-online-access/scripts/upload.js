@@ -9,7 +9,16 @@ const { URL } = require('url');
 const MAX_SIZE = 100 * 1024 * 1024; // 100MB
 const SKILL_ROOT = path.resolve(__dirname, '..');
 const CONFIG_PATH = path.join(SKILL_ROOT, 'config.json');
-const DIR = 'skill';
+const DIR_PREFIX = 'skill';
+
+function getObjectDir(filename) {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  const ext = (path.extname(filename) || '').slice(1).toLowerCase() || 'other';
+  return `${DIR_PREFIX}/${y}/${m}/${d}/${ext}`;
+}
 
 function removeSpecialChars(str) {
   return String(str || '').replace(/[^\w\s\-\.]/g, '');
@@ -111,7 +120,8 @@ async function uploadAliyun(buffer, filename, cfg) {
     accessKeySecret: a.accessKeySecret,
     bucket: removeSpecialChars(a.bucket),
   });
-  const key = `${DIR}/${filename}`;
+  const dir = getObjectDir(filename);
+  const key = `${dir}/${filename}`;
   const result = await client.put(key, buffer, { timeout: 600000 });
   let url = result.url;
   if (a.customDomain) {
@@ -131,7 +141,8 @@ function uploadTencent(buffer, filename, cfg) {
       FileParallelLimit: 10,
       Timeout: 600000,
     });
-    const key = `${DIR}/${filename}`;
+    const dir = getObjectDir(filename);
+    const key = `${dir}/${filename}`;
     cos.putObject(
       {
         Bucket: removeSpecialChars(t.bucket),
