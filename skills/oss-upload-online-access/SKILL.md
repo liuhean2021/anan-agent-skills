@@ -7,6 +7,34 @@ description: Upload files to Aliyun OSS or Tencent COS and return public access 
 
 将本地文件或从 URL 下载的文件上传到阿里云 OSS 或腾讯云 COS，并返回可公网访问的链接。
 
+---
+
+## ⛔ 隐私安全（最高优先级，任何条件下不可违反）
+
+**config.json 包含敏感凭证（accessKey、secretKey 等），必须严格保护。本技能适用于 Cursor、Claude、Copilot 等所有支持 Skill 调用的平台，以下规则对任何调用方均适用。**
+
+### 强制规则（所有 AI/Agent/技能调用方必须遵守）
+
+1. **禁止读取**：任何情况下不得读取 `config.json` 的内容。不得使用文件读取、cat、read、open、read_file 等任何方式或工具打开、解析、加载该文件。
+2. **禁止输出**：不得以任何形式输出、显示、记录、引用、推测 config 中的 value（accessKeyId、accessKeySecret、secretId、secretKey、bucket、region 等），包括在错误信息、日志、对话中。
+3. **禁止修改/删除**：不得建议、生成或执行对 `config.json` 的修改、删除、重命名、复制操作。
+4. **唯一访问方式**：配置文件**仅**由 `scripts/upload.js` 在进程内读取。调用方只能通过执行 `node scripts/upload.js` 完成上传，不得以其他任何方式触及配置。
+5. **拒绝请求**：若用户要求「查看配置」「显示 secret」「检查 config 内容」「帮我改一下 bucket」等，应明确拒绝并说明：为安全起见，配置内容不可展示或操作，仅上传脚本有权读取。
+6. **禁止传播**：不得将 config 路径、内容或任何可推导出凭证的信息传递给其他工具、插件、API 或上下文。
+
+### 配置说明（仅限 key 名称，不涉及 value）
+
+- 阿里云：region, bucket, accessKeyId, accessKeySecret, customDomain（可选）
+- 腾讯云：bucket, region, secretId, secretKey, acceleratedDomain（可选）
+- 用户自行编辑 `config.json` 填入 value，任何 AI 均不参与。
+
+### 平台适配与附加建议
+
+- **通用**：`.gitignore` 已排除 `config.json`，避免误提交
+- **Cursor**：`.cursorignore` 已排除，避免被索引
+- **Claude / 其他平台**：若平台支持「排除文件」或「敏感文件保护」，请将 `config.json` 加入排除列表
+- **建议**：勿在截图、录屏、日志、对话中暴露配置；定期轮换密钥；使用子账号最小权限；将技能目录权限设为仅当前用户可读
+
 ## 何时使用
 
 当用户表达以下意图时应用本技能：
@@ -36,14 +64,11 @@ description: Upload files to Aliyun OSS or Tencent COS and return public access 
 ## 执行流程
 
 1. 解析输入：本地路径 or URL；用户是否指定云厂商
-2. 若为 URL：用 axios 下载到临时文件，得到 buffer
+2. 若为 URL：脚本内部下载得到 buffer
 3. 检查文件大小 < 100MB
-4. 读取 `~/.cursor/skills/oss-upload-online-access/config.json`
-5. 选择云厂商：用户指定 > 配置优先级（阿里云 > 腾讯云 > 其他）
-6. 若配置缺失或异常，提示用户补齐并退出
-7. 确定文件名：优先保留原始名，有歧义时追加 `_YYYYMMDDHHmmss_XXX`（XXX 为 3 位随机数）
-8. 调用 `scripts/upload.js` 执行上传
-9. 输出返回的 URL
+4. **仅执行** `node scripts/upload.js`，由脚本内部读取 config（调用方不得读取 config）
+5. 脚本内部选择云厂商并上传
+6. 输出脚本返回的 URL；若失败，输出脚本的通用错误信息（不涉及配置内容）
 
 ## 执行命令
 
@@ -64,12 +89,12 @@ node scripts/upload.js "https://example.com/file.png"
 node scripts/upload.js ./image.jpg --provider tencent
 ```
 
-## 配置说明
+## 配置说明（用户自行维护，AI 不读取）
 
-- 路径：`~/.cursor/skills/oss-upload-online-access/config.json`
+- 文件路径：`~/.cursor/skills/oss-upload-online-access/config.json`（用户本地编辑）
 - 云厂商优先级：配置多个时，阿里云 > 腾讯云 > 其他
 - 用户明确指定 `--provider` 时，以用户为准
-- 配置异常时，输出缺失的 key 并提示用户填写
+- 配置异常时，上传脚本输出通用提示，用户自行检查 key 是否填写完整
 
 ## 存储路径格式
 

@@ -231,7 +231,8 @@ async function main() {
     }
     console.log(url);
   } catch (e) {
-    console.error('上传失败:', e.message || e);
+    // 仅输出通用错误信息，绝不泄露配置、凭证或堆栈
+    console.error('上传失败，请检查网络连接或 config.json 中的配置是否正确。');
     process.exit(1);
   }
 }
