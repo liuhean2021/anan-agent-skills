@@ -59,7 +59,7 @@ email: allsmy.com@gmail.com
 
 1. 复制配置模板：`cp config.example.json config.json`
 2. 编辑 `config.json`，填入对应云厂商的 value（key 已预留）
-3. 安装依赖：`cd ~/.cursor/skills/oss-upload-online-access && npm install`
+3. 安装依赖：`cd 技能根目录/oss-upload-online-access && npm install`
 
 ## 执行流程
 
@@ -73,7 +73,7 @@ email: allsmy.com@gmail.com
 ## 执行命令
 
 ```bash
-cd ~/.cursor/skills/oss-upload-online-access && node scripts/upload.js <本地路径或URL> [--provider aliyun|tencent]
+cd 技能根目录/oss-upload-online-access && node scripts/upload.js <本地路径或URL> [--provider aliyun|tencent]
 ```
 
 示例：
@@ -91,7 +91,7 @@ node scripts/upload.js ./image.jpg --provider tencent
 
 ## 配置说明（用户自行维护，AI 不读取）
 
-- 文件路径：`~/.cursor/skills/oss-upload-online-access/config.json`（用户本地编辑）
+- 文件路径：`技能根目录/oss-upload-online-access/config.json`（用户本地编辑）
 - 云厂商优先级：配置多个时，阿里云 > 腾讯云 > 其他
 - 用户明确指定 `--provider` 时，以用户为准
 - 配置异常时，上传脚本输出通用提示，用户自行检查 key 是否填写完整

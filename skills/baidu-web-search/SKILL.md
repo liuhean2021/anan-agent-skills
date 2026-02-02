@@ -58,7 +58,7 @@ email: allsmy.com@gmail.com
 
 1. 复制配置模板：`cp config.example.json config.json`
 2. 编辑 `config.json`，填入 `apiKey`（百度智能云千帆「百度搜索」API Key，见 [千帆文档](https://cloud.baidu.com/doc/qianfan-api/s/Wmbq4z7e5)）
-3. 安装依赖：`cd ~/.cursor/skills/baidu-web-search && npm install`
+3. 安装依赖：`cd 技能根目录/baidu-web-search && npm install`
 
 ## 执行流程
 
@@ -70,7 +70,7 @@ email: allsmy.com@gmail.com
 ## 执行命令
 
 ```bash
-cd ~/.cursor/skills/baidu-web-search && node scripts/search.js "<查询内容>" [条数]
+cd 技能根目录/baidu-web-search && node scripts/search.js "<查询内容>" [条数]
 ```
 
 示例：
@@ -85,5 +85,5 @@ node scripts/search.js "TypeScript 最新版本" 10
 
 ## 配置说明（用户自行维护，AI 不读取）
 
-- 文件路径：`~/.cursor/skills/baidu-web-search/config.json`（用户本地编辑）
+- 文件路径：`技能根目录/baidu-web-search/config.json`（用户本地编辑）
 - 配置异常时，搜索脚本输出通用提示，用户自行检查 apiKey 是否填写正确
