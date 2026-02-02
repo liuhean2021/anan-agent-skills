@@ -26,7 +26,7 @@ email: allsmy.com@gmail.com
 
 ### 配置说明（仅限 key 名称，不涉及 value）
 
-- 阿里云：region, bucket, accessKeyId, accessKeySecret, customDomain（可选）
+- 阿里云：region, bucket, accessKeyId, accessKeySecret；endpoint（可选，如传输加速填 oss-accelerate.aliyuncs.com）；customDomain（可选）
 - 腾讯云：bucket, region, secretId, secretKey, acceleratedDomain（可选）
 - 用户自行编辑 `config.json` 填入 value，任何 AI 均不参与。
 
@@ -52,8 +52,9 @@ email: allsmy.com@gmail.com
 
 ## 输出
 
-- 成功：返回**远程访问 URL**，可直接在浏览器打开或分享
-- 失败：说明原因并提示用户检查配置、文件大小等
+- 成功：**先校验链接可访问性**（HEAD 请求），通过后才返回远程访问 URL，可直接在浏览器打开或分享
+- 校验失败：不输出链接，仅报错「上传后校验失败：链接不可访问，无法提供有效链接」，并退出
+- 上传异常：说明原因并提示用户检查配置、文件大小等
 
 ## 前置准备（首次使用）
 
@@ -68,7 +69,8 @@ email: allsmy.com@gmail.com
 3. 检查文件大小 < 100MB
 4. **仅执行** `node scripts/upload.js`，由脚本内部读取 config（调用方不得读取 config）
 5. 脚本内部选择云厂商并上传
-6. 输出脚本返回的 URL；若失败，输出脚本的通用错误信息（不涉及配置内容）
+6. **上传后对返回链接做 HEAD 校验**：可访问（2xx）才输出 URL；不可访问则报错退出、不输出链接
+7. 若失败或校验不通过，输出脚本的通用错误信息（不涉及配置内容）
 
 ## 执行命令
 
@@ -105,7 +107,16 @@ node scripts/upload.js ./image.jpg --provider tencent
 
 示例：`skill/2026/02/01/txt/test-upload.txt`
 
+## 文件格式支持（任意文件可上传并在线访问）
+
+- **目标**：任何文件均可正常上传并能在线访问（浏览器打开或下载）。
+- **文本/源码**：如 `.txt`、`.md`、`.html`、`.json`、`.js`、`.ts`、`.py`、`.css`、`.yaml`、`.sql`、`.graphql` 等，以 UTF-8 读取并设置对应 `Content-Type`，保证在线预览不乱码。
+- **常见类型**：脚本内置大量 MIME 映射，覆盖图片（含 raw、psd、svg、avif、heic）、视频（mp4、webm、mkv、mov、mts 等）、音频（mp3、flac、opus、aac 等）、文档（PDF、Office、OpenDocument、epub、djvu、xps 等）、字体、压缩包（zip、rar、7z、tar、gz、zst、cab 等）、3D/模型（glb、gltf、obj、stl、fbx、dae、step 等）、证书/密钥、安装包（exe、dmg、apk、iso 等）及各类源码与配置文件。
+- **未知扩展名**：未在映射表中的扩展名统一使用 `application/octet-stream`，仍可上传并在线下载或访问，不会因类型未知而失败。
+
 ## 约束
 
 - 单文件 < 100MB
-- 文件名：OSS 支持的前提下优先保留原名，有歧义则追加 `_YYYYMMDDHHmmss_XXX`
+- 文件名：仅使用字母与数字，且不重复。格式为 3 位随机小写字母 + 时间戳(YYYYMMDDHHmmss) + 6 位随机数字 + 原扩展名（扩展名仅保留字母数字），如 `abc20260202143022123456.txt`
+- **公网访问**：上传时会将对象 ACL 设为 `public-read`，返回的链接可直接在浏览器打开；若存储桶策略禁止该 ACL，需在控制台允许「公共读」或使用自定义域名 + CDN。返回的 URL 统一为 `https`。
+- **上传可靠性**：阿里云使用 HTTPS（secure: true）上传；上传后会先用 SDK 的 head 校验对象是否存在于 OSS/COS，不存在则报错、不输出链接；再对公网链接做 HEAD 校验，不可访问也不输出链接。

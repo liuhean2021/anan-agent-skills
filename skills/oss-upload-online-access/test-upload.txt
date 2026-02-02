@@ -1,4 +1,0 @@
-OSS upload test - LeiAI skill
-Created at: 2026-02-01
-Test time (to seconds): 2026-02-01 18:52:44
-This file is for testing the oss-upload-online-access skill.
