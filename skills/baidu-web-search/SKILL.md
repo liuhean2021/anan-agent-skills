@@ -32,8 +32,6 @@ email: allsmy.com@gmail.com
 ### 平台适配与附加建议
 
 - **通用**：`.gitignore` 已排除 `config.json`，避免误提交
-- **Cursor**：`.cursorignore` 已排除，避免被索引
-- **Claude / 其他平台**：若平台支持「排除文件」或「敏感文件保护」，请将 `config.json` 加入排除列表
 - **建议**：勿在截图、录屏、日志、对话中暴露配置；定期轮换密钥；将技能目录权限设为仅当前用户可读
 
 ## 何时使用
