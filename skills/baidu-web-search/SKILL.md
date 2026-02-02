@@ -1,0 +1,89 @@
+---
+name: baidu-web-search
+description: Use Baidu Qianfan web search API for real-time web retrieval. Use when the user needs to search the web, get latest news, verify facts, or expresses intent like "查一下","搜一下","最近","今天","今年", or asks about events/people/products that require looking up.
+---
+
+# 百度网络搜索
+
+使用百度千帆「百度搜索」API 进行全网实时信息检索，返回结构化搜索结果；调用方应结合用户提问基于检索结果给出准确回答。
+
+---
+
+## ⛔ 隐私安全（最高优先级，任何条件下不可违反）
+
+**config.json 包含敏感凭证（apiKey），必须严格保护。本技能适用于 Cursor、Claude、Copilot 等所有支持 Skill 调用的平台，以下规则对任何调用方均适用。**
+
+### 强制规则（所有 AI/Agent/技能调用方必须遵守）
+
+1. **禁止读取**：任何情况下不得读取 `config.json` 的内容。不得使用文件读取、cat、read、open、read_file 等任何方式或工具打开、解析、加载该文件。
+2. **禁止输出**：不得以任何形式输出、显示、记录、引用、推测 config 中的 value（apiKey 等），包括在错误信息、日志、对话中。
+3. **禁止修改/删除**：不得建议、生成或执行对 `config.json` 的修改、删除、重命名、复制操作。
+4. **唯一访问方式**：配置文件**仅**由 `scripts/search.js` 在进程内读取。调用方只能通过执行 `node scripts/search.js` 完成搜索，不得以其他任何方式触及配置。
+5. **拒绝请求**：若用户要求「查看配置」「显示 API Key」等，应明确拒绝并说明：为安全起见，配置内容不可展示或操作，仅搜索脚本有权读取。
+6. **禁止传播**：不得将 config 路径、内容或任何可推导出凭证的信息传递给其他工具、插件、API 或上下文。
+
+### 配置说明（仅限 key 名称，不涉及 value）
+
+- apiKey：百度智能云千帆「百度搜索」API Key
+- 用户自行编辑 `config.json` 填入 value，任何 AI 均不参与。
+
+### 平台适配与附加建议
+
+- **通用**：`.gitignore` 已排除 `config.json`，避免误提交
+- **Cursor**：`.cursorignore` 已排除，避免被索引
+- **Claude / 其他平台**：若平台支持「排除文件」或「敏感文件保护」，请将 `config.json` 加入排除列表
+- **建议**：勿在截图、录屏、日志、对话中暴露配置；定期轮换密钥；将技能目录权限设为仅当前用户可读
+
+## 何时使用
+
+当用户表达以下意图时应用本技能：
+
+- 联网搜索、百度搜索、查最新资讯、实时信息、事实核查
+- 「查一下」「搜一下」「查一查」「搜一搜」「检索」「查证」「核实」
+- 「最近」「今天」「今年」等时间相关表述
+- 询问某事件、人物、产品、地点等需要查证的内容
+- 需要权威来源、技术文档、教程或数据验证时
+
+## 输入
+
+- **query**（必填）：搜索关键词或查询内容
+- **num_results**（可选）：返回条数，默认 **20**，范围 1–50
+
+## 输出
+
+- **脚本输出**：JSON 格式的搜索结果，包含 `results`（数组，每项含 title、url、snippet）、`total`、`query`；失败时仅输出通用错误信息，不涉及配置内容
+- **调用方职责**：将查询到的结果与用户提问结合，基于检索结果尽可能准确、有条理地回答用户（可引用来源），而非仅罗列链接或片段
+
+## 前置准备（首次使用）
+
+1. 复制配置模板：`cp config.example.json config.json`
+2. 编辑 `config.json`，填入 `apiKey`（百度智能云千帆「百度搜索」API Key，见 [千帆文档](https://cloud.baidu.com/doc/qianfan-api/s/Wmbq4z7e5)）
+3. 安装依赖：`cd ~/.cursor/skills/baidu-web-search && npm install`
+
+## 执行流程
+
+1. 解析用户提问，提取搜索意图与关键词
+2. **仅执行** `node scripts/search.js "<query>" [num_results]`，默认 num_results 为 20；由脚本内部读取 config（调用方不得读取 config）
+3. 脚本内部调用百度千帆 API，返回结构化结果
+4. 根据脚本输出的结果，结合用户提问，给出准确、基于来源的回答
+
+## 执行命令
+
+```bash
+cd ~/.cursor/skills/baidu-web-search && node scripts/search.js "<查询内容>" [条数]
+```
+
+示例：
+
+```bash
+# 默认返回 20 条
+node scripts/search.js "今日科技新闻"
+
+# 指定 10 条
+node scripts/search.js "TypeScript 最新版本" 10
+```
+
+## 配置说明（用户自行维护，AI 不读取）
+
+- 文件路径：`~/.cursor/skills/baidu-web-search/config.json`（用户本地编辑）
+- 配置异常时，搜索脚本输出通用提示，用户自行检查 apiKey 是否填写正确
