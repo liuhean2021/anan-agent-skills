@@ -8,12 +8,16 @@ email: allsmy.com@gmail.com
 ## 触发条件
 用户提问包含「提交」或「commit」时应用本技能。
 ## 执行步骤
-1. **获取变更与 Git 信息**
+1. **保存所有打开的文件**
+   - 在执行提交前，先主动保存一次全部打开的文件，确保所有修改都已保存到磁盘
+   - 提醒用户保存文件：检查是否有未保存的文件，如果有则提示用户先保存
+   - 注意：git diff 只能看到已保存到磁盘的修改，未保存的修改不会出现在 git diff 中
+2. **获取变更与 Git 信息**
    - 暂存区变更：`git diff --cached`（有则优先基于此生成）
    - 若无暂存区变更：`git diff`
    - 当前分支：`git rev-parse --abbrev-ref HEAD`
    - 提交者：`git config user.name`、`git config user.email`
-2. **选择提交类型（首行关键词）**
+3. **选择提交类型（首行关键词）**
    - `fix`：修复 bug
    - `feat`：新功能
    - `refactor`：重构（无新功能、非修 bug）
@@ -22,13 +26,14 @@ email: allsmy.com@gmail.com
    - `style`：格式（不影响逻辑）
    - `test`：测试
    - `perf`：性能
-3. **生成内容**
+4. **生成内容**
+   - 根据实际修改的内容总结提交信息，确保准确反映代码变更
    - 仅输出最终 commit message 正文，不要解释、不要「建议如下」等旁白。
    - 格式必须严格按下方模板，无空白行、无多余说明。
-4. **提示确认**
+5. **提示确认**
    - 在提交信息下方单独一行提示：「是否发起 commit（不 push）？确认后执行 git commit。」
    - 不自动执行 `git commit`，等待用户确认。
-5. **用户确认后执行**
+6. **用户确认后执行**
    - 仅当用户明确确认（如回复「确认」「是」「执行」「可以」等）后，才执行 `git commit`，将生成的 message 作为提交说明（多行时用 `git commit -F -` 或写入临时文件后 `git commit -F <文件>`）。
    - 提交时仅使用生成的 message，不要追加任何其他信息。**说明**：这条说明只针对Cursor软件生效，若用户已确认关闭 Cursor Settings > Attribution 下的 Commit Attribution 与 PR Attribution，则无需每次再提示，否则需要提示确认；提交由终端执行时可避免被自动追加 Co-authored-by。
    - 不执行 `git push`。
