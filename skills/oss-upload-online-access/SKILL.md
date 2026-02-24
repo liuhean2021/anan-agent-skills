@@ -4,12 +4,12 @@ description: Upload files to Aliyun OSS or Tencent COS and return public access 
 metadata:
   author: liuhean
   email: allsmy.com@gmail.com
-  openclaw: {"requires": {"env": ["OSS_ALIYUN_REGION", "OSS_ALIYUN_BUCKET", "OSS_ALIYUN_ACCESS_KEY_ID", "OSS_ALIYUN_ACCESS_KEY_SECRET", "OSS_TENCENT_BUCKET", "OSS_TENCENT_REGION", "OSS_TENCENT_SECRET_ID", "OSS_TENCENT_SECRET_KEY"]}}
+  openclaw: {"requires": {"env": ["OSS_ALIYUN_REGION", "OSS_ALIYUN_BUCKET", "OSS_ALIYUN_ACCESS_KEY_ID", "OSS_ALIYUN_ACCESS_KEY_SECRET"]}, "primaryEnv": "OSS_ALIYUN_ACCESS_KEY_ID"}
 ---
 
 # 上传文件到 OSS 在线访问
 
-将本地文件或从 URL 下载的文件上传到阿里云 OSS 或腾讯云 COS，并返回可公网访问的链接。
+将本地文件或从 URL 下载的文件上传到对象存储，并返回可公网访问的链接。**默认使用阿里云 OSS**，也支持腾讯云 COS（需配置对应凭证）。
 
 ---
 
@@ -70,7 +70,7 @@ metadata:
 - **本地文件**：工作区相对路径或绝对路径，如 `./docs/foo.pdf`、`/path/to/image.png`
 - **在线超链接**：HTTP/HTTPS URL，先下载到临时文件再上传
 
-用户可指定云厂商（如「用腾讯云」），否则按配置优先级选择。
+**默认使用阿里云 OSS**（优先级：阿里云 > 腾讯云）。如需使用腾讯云 COS，配置 `OSS_TENCENT_*` 环境变量（或 config.json `tencent` 字段），并在调用时指定 `--provider tencent`，或仅配置腾讯云凭证时自动选用。
 
 ## 输出
 
