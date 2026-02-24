@@ -1,8 +1,9 @@
 ---
 name: commit-message
 description: 根据 git diff 生成符合规范的 commit message；生成后提示用户确认是否发起 commit（不 push），确认后再执行 git commit。当用户说「提交」「commit」或要求生成提交信息时使用。输出格式为：提交类型 + 分支名 + 摘要，缩进列表说明改动，结尾带 Authored-by 署名，无多余内容、无空白行。
-author: liuhean
-email: allsmy.com@gmail.com
+metadata:
+  author: liuhean
+  email: allsmy.com@gmail.com
 ---
 # 根据 git diff 生成 commit message
 ## 触发条件

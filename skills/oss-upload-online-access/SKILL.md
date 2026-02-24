@@ -1,8 +1,9 @@
 ---
 name: oss-upload-online-access
 description: Upload files to Aliyun OSS or Tencent COS and return public access URLs. Use when the user wants to upload files, access files online, upload to OSS, get remote file links, or any phrase implying "upload for online/remote access".
-author: liuhean
-email: allsmy.com@gmail.com
+metadata:
+  author: liuhean
+  email: allsmy.com@gmail.com
 ---
 
 # 上传文件到 OSS 在线访问

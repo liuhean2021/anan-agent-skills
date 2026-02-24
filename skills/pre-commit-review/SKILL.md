@@ -1,8 +1,9 @@
 ---
 name: pre-commit-review
 description: Summarizes modified files in detail and reviews code to ensure changes do not affect other functionality. Use when the user asks for modification summary, code review, pre-commit review, or to ensure changes pass functional testing without introducing new issues. Trigger terms include: 审查代码、审查修改、review代码、代码审查、代码复审、测试代码、修改总结、提交前审查、不影响其他功能、审查结果不通过、回归测试、功能测试、修改review、审查变更. If the intent is ambiguous (e.g. 检查一下、看一下代码), ask the user to confirm: "是否需要按提交前审查流程，做修改总结 + 场景矩阵 + 代码审查？". If review fails, state the reason clearly.
-author: liuhean
-email: allsmy.com@gmail.com
+metadata:
+  author: liuhean
+  email: allsmy.com@gmail.com
 ---
 
 # 提交前修改总结与代码审查
