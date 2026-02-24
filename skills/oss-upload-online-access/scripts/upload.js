@@ -322,9 +322,45 @@ function alphanumericUniqueFilename(original) {
   return `${prefix}${ts}${suffix}.${ext}`;
 }
 
-function loadConfig() {
+/**
+ * Resolve config with priority:
+ * 1. Environment variables (injected by OpenClaw/ClawHub platform)
+ * 2. Local config.json (for local / self-hosted use)
+ *
+ * Aliyun env vars: OSS_ALIYUN_REGION, OSS_ALIYUN_BUCKET,
+ *   OSS_ALIYUN_ACCESS_KEY_ID, OSS_ALIYUN_ACCESS_KEY_SECRET,
+ *   OSS_ALIYUN_ENDPOINT (optional), OSS_ALIYUN_CUSTOM_DOMAIN (optional)
+ * Tencent env vars: OSS_TENCENT_BUCKET, OSS_TENCENT_REGION,
+ *   OSS_TENCENT_SECRET_ID, OSS_TENCENT_SECRET_KEY,
+ *   OSS_TENCENT_ACCELERATED_DOMAIN (optional)
+ */
+function resolveConfig() {
+  const aliyunEnv = {
+    region: (process.env.OSS_ALIYUN_REGION || '').trim(),
+    bucket: (process.env.OSS_ALIYUN_BUCKET || '').trim(),
+    accessKeyId: (process.env.OSS_ALIYUN_ACCESS_KEY_ID || '').trim(),
+    accessKeySecret: (process.env.OSS_ALIYUN_ACCESS_KEY_SECRET || '').trim(),
+    endpoint: (process.env.OSS_ALIYUN_ENDPOINT || '').trim(),
+    customDomain: (process.env.OSS_ALIYUN_CUSTOM_DOMAIN || '').trim(),
+  };
+  const tencentEnv = {
+    bucket: (process.env.OSS_TENCENT_BUCKET || '').trim(),
+    region: (process.env.OSS_TENCENT_REGION || '').trim(),
+    secretId: (process.env.OSS_TENCENT_SECRET_ID || '').trim(),
+    secretKey: (process.env.OSS_TENCENT_SECRET_KEY || '').trim(),
+    acceleratedDomain: (process.env.OSS_TENCENT_ACCELERATED_DOMAIN || '').trim(),
+  };
+
+  const hasAliyunEnv = !!(aliyunEnv.region && aliyunEnv.bucket && aliyunEnv.accessKeyId && aliyunEnv.accessKeySecret);
+  const hasTencentEnv = !!(tencentEnv.bucket && tencentEnv.region && tencentEnv.secretId && tencentEnv.secretKey);
+
+  if (hasAliyunEnv || hasTencentEnv) {
+    return { aliyun: aliyunEnv, tencent: tencentEnv };
+  }
+
+  // Fallback to local config.json
   if (!fs.existsSync(CONFIG_PATH)) {
-    console.error('错误：配置文件不存在。请复制 config.example.json 为 config.json 并填入配置。');
+    console.error('错误：未找到有效配置。请在 OpenClaw Skills 配置页面填入环境变量，或本地复制 config.example.json 为 config.json 并填入配置。');
     process.exit(1);
   }
   const raw = fs.readFileSync(CONFIG_PATH, 'utf8');
@@ -353,12 +389,12 @@ function selectProvider(cfg, userProvider) {
     const p = userProvider.toLowerCase();
     if (p === 'aliyun' && isAliyunConfigured(cfg)) return 'aliyun';
     if (p === 'tencent' && isTencentConfigured(cfg)) return 'tencent';
-    console.error(`错误：用户指定了 ${userProvider}，但该云厂商配置不完整。请检查 config.json。`);
+    console.error(`错误：用户指定了 ${userProvider}，但该云厂商配置不完整。请在 OpenClaw Skills 配置页面填入对应环境变量，或检查 config.json。`);
     process.exit(1);
   }
   if (isAliyunConfigured(cfg)) return 'aliyun';
   if (isTencentConfigured(cfg)) return 'tencent';
-  console.error('错误：未找到有效配置。请至少配置阿里云或腾讯云，并填写 region、bucket、accessKeyId、accessKeySecret（或 secretId、secretKey）。');
+  console.error('错误：未找到有效配置。请至少配置阿里云或腾讯云（env var 或 config.json），并填写 region、bucket、accessKeyId、accessKeySecret（或 secretId、secretKey）。');
   process.exit(1);
 }
 
@@ -525,7 +561,7 @@ async function main() {
     process.exit(1);
   }
 
-  const cfg = loadConfig();
+  const cfg = resolveConfig();
   const chosen = selectProvider(cfg, provider);
 
   let buffer;
@@ -587,7 +623,7 @@ async function main() {
     console.log(url);
   } catch (e) {
     // 仅输出通用错误信息，绝不泄露配置、凭证或堆栈
-    console.error('上传失败，请检查网络连接或 config.json 中的配置是否正确。');
+    console.error('上传失败，请检查网络连接或凭证配置（OSS_ALIYUN_* / OSS_TENCENT_* 环境变量，或 config.json）是否正确。');
     process.exit(1);
   }
 }

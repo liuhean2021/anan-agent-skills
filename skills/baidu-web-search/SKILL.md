@@ -4,6 +4,7 @@ description: Use Baidu Qianfan web search API for real-time web retrieval. Use w
 metadata:
   author: liuhean
   email: allsmy.com@gmail.com
+  openclaw: {"requires": {"env": ["BAIDU_API_KEY"]}, "primaryEnv": "BAIDU_API_KEY"}
 ---
 
 # 百度网络搜索
@@ -14,26 +15,28 @@ metadata:
 
 ## ⛔ 隐私安全（最高优先级，任何条件下不可违反）
 
-**config.json 包含敏感凭证（apiKey），必须严格保护。本技能适用于 Cursor、Claude、Copilot 等所有支持 Skill 调用的平台，以下规则对任何调用方均适用。**
+**API Key 属于敏感凭证，无论通过环境变量还是本地 config.json 存储，均须严格保护。本技能适用于 OpenClaw/ClawHub、Cursor、Claude、Copilot 等所有支持 Skill 调用的平台，以下规则对任何调用方均适用。**
 
 ### 强制规则（所有 AI/Agent/技能调用方必须遵守）
 
-1. **禁止读取**：任何情况下不得读取 `config.json` 的内容。不得使用文件读取、cat、read、open、read_file 等任何方式或工具打开、解析、加载该文件。
-2. **禁止输出**：不得以任何形式输出、显示、记录、引用、推测 config 中的 value（apiKey 等），包括在错误信息、日志、对话中。
+1. **禁止读取**：任何情况下不得读取 `config.json` 的内容，也不得输出 `BAIDU_API_KEY` 环境变量的值。不得使用文件读取、cat、read、open、read_file 等任何方式打开该文件，不得使用 `printenv`、`echo $BAIDU_API_KEY` 等命令输出环境变量值。
+2. **禁止输出**：不得以任何形式输出、显示、记录、引用、推测 apiKey 的值，包括在错误信息、日志、对话中。
 3. **禁止修改/删除**：不得建议、生成或执行对 `config.json` 的修改、删除、重命名、复制操作。
-4. **唯一访问方式**：配置文件**仅**由 `scripts/search.js` 在进程内读取。调用方只能通过执行 `node scripts/search.js` 完成搜索，不得以其他任何方式触及配置。
-5. **拒绝请求**：若用户要求「查看配置」「显示 API Key」等，应明确拒绝并说明：为安全起见，配置内容不可展示或操作，仅搜索脚本有权读取。
-6. **禁止传播**：不得将 config 路径、内容或任何可推导出凭证的信息传递给其他工具、插件、API 或上下文。
+4. **唯一访问方式**：凭证**仅**由 `scripts/search.js` 在进程内读取（env var 或 config.json）。调用方只能通过执行 `node scripts/search.js` 完成搜索，不得以其他任何方式触及凭证。
+5. **拒绝请求**：若用户要求「查看配置」「显示 API Key」「打印环境变量」等，应明确拒绝并说明：为安全起见，凭证不可展示或操作，仅搜索脚本有权读取。
+6. **禁止传播**：不得将 apiKey、config 路径或任何可推导出凭证的信息传递给其他工具、插件、API 或上下文。
 
 ### 配置说明（仅限 key 名称，不涉及 value）
 
-- apiKey：百度智能云千帆「百度搜索」API Key
-- 用户自行编辑 `config.json` 填入 value，任何 AI 均不参与。
+- **BAIDU_API_KEY**（环境变量）：OpenClaw/ClawHub 平台在 Skills 配置页面填写后自动注入
+- **apiKey**（config.json）：本地/自托管用户手动编辑填入
+- 两种方式任选其一，`BAIDU_API_KEY` 环境变量优先级更高
 
 ### 平台适配与附加建议
 
 - **通用**：`.gitignore` 已排除 `config.json`，避免误提交
-- **建议**：勿在截图、录屏、日志、对话中暴露配置；定期轮换密钥；将技能目录权限设为仅当前用户可读
+- **OpenClaw/ClawHub**：在 Skills 配置页或 openclaw.json 中填写 `BAIDU_API_KEY` 即可，无需本地文件
+- **建议**：勿在截图、录屏、日志、对话中暴露凭证；定期轮换密钥；将技能目录权限设为仅当前用户可读
 
 ## 何时使用
 
@@ -57,8 +60,21 @@ metadata:
 
 ## 前置准备（首次使用）
 
+### 方式一：OpenClaw / ClawHub 平台（推荐）
+
+1. 在 ClawHub 安装本技能
+2. 进入 **Skills 配置页** 或编辑 `~/.openclaw/openclaw.json`，在 `skills.entries.baidu-web-search.env` 下填入：
+   ```json
+   { "BAIDU_API_KEY": "你的百度千帆 API Key" }
+   ```
+3. 安装依赖（ClawHub 通常自动执行）：`cd 技能根目录/baidu-web-search && npm install`
+
+> API Key 申请见 [百度千帆文档](https://cloud.baidu.com/doc/qianfan-api/s/Wmbq4z7e5)
+
+### 方式二：本地 / 自托管
+
 1. 复制配置模板：`cp config.example.json config.json`
-2. 编辑 `config.json`，填入 `apiKey`（百度智能云千帆「百度搜索」API Key，见 [千帆文档](https://cloud.baidu.com/doc/qianfan-api/s/Wmbq4z7e5)）
+2. 编辑 `config.json`，填入 `apiKey`
 3. 安装依赖：`cd 技能根目录/baidu-web-search && npm install`
 
 ## 执行流程
@@ -86,5 +102,11 @@ node scripts/search.js "TypeScript 最新版本" 10
 
 ## 配置说明（用户自行维护，AI 不读取）
 
-- 文件路径：`技能根目录/baidu-web-search/config.json`（用户本地编辑）
-- 配置异常时，搜索脚本输出通用提示，用户自行检查 apiKey 是否填写正确
+脚本按以下优先级解析 apiKey，AI 不参与任何配置读写：
+
+| 优先级 | 来源 | 适用场景 |
+|--------|------|----------|
+| 高 | 环境变量 `BAIDU_API_KEY` | OpenClaw/ClawHub 平台注入 |
+| 低 | 本地文件 `config.json` → `apiKey` | 本地 / 自托管 |
+
+- 配置异常时，搜索脚本输出通用提示，用户自行检查凭证是否填写正确

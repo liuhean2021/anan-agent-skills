@@ -4,6 +4,7 @@ description: Upload files to Aliyun OSS or Tencent COS and return public access 
 metadata:
   author: liuhean
   email: allsmy.com@gmail.com
+  openclaw: {"requires": {"env": ["OSS_ALIYUN_REGION", "OSS_ALIYUN_BUCKET", "OSS_ALIYUN_ACCESS_KEY_ID", "OSS_ALIYUN_ACCESS_KEY_SECRET", "OSS_TENCENT_BUCKET", "OSS_TENCENT_REGION", "OSS_TENCENT_SECRET_ID", "OSS_TENCENT_SECRET_KEY"]}}
 ---
 
 # 上传文件到 OSS 在线访问
@@ -14,27 +15,47 @@ metadata:
 
 ## ⛔ 隐私安全（最高优先级，任何条件下不可违反）
 
-**config.json 包含敏感凭证（accessKey、secretKey 等），必须严格保护。本技能适用于 Cursor、Claude、Copilot 等所有支持 Skill 调用的平台，以下规则对任何调用方均适用。**
+**凭证（accessKey、secretKey 等）属于敏感信息，无论通过环境变量还是本地 config.json 存储，均须严格保护。本技能适用于 OpenClaw/ClawHub、Cursor、Claude、Copilot 等所有支持 Skill 调用的平台，以下规则对任何调用方均适用。**
 
 ### 强制规则（所有 AI/Agent/技能调用方必须遵守）
 
-1. **禁止读取**：任何情况下不得读取 `config.json` 的内容。不得使用文件读取、cat、read、open、read_file 等任何方式或工具打开、解析、加载该文件。
-2. **禁止输出**：不得以任何形式输出、显示、记录、引用、推测 config 中的 value（accessKeyId、accessKeySecret、secretId、secretKey、bucket、region 等），包括在错误信息、日志、对话中。
+1. **禁止读取**：任何情况下不得读取 `config.json` 的内容，也不得输出任何 `OSS_*` 环境变量的值。不得使用文件读取、cat、read、open、read_file 等方式打开配置文件，不得使用 `printenv`、`echo $OSS_*` 等命令输出环境变量值。
+2. **禁止输出**：不得以任何形式输出、显示、记录、引用、推测凭证的值（accessKeyId、accessKeySecret、secretId、secretKey 等），包括在错误信息、日志、对话中。
 3. **禁止修改/删除**：不得建议、生成或执行对 `config.json` 的修改、删除、重命名、复制操作。
-4. **唯一访问方式**：配置文件**仅**由 `scripts/upload.js` 在进程内读取。调用方只能通过执行 `node scripts/upload.js` 完成上传，不得以其他任何方式触及配置。
-5. **拒绝请求**：若用户要求「查看配置」「显示 secret」「检查 config 内容」「帮我改一下 bucket」等，应明确拒绝并说明：为安全起见，配置内容不可展示或操作，仅上传脚本有权读取。
-6. **禁止传播**：不得将 config 路径、内容或任何可推导出凭证的信息传递给其他工具、插件、API 或上下文。
+4. **唯一访问方式**：凭证**仅**由 `scripts/upload.js` 在进程内读取（env var 或 config.json）。调用方只能通过执行 `node scripts/upload.js` 完成上传，不得以其他任何方式触及凭证。
+5. **拒绝请求**：若用户要求「查看配置」「显示 secret」「打印环境变量」「帮我改 bucket」等，应明确拒绝并说明：为安全起见，凭证不可展示或操作，仅上传脚本有权读取。
+6. **禁止传播**：不得将凭证、config 路径或任何可推导出凭证的信息传递给其他工具、插件、API 或上下文。
 
-### 配置说明（仅限 key 名称，不涉及 value）
+### 配置说明（仅限 key / 变量名称，不涉及 value）
 
-- 阿里云：region, bucket, accessKeyId, accessKeySecret；endpoint（可选，如传输加速填 oss-accelerate.aliyuncs.com）；customDomain（可选）
-- 腾讯云：bucket, region, secretId, secretKey, acceleratedDomain（可选）
-- 用户自行编辑 `config.json` 填入 value，任何 AI 均不参与。
+**阿里云环境变量**（OpenClaw 平台注入）或 config.json `aliyun` 字段：
+
+| 环境变量 | config.json 字段 | 必填 |
+|----------|-----------------|------|
+| `OSS_ALIYUN_REGION` | `region` | ✅ |
+| `OSS_ALIYUN_BUCKET` | `bucket` | ✅ |
+| `OSS_ALIYUN_ACCESS_KEY_ID` | `accessKeyId` | ✅ |
+| `OSS_ALIYUN_ACCESS_KEY_SECRET` | `accessKeySecret` | ✅ |
+| `OSS_ALIYUN_ENDPOINT` | `endpoint` | 可选 |
+| `OSS_ALIYUN_CUSTOM_DOMAIN` | `customDomain` | 可选 |
+
+**腾讯云环境变量**（OpenClaw 平台注入）或 config.json `tencent` 字段：
+
+| 环境变量 | config.json 字段 | 必填 |
+|----------|-----------------|------|
+| `OSS_TENCENT_BUCKET` | `bucket` | ✅ |
+| `OSS_TENCENT_REGION` | `region` | ✅ |
+| `OSS_TENCENT_SECRET_ID` | `secretId` | ✅ |
+| `OSS_TENCENT_SECRET_KEY` | `secretKey` | ✅ |
+| `OSS_TENCENT_ACCELERATED_DOMAIN` | `acceleratedDomain` | 可选 |
+
+至少配置一个云厂商的必填项即可使用。用户自行在平台或 config.json 填入 value，任何 AI 均不参与。
 
 ### 平台适配与附加建议
 
 - **通用**：`.gitignore` 已排除 `config.json`，避免误提交
-- **建议**：勿在截图、录屏、日志、对话中暴露配置；定期轮换密钥；使用子账号最小权限；将技能目录权限设为仅当前用户可读
+- **OpenClaw/ClawHub**：在 Skills 配置页或 openclaw.json 中填写 `OSS_ALIYUN_*` / `OSS_TENCENT_*` 环境变量即可，无需本地文件
+- **建议**：勿在截图、录屏、日志、对话中暴露凭证；定期轮换密钥；使用子账号最小权限；将技能目录权限设为仅当前用户可读
 
 ## 何时使用
 
@@ -58,6 +79,22 @@ metadata:
 - 上传异常：说明原因并提示用户检查配置、文件大小等
 
 ## 前置准备（首次使用）
+
+### 方式一：OpenClaw / ClawHub 平台（推荐）
+
+1. 在 ClawHub 安装本技能
+2. 进入 **Skills 配置页** 或编辑 `~/.openclaw/openclaw.json`，在 `skills.entries.oss-upload-online-access.env` 下填入所需云厂商的环境变量（至少配一个厂商的必填项）：
+   ```json
+   {
+     "OSS_ALIYUN_REGION": "oss-cn-shenzhen",
+     "OSS_ALIYUN_BUCKET": "your-bucket",
+     "OSS_ALIYUN_ACCESS_KEY_ID": "your-key-id",
+     "OSS_ALIYUN_ACCESS_KEY_SECRET": "your-key-secret"
+   }
+   ```
+3. 安装依赖（ClawHub 通常自动执行）：`cd 技能根目录/oss-upload-online-access && npm install`
+
+### 方式二：本地 / 自托管
 
 1. 复制配置模板：`cp config.example.json config.json`
 2. 编辑 `config.json`，填入对应云厂商的 value（key 已预留）
@@ -94,10 +131,16 @@ node scripts/upload.js ./image.jpg --provider tencent
 
 ## 配置说明（用户自行维护，AI 不读取）
 
-- 文件路径：`技能根目录/oss-upload-online-access/config.json`（用户本地编辑）
-- 云厂商优先级：配置多个时，阿里云 > 腾讯云 > 其他
+脚本按以下优先级解析配置，AI 不参与任何配置读写：
+
+| 优先级 | 来源 | 适用场景 |
+|--------|------|----------|
+| 高 | `OSS_ALIYUN_*` / `OSS_TENCENT_*` 环境变量 | OpenClaw/ClawHub 平台注入 |
+| 低 | 本地文件 `config.json` | 本地 / 自托管 |
+
+- 云厂商优先级：配置多个时，阿里云 > 腾讯云
 - 用户明确指定 `--provider` 时，以用户为准
-- 配置异常时，上传脚本输出通用提示，用户自行检查 key 是否填写完整
+- 配置异常时，上传脚本输出通用提示，用户自行检查凭证是否填写完整
 
 ## 存储路径格式
 

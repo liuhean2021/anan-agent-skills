@@ -11,17 +11,21 @@ const DEFAULT_NUM_RESULTS = 20;
 const MAX_NUM_RESULTS = 50;
 const TIMEOUT_MS = 15000;
 
-function loadConfig() {
-  if (!fs.existsSync(CONFIG_PATH)) {
-    console.log(JSON.stringify({ results: [], total: 0, query: '', error: '配置文件不存在，请复制 config.example.json 为 config.json 并填入 apiKey。' }));
-    process.exit(1);
-  }
-  const raw = fs.readFileSync(CONFIG_PATH, 'utf8');
+/**
+ * Resolve apiKey with priority:
+ * 1. BAIDU_API_KEY env var (injected by OpenClaw/ClawHub platform)
+ * 2. Local config.json (for local / self-hosted use)
+ */
+function resolveApiKey() {
+  const envKey = (process.env.BAIDU_API_KEY || '').trim();
+  if (envKey) return envKey;
+
+  if (!fs.existsSync(CONFIG_PATH)) return '';
   try {
-    return JSON.parse(raw);
+    const cfg = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
+    return (cfg.apiKey || '').trim();
   } catch (e) {
-    console.log(JSON.stringify({ results: [], total: 0, query: '', error: 'config.json 格式无效。' }));
-    process.exit(1);
+    return '';
   }
 }
 
@@ -42,10 +46,9 @@ async function main() {
     process.exit(1);
   }
 
-  const cfg = loadConfig();
-  const apiKey = (cfg.apiKey || '').trim();
+  const apiKey = resolveApiKey();
   if (!apiKey) {
-    console.log(JSON.stringify(emptyResult(query, '未配置 apiKey，请编辑 config.json 填入百度千帆「百度搜索」API Key。')));
+    console.log(JSON.stringify(emptyResult(query, '未配置 apiKey，请在 OpenClaw Skills 配置页面填入 BAIDU_API_KEY，或本地编辑 config.json 填入 apiKey。')));
     process.exit(1);
   }
 
@@ -85,7 +88,7 @@ async function main() {
     };
     console.log(JSON.stringify(output));
   } catch (e) {
-    console.log(JSON.stringify(emptyResult(query, '搜索服务暂时不可用，请检查 config.json 中的 apiKey 或网络连接。')));
+    console.log(JSON.stringify(emptyResult(query, '搜索服务暂时不可用，请检查 BAIDU_API_KEY 环境变量或 config.json 中的 apiKey，以及网络连接。')));
     process.exit(1);
   }
 }
