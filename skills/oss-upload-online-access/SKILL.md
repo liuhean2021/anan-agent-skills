@@ -4,7 +4,7 @@ description: Upload files to Aliyun OSS or Tencent COS and return public access 
 metadata:
   author: liuhean
   email: allsmy.com@gmail.com
-  openclaw: {"requires": {"env": ["OSS_ALIYUN_REGION", "OSS_ALIYUN_BUCKET", "OSS_ALIYUN_ACCESS_KEY_ID", "OSS_ALIYUN_ACCESS_KEY_SECRET"]}, "primaryEnv": "OSS_ALIYUN_ACCESS_KEY_ID"}
+  openclaw: {"primaryEnv": "OSS_ALIYUN_ACCESS_KEY_ID"}
 ---
 
 # 上传文件到 OSS 在线访问
@@ -82,8 +82,16 @@ metadata:
 
 ### 方式一：OpenClaw / ClawHub 平台（推荐）
 
+> **注意：Skills 页面的配置框仅为引导入口**
+>
+> ClawHub Skills 页面只会显示 `OSS_ALIYUN_ACCESS_KEY_ID` 一个字段（平台限制，每个技能只能展示一个主要凭证字段）。**仅填写该字段不足以让技能正常工作**——还需要手动补全其余必填环境变量。
+>
+> **推荐做法**：直接编辑 `~/.openclaw/openclaw.json`，在对应技能的 `env` 块中填入所有必填字段（见下方示例），无需依赖 Skills 页面表单。
+
 1. 在 ClawHub 安装本技能
-2. 进入 **Skills 配置页** 或编辑 `~/.openclaw/openclaw.json`，在 `skills.entries.oss-upload-online-access.env` 下填入所需云厂商的环境变量（至少配一个厂商的必填项）：
+2. 编辑 `~/.openclaw/openclaw.json`，找到 `skills.entries.oss-upload-online-access.env`，填入所需云厂商的所有必填环境变量：
+
+   **阿里云 OSS（默认）**：
    ```json
    {
      "OSS_ALIYUN_REGION": "oss-cn-shenzhen",
@@ -92,6 +100,35 @@ metadata:
      "OSS_ALIYUN_ACCESS_KEY_SECRET": "your-key-secret"
    }
    ```
+
+   **腾讯云 COS（可选，与阿里云二选一或同时配置）**：
+   ```json
+   {
+     "OSS_TENCENT_BUCKET": "your-bucket-appid",
+     "OSS_TENCENT_REGION": "ap-guangzhou",
+     "OSS_TENCENT_SECRET_ID": "your-secret-id",
+     "OSS_TENCENT_SECRET_KEY": "your-secret-key"
+   }
+   ```
+
+   openclaw.json 完整示例结构：
+   ```json
+   {
+     "skills": {
+       "entries": {
+         "oss-upload-online-access": {
+           "env": {
+             "OSS_ALIYUN_REGION": "oss-cn-shenzhen",
+             "OSS_ALIYUN_BUCKET": "your-bucket",
+             "OSS_ALIYUN_ACCESS_KEY_ID": "your-key-id",
+             "OSS_ALIYUN_ACCESS_KEY_SECRET": "your-key-secret"
+           }
+         }
+       }
+     }
+   }
+   ```
+
 3. 安装依赖（ClawHub 通常自动执行）：`cd 技能根目录/oss-upload-online-access && npm install`
 
 ### 方式二：本地 / 自托管
