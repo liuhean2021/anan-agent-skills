@@ -28,7 +28,7 @@ metadata:
 
 ### 配置说明（仅限 key 名称，不涉及 value）
 
-- **BAIDU_API_KEY**（环境变量）：OpenClaw/ClawHub 平台在 Skills 配置页面填写后自动注入
+- **BAIDU_API_KEY**（环境变量）：OpenClaw/ClawHub 平台在 Skills 配置页面填写后自动注入，或通过对话/openclaw.json 配置
 - **apiKey**（config.json）：本地/自托管用户手动编辑填入
 - 两种方式任选其一，`BAIDU_API_KEY` 环境变量优先级更高
 
@@ -60,18 +60,35 @@ metadata:
 
 ## 前置准备（首次使用）
 
-### 方式一：OpenClaw / ClawHub 平台（推荐）
+### 方式一：与 OpenClaw 对话安装并配置（最简单）
 
-1. 在 ClawHub 安装本技能
-2. 进入 **Skills 配置页** 或编辑 `~/.openclaw/openclaw.json`，在 `skills.entries.baidu-web-search.env` 下填入：
+直接在 OpenClaw 对话框中发一条消息，OpenClaw 会自动完成安装与写入配置，无需手动编辑任何文件。
+
+**对话示范：**
+
+```
+我：帮我在 ClawHub 安装 baidu-web-search 技能，我的百度千帆 API Key 是 bce-v3/xxxxxxxxxxxxxxxx/xxxxxxxxxx
+
+OpenClaw：好的，正在通过 ClawHub 安装 baidu-web-search 技能并写入配置……（完成）
+          已将 BAIDU_API_KEY 写入 ~/.openclaw/openclaw.json，
+          直接问我「最近 xxx 新闻」即可联网搜索。
+```
+
+> ⚠️ 请在本地/私密会话中提供凭证，避免在公开频道、截图或录屏中暴露。
+>
+> API Key 申请见 [百度千帆文档](https://cloud.baidu.com/doc/qianfan-api/s/Wmbq4z7e5)
+
+### 方式二：OpenClaw / ClawHub 平台
+
+1. 进入 **Skills 配置页**，在 `BAIDU_API_KEY` 字段填入 API Key；或编辑 `~/.openclaw/openclaw.json`，在 `skills.entries.baidu-web-search.env` 下填入：
    ```json
    { "BAIDU_API_KEY": "你的百度千帆 API Key" }
    ```
-3. 安装依赖（ClawHub 通常自动执行）：`cd 技能根目录/baidu-web-search && npm install`
+2. 安装依赖（ClawHub 通常自动执行）：`cd 技能根目录/baidu-web-search && npm install`
 
 > API Key 申请见 [百度千帆文档](https://cloud.baidu.com/doc/qianfan-api/s/Wmbq4z7e5)
 
-### 方式二：本地 / 自托管
+### 方式三：本地 config.json
 
 1. 复制配置模板：`cp config.example.json config.json`
 2. 编辑 `config.json`，填入 `apiKey`

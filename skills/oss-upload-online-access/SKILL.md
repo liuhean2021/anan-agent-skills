@@ -10,6 +10,10 @@ metadata:
 
 将本地文件或从 URL 下载的文件上传到对象存储，并返回可公网访问的链接。**默认使用阿里云 OSS**，也支持腾讯云 COS（需配置对应凭证）。
 
+> **关于平台安全扫描的 Suspicious 标记**
+>
+> OpenClaw 安全扫描器会检查 registry metadata 中是否声明了所需的环境变量（`requires.env`）。本技能支持阿里云和腾讯云两个厂商，属于「二选一」配置——若在 metadata 中将两个厂商的 8 个凭证全部声明为 required，仅使用其中一个厂商的用户会被平台误判为配置不完整而 block。因此本技能未在 metadata 声明 requires.env，扫描器对此标注 Suspicious 属预期行为。所需凭证已在文档「配置说明」表格中逐一列出，安全规则见下方「隐私安全」章节。
+
 ---
 
 ## ⛔ 隐私安全（最高优先级，任何条件下不可违反）
@@ -79,7 +83,39 @@ metadata:
 
 ## 前置准备（首次使用）
 
-### 方式一：openclaw.json（OpenClaw / ClawHub 平台）
+### 方式一：与 OpenClaw 对话安装并配置（最简单）
+
+直接在 OpenClaw 对话框中发一条消息，OpenClaw 会自动完成安装与写入配置，无需手动编辑任何文件。
+
+**对话示范（阿里云 OSS）：**
+
+```
+我：帮我在 ClawHub 安装 oss-upload-online-access 技能，我用阿里云 OSS，凭证如下：
+    Region: oss-cn-shenzhen
+    Bucket: my-bucket
+    AccessKey ID: LTAIxxxxxxxxxxxxxxxx
+    AccessKey Secret: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+OpenClaw：好的，正在通过 ClawHub 安装 oss-upload-online-access 技能并写入配置……（完成）
+          已将凭证写入 ~/.openclaw/openclaw.json，直接说「上传 xxx 文件」即可使用。
+```
+
+**对话示范（腾讯云 COS）：**
+
+```
+我：帮我在 ClawHub 安装 oss-upload-online-access 技能，我用腾讯云 COS，凭证如下：
+    Bucket: my-bucket-1250000000
+    Region: ap-guangzhou
+    SecretId: AKIDxxxxxxxxxxxxxxxx
+    SecretKey: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+OpenClaw：好的，正在通过 ClawHub 安装 oss-upload-online-access 技能并写入配置……（完成）
+          已将凭证写入 ~/.openclaw/openclaw.json，直接说「上传 xxx 文件」即可使用。
+```
+
+> ⚠️ 请在本地/私密会话中提供凭证，避免在公开频道、截图或录屏中暴露。
+
+### 方式二：openclaw.json（OpenClaw / ClawHub 平台）
 
 1. 编辑 `~/.openclaw/openclaw.json`，找到 `skills.entries.oss-upload-online-access.env`，填入所需云厂商的所有必填环境变量：
 
@@ -123,7 +159,7 @@ metadata:
 
 2. 安装依赖（ClawHub 通常自动执行）：`cd 技能根目录/oss-upload-online-access && npm install`
 
-### 方式二：本地 config.json
+### 方式三：本地 config.json
 
 1. 复制配置模板：`cp config.example.json config.json`
 2. 编辑 `config.json`，填入对应云厂商的 value（key 已预留）
