@@ -349,6 +349,7 @@ function resolveConfig() {
     secretId: (process.env.OSS_TENCENT_SECRET_ID || '').trim(),
     secretKey: (process.env.OSS_TENCENT_SECRET_KEY || '').trim(),
     acceleratedDomain: (process.env.OSS_TENCENT_ACCELERATED_DOMAIN || '').trim(),
+    storageClass: (process.env.OSS_TENCENT_STORAGE_CLASS || '').trim(),
   };
 
   const hasAliyunEnv = !!(aliyunEnv.region && aliyunEnv.bucket && aliyunEnv.accessKeyId && aliyunEnv.accessKeySecret);
@@ -513,16 +514,17 @@ function uploadTencent(buffer, filename, cfg) {
     });
     const dir = getObjectDir(filename);
     const key = `${dir}/${filename}`;
+    const putParams = {
+      Bucket: bucket,
+      Region: region,
+      Key: key,
+      Body: buffer,
+      ContentType: getContentType(filename),
+      ACL: 'public-read',
+    };
+    if (t.storageClass) putParams.StorageClass = t.storageClass;
     cos.putObject(
-      {
-        Bucket: bucket,
-        Region: region,
-        Key: key,
-        StorageClass: 'STANDARD',
-        Body: buffer,
-        ContentType: getContentType(filename),
-        ACL: 'public-read',
-      },
+      putParams,
       (err, data) => {
         if (err) return reject(err);
         cos.headObject(

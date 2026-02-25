@@ -51,6 +51,7 @@ metadata:
 | `OSS_TENCENT_SECRET_ID` | `secretId` | ✅ |
 | `OSS_TENCENT_SECRET_KEY` | `secretKey` | ✅ |
 | `OSS_TENCENT_ACCELERATED_DOMAIN` | `acceleratedDomain` | 可选 |
+| `OSS_TENCENT_STORAGE_CLASS` | `storageClass` | 可选（不填则由 Bucket 默认决定，即单可用区标准桶默认 `STANDARD`；MAZ 多可用区 Bucket 填 `MAZ_STANDARD`） |
 
 至少配置一个云厂商的必填项即可使用。用户自行在平台或 config.json 填入 value，任何 AI 均不参与。
 
