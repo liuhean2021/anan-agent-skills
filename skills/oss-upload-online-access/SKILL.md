@@ -4,7 +4,6 @@ description: Upload files to Aliyun OSS or Tencent COS and return public access 
 metadata:
   author: liuhean
   email: allsmy.com@gmail.com
-  openclaw: {"primaryEnv": "OSS_ALIYUN_ACCESS_KEY_ID"}
 ---
 
 # 上传文件到 OSS 在线访问
@@ -54,7 +53,7 @@ metadata:
 ### 平台适配与附加建议
 
 - **通用**：`.gitignore` 已排除 `config.json`，避免误提交
-- **OpenClaw/ClawHub**：在 Skills 配置页或 openclaw.json 中填写 `OSS_ALIYUN_*` / `OSS_TENCENT_*` 环境变量即可，无需本地文件
+- **OpenClaw/ClawHub**：在 openclaw.json 中填写 `OSS_ALIYUN_*` / `OSS_TENCENT_*` 环境变量即可，无需本地文件
 - **建议**：勿在截图、录屏、日志、对话中暴露凭证；定期轮换密钥；使用子账号最小权限；将技能目录权限设为仅当前用户可读
 
 ## 何时使用
@@ -80,16 +79,9 @@ metadata:
 
 ## 前置准备（首次使用）
 
-### 方式一：OpenClaw / ClawHub 平台（推荐）
+### 方式一：openclaw.json（OpenClaw / ClawHub 平台）
 
-> **注意：Skills 页面的配置框仅为引导入口**
->
-> ClawHub Skills 页面只会显示 `OSS_ALIYUN_ACCESS_KEY_ID` 一个字段（平台限制，每个技能只能展示一个主要凭证字段）。**仅填写该字段不足以让技能正常工作**——还需要手动补全其余必填环境变量。
->
-> **推荐做法**：直接编辑 `~/.openclaw/openclaw.json`，在对应技能的 `env` 块中填入所有必填字段（见下方示例），无需依赖 Skills 页面表单。
-
-1. 在 ClawHub 安装本技能
-2. 编辑 `~/.openclaw/openclaw.json`，找到 `skills.entries.oss-upload-online-access.env`，填入所需云厂商的所有必填环境变量：
+1. 编辑 `~/.openclaw/openclaw.json`，找到 `skills.entries.oss-upload-online-access.env`，填入所需云厂商的所有必填环境变量：
 
    **阿里云 OSS（默认）**：
    ```json
@@ -129,9 +121,9 @@ metadata:
    }
    ```
 
-3. 安装依赖（ClawHub 通常自动执行）：`cd 技能根目录/oss-upload-online-access && npm install`
+2. 安装依赖（ClawHub 通常自动执行）：`cd 技能根目录/oss-upload-online-access && npm install`
 
-### 方式二：本地 / 自托管
+### 方式二：本地 config.json
 
 1. 复制配置模板：`cp config.example.json config.json`
 2. 编辑 `config.json`，填入对应云厂商的 value（key 已预留）
