@@ -13,10 +13,24 @@
 
 ## 快速开始
 
+### 一键安装（推荐）
+
+以下命令将仓库克隆到本地并自动软链接所有技能到 Claude Code 技能目录：
+
+```bash
+git clone https://github.com/liuhean2021/Anan-Agent-Skills ~/anan-agent-skills \
+  && mkdir -p ~/.claude/skills \
+  && for skill in ~/anan-agent-skills/skills/*/; do \
+       ln -sf "$skill" ~/.claude/skills/"$(basename "$skill")"; \
+     done
+```
+
+### 分步安装
+
 **第一步：克隆仓库**
 
 ```bash
-git clone <repo-url> ~/anan-agent-skills
+git clone https://github.com/liuhean2021/Anan-Agent-Skills ~/anan-agent-skills
 ```
 
 **第二步：填写配置**（按需，仅部分技能需要）
@@ -32,6 +46,7 @@ cp ~/anan-agent-skills/skills/<技能名>/config.example.json ~/anan-agent-skill
 
 | Agent | 技能路径 |
 |-------|---------|
+| 通用（跨客户端） | `~/.agents/skills/` |
 | Claude Code | `~/.claude/skills/` |
 | Cursor | `~/.cursor/skills/` |
 
@@ -44,3 +59,7 @@ done
 ```
 
 完成后 Agent 自动识别技能；含依赖的技能在首次使用时由 Agent 自行安装。
+
+## License
+
+MIT © [Hean Liu](LICENSE)
