@@ -127,3 +127,12 @@ node scripts/search.js "TypeScript 最新版本" 10
 | 低 | 本地文件 `config.json` → `apiKey` | 本地 / 自托管 |
 
 - 配置异常时，搜索脚本输出通用提示，用户自行检查凭证是否填写正确
+
+## 参与贡献
+
+欢迎提交 Issue 或 Pull Request 改进本技能！
+
+**仓库地址**：[https://github.com/liuhean2021/Anan-Agent-Skills](https://github.com/liuhean2021/Anan-Agent-Skills)
+
+- 本技能位于 `skills/baidu-web-search/` 目录
+- 提交前请确保 `config.json` 不在 git 追踪范围内（已在 `.gitignore` 排除）

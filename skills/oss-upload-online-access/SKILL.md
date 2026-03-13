@@ -230,3 +230,12 @@ node scripts/upload.js ./image.jpg --provider tencent
 - 文件名：仅使用字母与数字，且不重复。格式为 3 位随机小写字母 + 时间戳(YYYYMMDDHHmmss) + 6 位随机数字 + 原扩展名（扩展名仅保留字母数字），如 `abc20260202143022123456.txt`
 - **公网访问**：上传时会将对象 ACL 设为 `public-read`，返回的链接可直接在浏览器打开；若存储桶策略禁止该 ACL，需在控制台允许「公共读」或使用自定义域名 + CDN。返回的 URL 统一为 `https`。
 - **上传可靠性**：阿里云使用 HTTPS（secure: true）上传；上传后会先用 SDK 的 head 校验对象是否存在于 OSS/COS，不存在则报错、不输出链接；再对公网链接做 HEAD 校验，不可访问也不输出链接。
+
+## 参与贡献
+
+欢迎提交 Issue 或 Pull Request 改进本技能！
+
+**仓库地址**：[https://github.com/liuhean2021/Anan-Agent-Skills](https://github.com/liuhean2021/Anan-Agent-Skills)
+
+- 本技能位于 `skills/oss-upload-online-access/` 目录
+- 提交前请确保 `config.json` 不在 git 追踪范围内（已在 `.gitignore` 排除）
