@@ -239,3 +239,4 @@ node scripts/upload.js ./image.jpg --provider tencent
 
 - 本技能位于 `skills/oss-upload-online-access/` 目录
 - 提交前请确保 `config.json` 不在 git 追踪范围内（已在 `.gitignore` 排除）
+- 本技能采用 [MIT-0](../../LICENSE) 许可协议，可自由使用、修改和重新分发，无需署名

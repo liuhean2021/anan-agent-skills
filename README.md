@@ -60,6 +60,8 @@ done
 
 完成后 Agent 自动识别技能；含依赖的技能在首次使用时由 Agent 自行安装。
 
-## License
+## 许可协议
 
-MIT © [Hean Liu](LICENSE)
+MIT-0 · MIT 无署名
+
+ClawHub 上发布的所有技能均采用 [MIT-0](LICENSE) 许可协议。您可以免费使用、修改和重新分发，无需署名。
