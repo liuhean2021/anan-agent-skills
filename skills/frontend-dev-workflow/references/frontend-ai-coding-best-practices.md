@@ -1,6 +1,5 @@
 # 前端开发 AI Coding 最佳实践
 
-> 引用方式：在 `~/.claude/CLAUDE.md` 中添加 `@/path/to/frontend-ai-coding-best-practices.md` 以让 Claude Code 全局加载本规范
 > 适用：接手维护存量前端项目 + 新增页面开发（框架无关：Vue / React / Angular / Svelte / 原生等）
 > 工具链：Claude Code CLI（主力）+ Playwright（E2E）+ Playwright MCP / Chrome DevTools MCP（视觉验证）
 > 作者：Hean Liu <allsmy.com@gmail.com>
