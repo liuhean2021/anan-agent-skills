@@ -10,6 +10,7 @@
 | [commit-message](skills/commit-message/SKILL.md) | 根据 git diff 生成规范的 commit message |
 | [oss-upload-online-access](skills/oss-upload-online-access/SKILL.md) | 上传文件到阿里云 OSS / 腾讯云 COS 并返回公网链接 |
 | [pre-commit-review](skills/pre-commit-review/SKILL.md) | 提交前代码审查，输出修改总结与结构化审查结论 |
+| [frontend-dev-workflow](skills/frontend-dev-workflow/SKILL.md) | 前端 AI Coding 工作流：接手项目、修改页面、新增页面，测试先行 + 视觉验证闭环 |
 
 ## 快速开始
 
