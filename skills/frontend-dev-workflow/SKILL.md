@@ -12,8 +12,18 @@ metadata:
   email: allsmy.com@gmail.com
 ---
 
-> 详细说明、代码示例、Prompt 模板请查阅：
-> `references/frontend-ai-coding-best-practices.md`
+> 详细说明、代码示例、Prompt 模板按场景拆分为以下文件：
+>
+> | 文件 | 内容 |
+> |------|------|
+> | `references/ref-01-project-onboarding.md` | §1 定位与适用范围、§2 接手项目（画像生成、CLAUDE.md 模板、视觉基线） |
+> | `references/ref-02-modify-page.md` | §3 修改已有页面（7 步流程、Figma 还原、守护测试） |
+> | `references/ref-03-new-page.md` | §4 新增页面（TDD 流程、data-testid 规范） |
+> | `references/ref-04-testing.md` | §5 测试体系全集（E2E/单元/组件/视觉回归/性能/a11y/CI） |
+> | `references/ref-05-visual-verification.md` | §6 视觉验证闭环（三种方式、AI 视觉审查、设计 token 提取对比表） |
+> | `references/ref-06-ai-collaboration.md` | §7 AI 协作规范（授权矩阵、验收标准、PR 证据包） |
+> | `references/ref-07-scenarios-pitfalls.md` | §8 常见场景速查 + §9 避坑指南（翻车类型、框架特有坑） |
+> | `references/ref-08-tooling-prompts.md` | §10 工具配置（MCP/Hooks/playwright.config）+ 附录A Prompt 模板 + 附录B 组件提取 |
 
 # 前端开发 AI Coding 工作流
 

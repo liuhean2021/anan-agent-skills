@@ -1,0 +1,234 @@
+# §3 修改已有页面
+
+> 来源：frontend-ai-coding-best-practices.md §3
+> 适用：对存量页面做 UI / 样式改动
+
+---
+
+## 3. 修改已有页面
+
+### 3.1 标准流程（7 步，测试先行）
+
+```
+┌──────────────────────────────────────────────┐
+│  ① 截图现状（改前证据）                         │
+│  ② Read 代码 + 理解结构                        │
+│  ③ 写测试锁住现有行为（测试先行）                 │
+│  ④ 描述改动（精确到属性级）                      │
+│  ⑤ 执行修改（锁住非 UI 层）                     │
+│  ⑥ 跑测试 + 截图对比（改后验证）                 │
+│  ⑦ 补充改动相关的新测试                         │
+└──────────────────────────────────────────────┘
+```
+
+> **为什么测试在改代码之前？**
+> 先写测试锁住当前页面的正常行为（元素可见、交互可用、无溢出），然后再改代码。
+> 如果改完后测试挂了，说明你的改动破坏了需求外的功能——这正是测试先行要拦住的。
+> 没有这一步，你只能靠肉眼发现回归 bug，而 AI 改代码的影响范围往往超出你的预期。
+
+### 3.2 Step ①：截图现状
+
+```
+用 playwright 打开 http://localhost:[端口]/[页面路径]
+分别截图以下视口宽度：1440px、768px
+保存到 .baseline/
+```
+
+**为什么必须先截图**：AI 改代码后你才发现"改坏了"，但已经不记得原来长什么样。截图是回退依据。
+
+### 3.3 Step ②：Read 代码
+
+```
+读取 [目标页面文件]
+读取该文件引用的子组件
+告诉我：
+1. 页面结构（哪些区块、布局方式）
+2. 用了哪些 UI 库组件
+3. 样式写在哪里（scoped / CSS Modules / styled-components / 内联 / 全局）
+4. 有没有动态样式绑定（条件 class、动态 style、className 拼接）
+5. 哪些样式是从父组件或全局继承的
+```
+
+### 3.4 Step ③：写测试锁住现有行为（测试先行）
+
+在改任何代码之前，先为当前页面写一组"守护测试"，锁住现有的正常行为：
+
+> 覆盖维度选择规则见 **ref-04-testing.md §5.5**，直接复用 **ref-08-tooling-prompts.md 附录 A.5 模板**。
+
+**关键约束**：
+- 守护测试 MUST 在改代码之前全部通过（绿灯）
+- 守护测试只测"现有行为"，不测"新需求"
+- 如果页面已有 E2E 测试，跳过此步，直接跑已有测试确认绿灯
+- 补 `data-testid` 是唯一允许的源码改动，且 MUST 单独提交（`test: add data-testid for [页面]`）
+
+### 3.5 Step ④：精确描述改动
+
+改动来源通常是两种情况：**有设计图** 或 **无设计图（产品口头描述 / 自行判断）**。无论哪种，给 AI 的描述都必须精确。
+
+**黄金法则：说"从 A 改到 B"，不说"改好看一点"**
+
+#### 情况 A：有设计图
+
+设计图可能来自 Figma、Sketch、Adobe XD、Pixso、MasterGo、即时设计、Motiff 或其他工具。无论哪个工具，提取方式相同：
+
+```
+方式 1：设计工具 Dev Mode / 标注模式导出 CSS → 复制 token 给 AI
+方式 2：截图对比 → 上传设计图 + 当前页面截图，让 AI 列出差异逐项修改
+方式 3：设计工具 MCP / API → AI 直接读取设计 token（需对应工具支持）
+
+详细提取方式对比见 ref-05-visual-verification.md §6.4 设计 token 提取方式表。
+```
+
+**方式 3 详解：Figma 插件 + implement-design 技能工作流（推荐）**
+
+> **架构关系**：`figma@claude-plugins-official` 插件提供底层 MCP 工具（`get_design_context`、`get_screenshot` 等），`figma:implement-design` 技能编排这些工具为 7 步工作流。插件是基础设施，技能是上层编排，二者缺一不可。
+>
+> **前置条件**：
+> 1. 已在 `~/.claude/settings.json` 中启用插件（见 ref-08-tooling-prompts.md §10.1 MCP 配置）
+> 2. 首次使用在 Claude Code 中执行 `/mcp` 完成 Figma OAuth 认证
+> 3. 用户提供 Figma URL：`https://figma.com/design/:fileKey/:fileName?node-id=1-2`
+
+完整流程 7 步：
+
+```
+Step 1：解析 Node ID
+  - 从 Figma URL 提取 fileKey 和 nodeId
+    URL: https://figma.com/design/kL9xQn2VwM8pYrTb4ZcHjF/DesignSystem?node-id=42-15
+    → fileKey = kL9xQn2VwM8pYrTb4ZcHjF, nodeId = 42-15
+  - 分支 URL：figma.com/design/:fileKey/branch/:branchKey/:fileName → 用 branchKey 作为 fileKey
+
+Step 2：获取设计上下文
+  - get_design_context(fileKey, nodeId) → 布局、排版、色值、组件结构、间距
+  - 若响应截断（复杂设计）：先 get_metadata 获取节点树，再逐子节点调用 get_design_context
+
+Step 3：截图视觉参考
+  - get_screenshot(fileKey, nodeId) → 作为还原验证的 source of truth
+  - 全程保留此截图，用于 Step 7 逐项对照
+
+Step 4：下载资产
+  - 图片/图标/SVG，直接使用插件返回的 localhost 源
+  - MUST NOT 引入新图标包，MUST NOT 使用占位符
+  - 资产通过 Figma MCP 内置 assets 端点提供，不可修改 URL
+
+Step 5：翻译为项目规范
+  - Figma 输出（默认 React + Tailwind）视为设计意图描述，不是最终代码
+  - 替换为项目 token / 组件 / 样式方案，复用现有组件，遵循项目约定
+  - 尊重项目路由、状态管理、数据获取模式
+
+Step 6：1:1 视觉还原
+  - 使用 design token，避免硬编码
+  - token 冲突时优先项目 token，微调间距保持视觉一致
+  - 遵循 WCAG 无障碍要求
+
+Step 7：验证对照
+  - 对比 Step 3 截图逐项检查：布局、排版、颜色、交互态、响应式、资产、无障碍
+  - 偏离设计稿时 MUST 在代码注释中说明原因
+```
+
+> **插件的其他能力**（非 implement-design 流程，按需使用）：
+> - **Code Connect**：`get_code_connect_suggestions` → `send_code_connect_mappings`，将 Figma 组件与代码组件建立映射（需 Organization/Enterprise 计划）
+> - **Design System Rules**：`create_design_system_rules`，生成项目级设计系统规则文件，指导后续所有设计还原保持一致
+> - **FigJam**：`get_figjam` 读取 / `generate_diagram` 生成 FigJam 图表
+> - **反向同步**：`generate_figma_design`，将 UI 描述写回 Figma
+
+Prompt 示例（触发 implement-design 技能）：
+```
+实现这个 Figma 设计：https://figma.com/design/kL9xQn2VwM8pYrTb4ZcHjF/DesignSystem?node-id=42-15
+优先复用项目现有组件，不匹配时再创建新组件
+```
+
+Prompt 示例（有设计图，手动标注）：
+```
+修改 [文件路径]，按设计图调整 UI
+
+设计图标注数据：
+- 主按钮：高度 44px，圆角 8px，背景色 #2563EB，字号 15px
+- 搜索栏与表格间距：16px
+- 表格行高：52px
+- 操作列按钮：改为文字型，间距 12px
+
+[上传设计图截图作为参照]
+改完后截图对比，确认还原度
+```
+
+#### 情况 B：无设计图
+
+```
+❌ 模糊描述（AI 会乱改）：
+"表格太丑了，优化一下"
+
+✅ 精确描述（AI 能精准执行）：
+修改 [文件路径]：
+1. 搜索栏与表格间距：margin-bottom 8px → 16px
+2. 表格行高：从默认改为 52px
+3. 操作列宽度：从 280px 缩小到 180px，按钮改为文字型按钮
+4. 分页组件：对齐方式改为 justify-content: flex-end
+5. 页面标题与面包屑之间加 12px 间距
+```
+
+**如果你说不清具体数值**，可以这样：
+```
+[上传截图，红框标注问题区域]
+标注区域的问题：
+- 红框1：这里间距太挤，参考 [UI 库名] 默认规范调整
+- 红框2：按钮太多显得杂乱，改为下拉菜单
+- 红框3：表头颜色太深，改为浅灰 #F5F7FA
+```
+
+### 3.6 Step ⑤：执行修改
+
+```bash
+# 先锁住不该动的层
+/freeze src/api src/store src/router src/utils src/services src/lib
+```
+
+Prompt 模板（通用版）：
+```
+任务：按上述描述修改 [文件路径]
+
+约束：
+- 只改模板层（HTML 结构 / JSX）和样式层（CSS / SCSS / CSS Modules / styled）
+- 逻辑层的业务代码不改，除非是纯展示逻辑（如计算样式的变量）
+- 使用 [UI 库名] 组件的 prop / API 调整，优先于直接覆盖 CSS
+- 不引入新依赖
+- 所有新增 class 名使用项目现有命名风格
+
+先列出改动计划，确认后执行
+```
+
+### 3.7 Step ⑥：跑测试 + 截图对比
+
+**先跑守护测试，再截图对比。两道防线缺一不可。**
+
+```
+1. 跑 Step ③ 写的守护测试
+   npx playwright test tests/e2e/[页面].spec.ts
+   - 全部通过 → 说明改动没有破坏现有功能，继续
+   - 有失败 → 分析是"预期内变化"还是"回归 bug"
+     · 预期内（如按钮文字改了导致定位变化）→ 更新测试
+     · 回归 bug（如分页不能点了）→ 修复代码，不是改测试
+
+2. 用 playwright 截图 http://localhost:[端口]/[页面路径]
+   与改前截图对比，逐条确认：
+   - 每个改动点是否生效
+   - 未改区域是否保持不变
+   - 768px 下是否有溢出或重叠
+```
+
+### 3.8 Step ⑦：补充新需求的测试
+
+守护测试锁住了"旧行为不被破坏"，这一步锁住"新改动符合预期"：
+
+```
+为本次 UI 改动补充 Playwright 测试，追加到已有测试文件中
+
+测试重点（只测本次改动引入的新行为）：
+- 新增元素可见且可交互
+- 改动后的布局 / 间距 / 对齐在多断点下正确
+- 新交互流程可走通
+
+例如：
+- 操作列从按钮组改为下拉菜单 → 测试下拉菜单打开、点击菜单项
+- 分页从左对齐改为右对齐 → 视觉回归截图覆盖
+- 新增筛选条件 → 测试筛选交互
+```
