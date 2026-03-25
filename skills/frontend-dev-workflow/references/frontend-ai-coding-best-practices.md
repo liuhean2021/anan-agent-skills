@@ -69,7 +69,10 @@
 读取以下文件，生成项目画像：
 - package.json（依赖、脚本命令）
 - 构建配置文件（vite.config / next.config / angular.json / webpack.config 等）
+- 应用启动入口（src/main.ts 或 main.js / main.tsx — 插件注册、全局配置）
+- 根组件（src/App.vue / src/App.tsx / src/_app.tsx — 顶层布局、全局 Provider）
 - 路由配置或 pages/ 目录（路由结构 = 页面清单）
+- 全局布局目录（src/layout / layouts — 页面框架结构）
 - 状态管理目录（store / stores / 等）
 - API 层目录（api / services / 等）
 - 组件目录结构（components/）
