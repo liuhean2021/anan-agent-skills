@@ -30,11 +30,8 @@
 
 安装命令：
 ```bash
-# 1. 安装 Figma 官方插件（提供 MCP 工具）
+# 安装 Figma 官方插件（提供 MCP 工具）
 claude plugin install figma@claude-plugins-official
-
-# 2. 安装 figma-implement-design 技能（编排 7 步还原工作流）
-npx skills add https://github.com/openai/skills --skill figma-implement-design
 ```
 
 安装后 `~/.claude/settings.json` 中会自动写入：
@@ -55,7 +52,7 @@ npx skills add https://github.com/openai/skills --skill figma-implement-design
 > - `get_code_connect_map` / `get_code_connect_suggestions` — 查询 Code Connect 映射关系
 > - `generate_figma_design` — 将代码/描述写回 Figma（反向同步）
 >
-> 配合 `figma-implement-design` 技能使用，实现设计到代码的像素级还原。
+> 配合 `/figma:figma-implement-design` 官方技能使用，实现设计到代码的像素级还原。
 
 ### 10.2 可选 Hooks 配置（默认不启用自动修复）
 

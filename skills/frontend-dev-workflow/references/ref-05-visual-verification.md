@@ -71,6 +71,6 @@ Prompt 示例：
 | 方式 | 适用工具 | 精度 | 说明 |
 |------|---------|------|------|
 | Dev Mode / 标注模式导出 CSS | Figma / Pixso / MasterGo / 即时设计 | 最高 | 直接复制 token 给 Claude |
-| Figma 官方插件 | Figma（Claude Code 插件 `figma@claude-plugins-official`） | 高 | 配合 `figma-implement-design` 技能，Claude 直接读取设计上下文、截图和资产 |
+| Figma 官方插件 | Figma（Claude Code 插件 `figma@claude-plugins-official`） | 高 | 配合 `/figma:figma-implement-design` 官方技能，Claude 直接读取设计上下文、截图和资产 |
 | 设计标注工具 | 蓝湖 / Zeplin / MockingBot 等 | 高 | 开发者查看标注，手动提取 |
 | 截图对比 | 任何工具 | 中 | 通用兜底方案，所有工具可用 |
