@@ -124,10 +124,12 @@ IF 任务为小功能或 bug fix，THEN 可跳过本 Phase。
 IF 方向尚未确认、MVP 边界仍在摇摆、存在"先做哪个版本"争议，THEN 代理 MUST 返回 Phase 1，而不是直接写 `spec.md`。
 
 **必做动作**：
-1. 以 `ceo-review.md` 结论为输入执行 `/speckit.specify "<功能描述>"`，生成 `spec.md`
-2. 执行 `/speckit.clarify`，澄清所有模糊点，结果追加到 `spec.md`
-3. 将用户故事、功能边界、验收标准、约束条件写全
-4. 规格确认后锁定
+1. 以 `ceo-review.md` 结论为输入执行 `/speckit.specify "<功能描述>"`，生成 `spec.md` 初稿
+2. 执行 `/speckit.clarify`，澄清模糊点，结果**追加**写入 `spec.md`（不覆盖已有内容）
+3. IF 仍有模糊点，THEN **重复执行** `/speckit.clarify`，直到规格无歧义为止
+4. MUST NOT 通过重复执行 `/speckit.specify` 来补充规格——该命令会**覆盖**整个 `spec.md`，仅在初稿方向完全跑偏需要推倒重来时才使用
+5. 将用户故事、功能边界、验收标准、约束条件写全
+6. 规格确认后锁定
 
 **产出物**：`.specify/specs/<feature-id>/spec.md`
 
