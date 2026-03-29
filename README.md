@@ -11,6 +11,7 @@
 | [oss-upload-online-access](skills/oss-upload-online-access/SKILL.md) | 上传文件到阿里云 OSS / 腾讯云 COS 并返回公网链接 |
 | [pre-commit-review](skills/pre-commit-review/SKILL.md) | 提交前代码审查，输出修改总结与结构化审查结论 |
 | [frontend-dev-workflow](skills/frontend-dev-workflow/SKILL.md) | 前端 AI Coding 工作流：接手项目、修改页面、新增页面，测试先行 + 视觉验证闭环 |
+| [ai-coding-workflow](skills/ai-coding-workflow/SKILL.md) | AI Coding 完整工作流：规格驱动开发，覆盖产品方向 → 需求规格 → 技术方案 → TDD → 代码审查 → QA → 发布复盘全流程 |
 
 ## 快速开始
 
