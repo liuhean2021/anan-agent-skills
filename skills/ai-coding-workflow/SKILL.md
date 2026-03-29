@@ -24,6 +24,7 @@ metadata:
 > | `references/ref-04-governance-checklist.md` | §3 AI治理（数据边界/高风险操作/人工责任/留痕）+ §6 最佳实践清单（5组 checklist） |
 > | `references/ref-05-legacy-onboarding.md` | §7 存量项目接入（三档策略 A/B/C + Bug Fix 简化流程） |
 > | `references/ref-06-branch-parallel.md` | §8 分支策略（主干开发、PR合并规则）+ §9 并行开发（Git Worktree + OMC 多代理选型） |
+> | `references/ref-07-advanced-practices.md` | §12 进阶实践（P1 测试分层/依赖安全/DORA/Hooks；P2 AI信任边界/环境策略/合规审查/成本管理）|
 
 # AI Coding 工作流
 
@@ -184,7 +185,7 @@ cd ../project-feature-b && claude
 
 ## AI 治理（核心边界）
 
-> 完整规则 → `references/ref-04-governance-checklist.md §3`
+> 完整规则 → `references/ref-04-governance-checklist.md §3`；进阶实践（测试分层/依赖安全/合规/成本）→ `references/ref-07-advanced-practices.md`
 
 - 客户数据、生产数据、密钥 MUST NOT 发送给任何模型
 - AI MUST NOT 在无人工批准的情况下直接执行生产发布、回滚、权限变更、数据库迁移

@@ -1,0 +1,161 @@
+# §12 进阶实践（P1/P2 可选采纳）
+
+> 本文档为主工作流的延伸参考，**不强制执行**，按团队规模和项目阶段按需采纳。
+> 关联文档：`ref-03-full-workflow.md`、`ref-04-governance-checklist.md`
+
+---
+
+## P1：重要补充（中型团队建议采纳）
+
+### 12.1 测试覆盖分层（测试金字塔）
+
+主工作流的 TDD 只覆盖单测和 UI 测，完整分层如下：
+
+| 层级 | 类型 | 触发时机 | 工具参考 |
+|------|------|---------|---------|
+| 单元测试 | 函数/模块级 | Phase 6（TDD 前置） | vitest / pytest / go test |
+| 集成测试 | 服务间交互 | Phase 9 QA 前 | supertest / httpx |
+| 契约测试 | API 提供方/消费方一致性 | 跨服务改动时 | Pact |
+| E2E 测试 | 关键用户路径 | Phase 9 + CI | gstack / `/qa` |
+| 压力测试 | 高并发场景 | 上线前（性能敏感功能） | k6 / wrk |
+
+**建议接入时机**：B 档以上存量项目，或新项目达到 MVP 后。
+
+---
+
+### 12.2 依赖安全（SBOM + 漏洞扫描）
+
+第三方包引入存在供应链风险，建议：
+
+```bash
+# Node.js 项目
+npm audit --audit-level=high      # 本地检查
+# CI 中集成 Snyk 或 GitHub Dependabot
+
+# Python 项目
+pip-audit                         # 本地检查
+
+# Go 项目
+govulncheck ./...
+```
+
+**规则**：
+- High/Critical 级别漏洞阻断 PR 合并
+- Medium 级别记入 `memory/issues.md` 排期处理
+- 新引入依赖须说明用途，避免引入功能重叠的包
+
+---
+
+### 12.3 DORA 指标追踪
+
+工程效能度量，在 `/retro` 时一并回顾：
+
+| 指标 | 说明 | 目标参考 |
+|------|------|---------|
+| 部署频率 | 每天 / 每周几次 | Elite: 多次/天 |
+| 变更前置时间 | commit → 生产上线耗时 | Elite: < 1 小时 |
+| 变更失败率 | 上线后需要回滚的比例 | Elite: < 5% |
+| MTTR | 故障平均恢复时间 | Elite: < 1 小时 |
+
+**接入方式**：从 CI/CD 系统导出数据，在 `retros/YYYY-WW.md` 中追加。
+
+---
+
+### 12.4 消除"半自动"依赖（Claude Code Hooks 自动化）
+
+主工作流中多处需要手动说"保存到文件"，可用 Hooks 消除：
+
+```json
+// ~/.claude/settings.json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '[$(date)] 文件已写入' >> ~/.claude/activity.log"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '会话结束，请检查是否有待保存的决策记录' | terminal-notifier -title Claude"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+更彻底的方案：用 `/speckit.constitution` 中定义"每阶段结束自动写入对应文件"的 AI 行为规则。
+
+配置方式：`/update-config`
+
+---
+
+## P2：完善度提升（大型团队 / 合规场景）
+
+### 12.5 AI 信任边界
+
+AI 生成代码时对外部输入的处理需特别审查：
+
+**禁止模式**：
+- AI 生成的代码直接拼接用户输入到 SQL / shell 命令
+- AI 生成的 API 路由未校验权限就返回敏感数据
+- AI 生成的文件操作使用用户传入的路径（路径穿越）
+
+**Phase 8 额外检查项**：
+- [ ] 所有外部输入（HTTP 参数、文件内容、第三方 API 响应）有显式校验
+- [ ] AI 生成的加密/签名代码由 security-engineer 角色二次确认
+- [ ] 不信任 AI 对"该输入已在上层校验"的推断，逐层验证
+
+---
+
+### 12.6 环境策略
+
+| 环境 | 用途 | 数据 | 部署触发 |
+|------|------|------|---------|
+| local | 本地开发 | mock / 本地 DB | 手动 |
+| dev | 联调 / PR 预览 | 脱敏数据 | PR 创建自动部署 |
+| staging | 上线前验收 | 生产镜像数据（脱敏） | main 分支合并触发 |
+| production | 生产 | 真实数据 | 人工批准 |
+
+**关键原则**：
+- staging 与 production 使用相同的基础设施配置（IaC 管理）
+- 不允许直接登录 production 执行数据操作，必须通过部署流程
+
+---
+
+### 12.7 合规审查
+
+合规敏感功能（涉及用户数据、支付、认证）在 Phase 8 额外增加：
+
+- [ ] 数据存储是否符合 GDPR / 个保法最小化原则
+- [ ] 日志中是否有 PII（姓名、手机、邮箱、身份证）未脱敏
+- [ ] 第三方数据共享是否有明确授权链
+- [ ] 审计日志是否完整（谁、在什么时间、对什么数据、做了什么操作）
+
+记录到 `review-findings.md` 中的 `[COMPLIANCE]` 分类。
+
+---
+
+### 12.8 Token 成本管理
+
+Opus 适合规划，但大规模使用成本显著，建议设置阈值：
+
+| 场景 | 推荐模型 | 降级条件 |
+|------|---------|---------|
+| 产品方向 / 架构评审 | Opus | — |
+| 代码审查 | Sonnet | 文件 < 300 行可用 Haiku |
+| 代码实现 | Sonnet | — |
+| 简单 bug fix | Sonnet / Haiku | — |
+| 批量任务（测试生成等） | Haiku | — |
+
+**团队管控**：在 CLAUDE.md 中设置默认模型为 Sonnet，Opus 使用 `/model opus` 显式切换，形成使用记录。
