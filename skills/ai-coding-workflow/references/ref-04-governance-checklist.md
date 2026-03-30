@@ -51,9 +51,9 @@
 ### 6.2 每个功能开始前
 
 - [ ] 按 Section 1.1 判断任务规模，确定起始 Phase
-- [ ] IF 方向未定、MVP 边界未定、或影响重大：先执行 `/office-hours`，再执行 `/plan-ceo-review`，将结论写入 `.specify/specs/<feature-id>/ceo-review.md`
+- [ ] IF 方向未定、MVP 边界未定、或影响重大：先执行 `/office-hours`，再执行 `/plan-ceo-review`，将结论写入 `specs/<feature-id>/ceo-review.md`
 - [ ] IF 方向已定且需求明确：执行 `/speckit.specify` + `/speckit.clarify`，锁定规格（变更须回 Phase 2 正式修改）
-- [ ] 执行 `/speckit.plan` + `/plan-eng-review`，将结论写入 `.specify/specs/<feature-id>/arch-review.md`
+- [ ] 执行 `/speckit.plan` + `/plan-eng-review`，将结论写入 `specs/<feature-id>/arch-review.md`
 - [ ] 复杂需求推荐执行 `/speckit.checklist`，补齐需求完整性/清晰度问题
 - [ ] `/speckit.tasks` 生成任务列表
 - [ ] `/speckit.analyze` 在 `tasks.md` 生成后执行并通过
@@ -71,7 +71,7 @@
 ### 6.4 上线前（七关 MUST 全过）
 
 - [ ] gitleaks Secret 扫描通过（pre-commit hook 自动触发，CI 二次校验）
-- [ ] `/review` + security-engineer 代码+安全审查通过，将结论写入 `.specify/specs/<feature-id>/review-findings.md`，修复后重审
+- [ ] `/review` + security-engineer 代码+安全审查通过，将结论写入 `specs/<feature-id>/review-findings.md`，修复后重审
 - [ ] `/qa` QA 验证通过，截图已存档（feature branch 默认 diff-aware）
 - [ ] IF 本次前面生成了 `/speckit.checklist`：其中阻断项已闭环
 - [ ] `/ship` → CI 全绿 + ≥ 1 人 Review Approve 后合并

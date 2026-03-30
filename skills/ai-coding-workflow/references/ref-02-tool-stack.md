@@ -24,8 +24,7 @@
 
 ```
 主力：Claude Code CLI
-  ├─ 计划 / 架构 / 评审阶段 → Opus（思考质量优先）
-  └─ 实现 / 测试阶段       → Sonnet（速度与质量平衡）
+  模型与推理档位遵循当前 CLI / 仓库默认配置，MUST NOT 在工作流文档中硬编码固定模型分工
 
 辅助：Codex CLI、Gemini CLI、Cursor（次选）
 规则：单一模型优先；超限时保持代理不变，临时替换模型补充
@@ -72,14 +71,14 @@ specify doctor                                      # 项目健康诊断（v0.3.
 /speckit.constitution            # 项目原则（一次性）
 /speckit.specify "功能描述"      # PRD + 用户故事（生成初稿；重复执行会覆盖 spec.md，仅在推倒重来时使用）
 /speckit.clarify                 # 澄清模糊点，追加写入 spec.md；可多次执行直到规格无歧义（plan 前 MUST 执行）
+/speckit.checklist               # 需求质量 checklist（plan 前执行，检查需求完整性/清晰度/一致性，不是代码验收）
 /speckit.plan "技术栈"           # 技术方案
-/speckit.checklist               # 需求质量 checklist（检查完整性/清晰度/一致性，不是代码验收）
 /speckit.tasks                   # 任务拆解
 /speckit.analyze                 # 跨文档一致性分析（tasks 后、implement 前运行）
 /speckit.implement               # 执行实现
 
 # Codex CLI 语法（--ai-skills 模式，与 /speckit.* 等价）
-$speckit-constitution / $speckit-specify / $speckit-clarify / $speckit-plan / $speckit-checklist / $speckit-tasks / $speckit-analyze / $speckit-implement
+$speckit-constitution / $speckit-specify / $speckit-clarify / $speckit-checklist / $speckit-plan / $speckit-tasks / $speckit-analyze / $speckit-implement
 
 # Extensions：扩展新能力（Jira/Linear/Azure DevOps/代码审查等）
 specify extension search             # 搜索可用扩展

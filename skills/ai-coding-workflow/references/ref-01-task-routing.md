@@ -29,11 +29,11 @@ WHEN 收到新任务时，代理 MUST 先按下表确定起始 Phase，再执行
 | 任务类型 | 起始 Phase |
 |---------|-----------|
 | 新项目首次配置 | Phase 0（项目初始化） |
-| 方向未定 / MVP 边界未定 / 有架构或业务重大影响的需求 | Phase 1 → Phase 11 全流程 |
-| 新项目或新功能，但方向已被强约束锁定 | Phase 1（简版）→ Phase 10 |
-| 需求清晰的新功能（multi-file 或新模块） | Phase 2 → Phase 10 |
-| 小功能（单文件或 < 50 行变更） | Phase 2 → Phase 10 |
-| bug fix / 单文件改动 | Phase 6 → Phase 10 |
+| 方向未定 / MVP 边界未定 / 有架构或业务重大影响的需求 | Phase 1 → Phase 10 全流程 |
+| 新项目或新功能，但方向已被强约束锁定 | Phase 1（简版）→ Phase 9 |
+| 需求清晰的新功能（multi-file 或新模块） | Phase 2 → Phase 9 |
+| 小功能（单文件或 < 50 行变更） | Phase 2 → Phase 9 |
+| bug fix / 单文件改动 | Phase 5 → Phase 9 |
 | 使用新版本库、AI 给出错误 API | 在提示词末尾追加 `use context7` |
 | 多个功能并行开发 | 参见 Section 9：并行开发（ref-06） |
 
@@ -42,16 +42,16 @@ WHEN 收到新任务时，代理 MUST 先按下表确定起始 Phase，再执行
 | 阶段 | 命令 | 工具 | 产出文档（精确路径） |
 |------|------|------|---------|
 | 项目初始化（一次性，在项目根目录执行） | `specify init . --ai claude` | spec-kit | `.specify/` 目录 |
-| 产品方向 | `/office-hours`（问题仍模糊时）→ `/plan-ceo-review` | gstack | `.specify/specs/<feature-id>/ceo-review.md` |
-| 需求规格 | `/speckit.specify` | spec-kit | `.specify/specs/<feature-id>/spec.md` |
-| 澄清需求 | `/speckit.clarify` | spec-kit | `.specify/specs/<feature-id>/spec.md`（追加） |
-| 技术方案 | `/speckit.plan` | spec-kit | `.specify/specs/<feature-id>/plan.md` `.specify/specs/<feature-id>/research.md` `.specify/specs/<feature-id>/contracts/` |
-| 架构评审 | `/plan-eng-review` | gstack | `.specify/specs/<feature-id>/arch-review.md` |
-| 规格质量清单 | `/speckit.checklist` | spec-kit | `.specify/specs/<feature-id>/checklists/` |
-| 任务拆解 | `/speckit.tasks` | spec-kit | `.specify/specs/<feature-id>/tasks.md` |
+| 产品方向 | `/office-hours`（问题仍模糊时）→ `/plan-ceo-review` | gstack | `specs/<feature-id>/ceo-review.md` |
+| 需求规格 | `/speckit.specify` | spec-kit | `specs/<feature-id>/spec.md` |
+| 澄清需求 | `/speckit.clarify` | spec-kit | `specs/<feature-id>/spec.md`（追加） |
+| 规格质量清单 | `/speckit.checklist` | spec-kit | `specs/<feature-id>/checklists/` |
+| 技术方案 | `/speckit.plan` | spec-kit | `specs/<feature-id>/plan.md` `specs/<feature-id>/research.md` `specs/<feature-id>/contracts/` |
+| 架构评审 | `/plan-eng-review` | gstack | `specs/<feature-id>/arch-review.md` |
+| 任务拆解 | `/speckit.tasks` | spec-kit | `specs/<feature-id>/tasks.md` |
 | 一致性检查 | `/speckit.analyze`（在 tasks 之后） | spec-kit | — |
 | 代码实现 | `/speckit.implement` + OMC（按需） | spec-kit + oh-my-claudecode | wip commits |
-| 代码+安全审查 | `/review` + security-engineer + OMC 并行复核 + gitleaks | gstack + agency + oh-my-claudecode | `.specify/specs/<feature-id>/review-findings.md` |
+| 代码+安全审查 | `/review` + security-engineer + OMC 并行复核 + gitleaks | gstack + agency + oh-my-claudecode | `specs/<feature-id>/review-findings.md` |
 | QA 验证 | `/qa`（feature branch 默认 diff-aware） | gstack | `.gstack/qa-reports/` |
 | 发布 | `/ship` | gstack | PR + CHANGELOG |
 | 周复盘 | `/retro` | gstack | `.context/retros/` |
@@ -63,9 +63,9 @@ WHEN 收到新任务时，代理 MUST 先按下表确定起始 Phase，再执行
 | 目标场景 | 使用命令 |
 |---------|--------|
 | 方向判断 / MVP 收敛 | `/office-hours`（需求仍模糊时）→ `/plan-ceo-review` |
-| 需求落规格 | `/speckit.specify` → `/speckit.clarify` |
-| 新项目或新功能：方向未定时先做方向判断，再落规格 | `/office-hours` → `/plan-ceo-review` → `/speckit.specify` |
-| 新项目或新功能：方向已定时快速落规格 | `/plan-ceo-review`（简版，可选）→ `/speckit.specify` |
+| 需求落规格 | `/speckit.specify` → `/speckit.clarify` → `/speckit.checklist` |
+| 新项目或新功能：方向未定时先做方向判断，再落规格 | `/office-hours` → `/plan-ceo-review` → `/speckit.specify` → `/speckit.clarify` → `/speckit.checklist` |
+| 新项目或新功能：方向已定时快速落规格 | `/plan-ceo-review`（简版，可选）→ `/speckit.specify` → `/speckit.clarify` → `/speckit.checklist` |
 | 生成技术方案 | `/speckit.plan` → `/plan-eng-review` |
 | 规格质量检查 | `/speckit.checklist` |
 | 拆解任务 | `/speckit.tasks` |
@@ -89,6 +89,8 @@ WHEN 收到新任务时，代理 MUST 先按下表确定起始 Phase，再执行
 
 > 代理 MUST 在对应 Phase 结束后，将产出内容写入下表标注的精确路径，无需等待人工确认。
 
+当前 spec-kit 目录架构分为两层：`.specify/` 保存模板、脚本、constitution、扩展与预设等框架元数据；业务级 feature 文档统一放在项目根目录 `specs/<feature-id>/` 下，包含 `spec.md`、`plan.md`、`tasks.md`、`checklists/`、`contracts/` 等实际交付物。
+
 ### 文件路径速查表（精确路径，代理直接使用）
 
 | 文件 / 目录 | 精确路径（相对项目根目录） | 由谁写入 | 对应 Phase |
@@ -102,21 +104,21 @@ WHEN 收到新任务时，代理 MUST 先按下表确定起始 Phase，再执行
 | 项目级模板覆盖 | `.specify/templates/overrides/` | 手动维护 | 按需 |
 | 已安装扩展 | `.specify/extensions/<ext-id>/` | `specify extension add` | 按需 |
 | 已安装预设 | `.specify/presets/<preset-id>/` | `specify preset add` | 按需 |
-| 产品方向结论 | `.specify/specs/<feature-id>/ceo-review.md` | 代理写入 | Phase 1 |
-| 需求规格 | `.specify/specs/<feature-id>/spec.md` | `/speckit.specify` | Phase 2 |
-| 技术实现方案 | `.specify/specs/<feature-id>/plan.md` | `/speckit.plan` | Phase 3 |
-| 技术调研 | `.specify/specs/<feature-id>/research.md` | `/speckit.plan` | Phase 3 |
-| 数据模型 | `.specify/specs/<feature-id>/data-model.md` | `/speckit.plan` | Phase 3 |
-| API 契约 | `.specify/specs/<feature-id>/contracts/` | `/speckit.plan` | Phase 3 |
-| 架构评审 | `.specify/specs/<feature-id>/arch-review.md` | 代理写入 | Phase 3 |
-| 验收 checklist | `.specify/specs/<feature-id>/checklists/` | `/speckit.checklist` | Phase 4 |
-| 原子任务列表 | `.specify/specs/<feature-id>/tasks.md` | `/speckit.tasks` | Phase 5 |
-| 审查发现 | `.specify/specs/<feature-id>/review-findings.md` | 代理写入 | Phase 8 |
-| 架构决策 ADR | `memory/decisions.md` | 代理追加 | Phase 3 / Phase 7 |
-| 已知问题 | `memory/issues.md` | 代理追加 | Phase 7 / bug fix |
-| 项目代码模式 | `memory/patterns.md` | 代理追加 | Phase 11 |
-| QA 报告 + 截图 | `.gstack/qa-reports/` | `/qa` 自动生成 | Phase 9 |
-| 发布日志 | `CHANGELOG.md` | `/ship` 自动生成 | Phase 10 |
-| 周复盘快照 | `.context/retros/` | `/retro` 自动生成 | Phase 11 |
+| 产品方向结论 | `specs/<feature-id>/ceo-review.md` | 代理写入 | Phase 1 |
+| 需求规格 | `specs/<feature-id>/spec.md` | `/speckit.specify` | Phase 2 |
+| 验收 checklist | `specs/<feature-id>/checklists/` | `/speckit.checklist` | Phase 2 |
+| 技术实现方案 | `specs/<feature-id>/plan.md` | `/speckit.plan` | Phase 3 |
+| 技术调研 | `specs/<feature-id>/research.md` | `/speckit.plan` | Phase 3 |
+| 数据模型 | `specs/<feature-id>/data-model.md` | `/speckit.plan` | Phase 3 |
+| API 契约 | `specs/<feature-id>/contracts/` | `/speckit.plan` | Phase 3 |
+| 架构评审 | `specs/<feature-id>/arch-review.md` | 代理写入 | Phase 3 |
+| 原子任务列表 | `specs/<feature-id>/tasks.md` | `/speckit.tasks` | Phase 4 |
+| 审查发现 | `specs/<feature-id>/review-findings.md` | 代理写入 | Phase 7 |
+| 架构决策 ADR | `memory/decisions.md` | 代理追加 | Phase 3 / Phase 6 |
+| 已知问题 | `memory/issues.md` | 代理追加 | Phase 6 / bug fix |
+| 项目代码模式 | `memory/patterns.md` | 代理追加 | Phase 10 |
+| QA 报告 + 截图 | `.gstack/qa-reports/` | `/qa` 自动生成 | Phase 8 |
+| 发布日志 | `CHANGELOG.md` | `/ship` 自动生成 | Phase 9 |
+| 周复盘快照 | `.context/retros/` | `/retro` 自动生成 | Phase 10 |
 
 > `<feature-id>` 格式为 `NNN-feature-name`，例如 `001-user-auth`。spec-kit 根据当前 Git 分支名自动检测 feature-id；非 Git 环境可设置环境变量 `SPECIFY_FEATURE=001-feature-name` 手动指定。

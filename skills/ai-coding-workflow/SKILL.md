@@ -11,7 +11,7 @@ description: 当用户需要统一的 AI 编程工作流时使用，涵盖新项
 > |------|------|
 > | `references/ref-01-task-routing.md` | §1 任务路由（任务类型→Phase表、命令速查、场景→命令映射）+ §4 文档结构（文件路径速查表） |
 > | `references/ref-02-tool-stack.md` | §2 工具体系总览 + §10 各工具详细说明（spec-kit/gstack/agency/OMC/gitleaks/自检）+ §11 参考来源 |
-> | `references/ref-03-full-workflow.md` | §5 完整开发工作流 Phase 0~11（含 ceo-review 模板、spec 模板） |
+> | `references/ref-03-full-workflow.md` | §5 完整开发工作流 Phase 0~10（含 ceo-review 模板、spec 模板） |
 > | `references/ref-04-governance-checklist.md` | §3 AI治理（数据边界/高风险操作/人工责任/留痕）+ §6 最佳实践清单（5组 checklist） |
 > | `references/ref-05-legacy-onboarding.md` | §7 存量项目接入（三档策略 A/B/C + Bug Fix 简化流程） |
 > | `references/ref-06-branch-parallel.md` | §8 分支策略（主干开发、PR合并规则）+ §9 并行开发（Git Worktree + OMC 多代理选型） |
@@ -41,7 +41,7 @@ description: 当用户需要统一的 AI 编程工作流时使用，涵盖新项
 
 ---
 
-## 场景 A：新项目 / 方向未定（Phase 0 → 11 全流程）
+## 场景 A：新项目 / 方向未定（Phase 0 → 10 全流程）
 
 > 详细流程 → `references/ref-03-full-workflow.md`；命令速查 → `references/ref-01-task-routing.md`
 
@@ -51,22 +51,22 @@ description: 当用户需要统一的 AI 编程工作流时使用，涵盖新项
 `specify init . --ai claude` → `/speckit.constitution` → 补写 `AGENTS.md` / `CLAUDE.md`
 
 **A1 产品方向**  
-先用 `/office-hours` 梳理问题空间，再执行 `/plan-ceo-review`，确认 MVP 边界。将结论写入 `.specify/specs/<feature-id>/ceo-review.md`。
+先用 `/office-hours` 梳理问题空间，再执行 `/plan-ceo-review`，确认 MVP 边界。将结论写入 `specs/<feature-id>/ceo-review.md`。
 
-**A2 需求规格**  
-执行 `/speckit.specify "功能描述"` 生成初稿 → **重复执行** `/speckit.clarify` 直到规格无歧义 → 锁定 `spec.md`。  
+**A2 需求规格**
+执行 `/speckit.specify "功能描述"` 生成初稿 → **重复执行** `/speckit.clarify` 直到规格无歧义 → 执行 `/speckit.checklist` 并闭环问题 → 锁定 `spec.md`。
 注意：`/speckit.clarify` 追加写入，可多次执行；`/speckit.specify` 会覆盖整个 spec.md，仅在推倒重来时使用。
 
-**A3 技术方案**  
-执行 `/speckit.plan "<技术栈>"` → `/plan-eng-review`，生成 `plan.md`、`research.md`、`arch-review.md`。
+**A3 技术方案**
+执行 `/speckit.plan "<技术栈>"` → `/plan-eng-review`，生成 `plan.md`、`research.md`、`data-model.md`、`contracts/`、`arch-review.md`。
 
-**A4 质量检查 + 任务拆解**  
-复杂需求先执行 `/speckit.checklist` 做规格质量检查 → `/speckit.tasks` 生成 `tasks.md` → `/speckit.analyze` 进行跨文档一致性分析。
+**A4 任务拆解**
+执行 `/speckit.tasks` 生成 `tasks.md`。
 
-**A5 TDD + 实施**（详见 `§ Phase 6-7`）  
-先写失败测试 → 执行 `/speckit.implement`（或 agency-agents / OMC 并行）→ 绿灯。
+**A5 TDD + 实施**（详见 `§ Phase 5-6`）
+`/speckit.analyze` → 先写失败测试 → 执行 `/speckit.implement`（或 agency-agents / OMC 并行）→ 绿灯。
 
-**A6 审查 + QA + 发布**（详见 `§ Phase 8-10`）  
+**A6 审查 + QA + 发布**（详见 `§ Phase 7-9`）
 `/review` + security-engineer 并行 → `/qa`（feature branch 默认 diff-aware）→ `/ship` → staging → 生产。
 
 **A7 复盘**  
@@ -74,20 +74,19 @@ description: 当用户需要统一的 AI 编程工作流时使用，涵盖新项
 
 ---
 
-## 场景 B：方向已定的新功能（Phase 2 → 10）
+## 场景 B：方向已定的新功能（Phase 2 → 9）
 
-> 详细流程 → `references/ref-03-full-workflow.md § Phase 2-10`
+> 详细流程 → `references/ref-03-full-workflow.md § Phase 2-9`
 
 ```
-Phase 2：需求规格（/speckit.specify 生成初稿 → 重复 /speckit.clarify 至无歧义 → 锁定 spec.md）
+Phase 2：需求规格（/speckit.specify 生成初稿 → 重复 /speckit.clarify 至无歧义 → /speckit.checklist 闭环规格质量问题 → 锁定 spec.md）
 Phase 3：技术方案（/speckit.plan → /plan-eng-review → arch-review.md）
-Phase 4：规格质量检查（/speckit.checklist，复杂需求推荐）
-Phase 5：任务拆解（/speckit.tasks → tasks.md）
-Phase 6：一致性分析 + TDD（/speckit.analyze → 先写失败测试 → wip commit）
-Phase 7：实施（/speckit.implement / agency / OMC → 绿灯 → wip commits）
-Phase 8：审查（/review + security-engineer → review-findings.md）
-Phase 9：QA（/qa → qa-reports/；feature branch 默认 diff-aware）
-Phase 10：发布（/ship → CI → staging → 生产）
+Phase 4：任务拆解（/speckit.tasks → tasks.md）
+Phase 5：一致性分析 + TDD（/speckit.analyze → 先写失败测试 → wip commit）
+Phase 6：实施（/speckit.implement / agency / OMC → 绿灯 → wip commits）
+Phase 7：审查（/review + security-engineer → review-findings.md）
+Phase 8：QA（/qa → qa-reports/；feature branch 默认 diff-aware）
+Phase 9：发布（/ship → CI → staging → 生产）
 ```
 
 **关键约束**：
@@ -101,9 +100,9 @@ Phase 10：发布（/ship → CI → staging → 生产）
 
 > bug fix 详细流程 → `references/ref-05-legacy-onboarding.md § 7.5`
 
-**小功能（< 50 行 / 单文件）**：从 Phase 2 开始，跳过 Phase 1（产品方向），走 Phase 2→10。
+**小功能（< 50 行 / 单文件）**：从 Phase 2 开始，跳过 Phase 1（产品方向），走 Phase 2→9。
 
-**bug fix / 单文件改动**：直接从 Phase 6 开始，不可跳步：
+**bug fix / 单文件改动**：直接从 Phase 5 开始，不可跳步：
 
 ```
 ① 先写失败/复现测试（固化问题，防止回归）
