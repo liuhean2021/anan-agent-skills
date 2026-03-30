@@ -22,7 +22,25 @@ description: 当用户需要统一的 AI 编程工作流时使用，涵盖新项
 **核心原则**：规格驱动 → 测试先行 → 最小改动 → 审查验证 → 持续复盘  
 **适用**：Claude Code CLI 主导的 AI 辅助开发（新项目 / 新功能 / bug fix / 存量接入）
 
-工具层级：spec-kit（规格）→ agency-agents（专业角色）→ gstack（评审验证）→ OMC（并行编排）
+工具层级：spec-kit（规格）→ agency-agents（专业角色）→ gstack（评审验证）→ 外部代理编排能力（例如 OMC）
+
+## 命令映射
+
+正文优先描述“动作”，不重复绑定宿主命令；具体命令按下表选择：
+
+| 动作 | Claude Code | Codex CLI | gstack 不可用时 |
+|------|-------------|-----------|----------------|
+| constitution | `/speckit.constitution` | `$speckit-constitution` | 手动维护项目原则 |
+| specify | `/speckit.specify` | `$speckit-specify` | 需安装 spec-kit |
+| clarify | `/speckit.clarify` | `$speckit-clarify` | 需安装 spec-kit |
+| checklist | `/speckit.checklist` | `$speckit-checklist` | 手动 checklist |
+| plan | `/speckit.plan` | `$speckit-plan` | 需安装 spec-kit |
+| tasks | `/speckit.tasks` | `$speckit-tasks` | 手动任务拆解 |
+| analyze | `/speckit.analyze` | `$speckit-analyze` | 手动一致性核对 |
+| implement | `/speckit.implement` | `$speckit-implement` | 手工实施 |
+| review | `/review` | `/review`（若 host 已装 gstack） | 人工审查 / CI |
+| qa | `/qa` | `/qa`（若 host 已装 gstack） | 手工测试 / CI |
+| ship | `/ship` | `/ship`（若 host 已装 gstack） | 宿主常规发布流程 |
 
 ---
 
@@ -32,12 +50,12 @@ description: 当用户需要统一的 AI 编程工作流时使用，涵盖新项
 |---------|---------|
 | 新项目 / 方向未定 / MVP 边界未定 / 架构重大影响 | → **场景 A** |
 | 方向已定的新功能（多文件或新模块） | → **场景 B** |
-| 小功能（<50行）/ bug fix / 单文件改动 | → **场景 C** |
+| 小变更（小功能或 bug fix） | → **场景 C** |
 | 接入存量旧项目 | → **场景 D** |
 | 工具安装、配置、升级 | → **场景 E** |
 | 多功能并行开发 | → **场景 F** |
 
-意图模糊时先询问：「是 A 新项目 / B 新功能 / C 小功能 bug fix / D 存量接入？」
+意图模糊时先询问：「是 A 新项目 / B 新功能 / C 小变更 / D 存量接入 / E 工具配置升级 / F 并行开发？」
 
 ---
 
@@ -48,26 +66,26 @@ description: 当用户需要统一的 AI 编程工作流时使用，涵盖新项
 **执行顺序**：
 
 **A0 项目初始化**（一次性）  
-`specify init . --ai <your-agent>` → `/speckit.constitution` → 补写 `AGENTS.md` / `CLAUDE.md`
+`specify init . --ai <your-agent>` → 执行 constitution → 补写 `AGENTS.md` / `CLAUDE.md`
 
 **A1 产品方向**  
 先用 `/office-hours` 梳理问题空间，再执行 `/plan-ceo-review`，确认 MVP 边界。将结论写入 `specs/<feature-id>/ceo-review.md`。
 
 **A2 需求规格**
-执行 `/speckit.specify "功能描述"` 生成初稿 → **重复执行** `/speckit.clarify` 直到规格无歧义 → 推荐在 `plan` 前执行 `/speckit.checklist` 并闭环问题；高风险或高歧义需求 MUST 执行 → 锁定 `spec.md`。
-注意：`/speckit.clarify` 追加写入，可多次执行；`/speckit.specify` 会覆盖整个 spec.md，仅在推倒重来时使用。
+执行 spec-kit 规格链路：specify → clarify → checklist。先生成初稿 → **重复澄清** 直到规格无歧义 → 推荐在 `plan` 前执行 checklist 并闭环问题；高风险或高歧义需求 MUST 执行 → 锁定 `spec.md`。
+注意：clarify 追加写入，可多次执行；specify 会覆盖整个 `spec.md`，仅在推倒重来时使用。
 
 **A3 技术方案**
-执行 `/speckit.plan "<技术栈>"` → `/plan-eng-review`，生成 `plan.md`、`research.md`、`data-model.md`、`contracts/`、`arch-review.md`。
+执行 spec-kit plan → `/plan-eng-review`，生成 `plan.md`、`research.md`、`data-model.md`、`contracts/`、`arch-review.md`。
 
 **A4 任务拆解**
-执行 `/speckit.tasks` 生成 `tasks.md`。
+执行 spec-kit tasks，生成 `tasks.md`。
 
 **A5 TDD + 实施**（详见 `§ Phase 5-6`）
-`/speckit.analyze` → 先写失败测试 → 执行 `/speckit.implement`（或 agency-agents / OMC 并行）→ 绿灯。
+执行一致性分析 → 先写失败测试 → 执行实现（或 agency-agents / 外部代理编排能力并行）→ 绿灯。
 
 **A6 审查 + QA + 发布**（详见 `§ Phase 7-9`）
-`/review` + security-engineer 并行 → `/qa`（feature branch 默认 diff-aware）→ `/ship` → staging → 生产。
+执行审查 → QA → 按 Phase 9 发布链路进入 CI / Review / 合并 / staging quick QA / production。若当前 host 未安装 gstack，则用人工审查、测试命令或 CI 流程替代对应命令。
 
 **A7 复盘**  
 `/retro` → 有价值经验写入 `memory/patterns.md`。
@@ -79,14 +97,14 @@ description: 当用户需要统一的 AI 编程工作流时使用，涵盖新项
 > 详细流程 → `references/ref-03-full-workflow.md § Phase 2-9`
 
 ```
-Phase 2：需求规格（/speckit.specify 生成初稿 → 重复 /speckit.clarify 至无歧义 → 推荐在 plan 前执行 /speckit.checklist，高风险或高歧义需求强制执行 → 锁定 spec.md）
-Phase 3：技术方案（/speckit.plan → /plan-eng-review → arch-review.md）
-Phase 4：任务拆解（/speckit.tasks → tasks.md）
-Phase 5：一致性分析 + TDD（/speckit.analyze → 先写失败测试 → 提交测试基线）
-Phase 6：实施（/speckit.implement / agency / OMC → 绿灯 → 原子提交）
-Phase 7：审查（/review + security-engineer → review-findings.md）
-Phase 8：QA（/qa → qa-reports/；feature branch 默认 diff-aware）
-Phase 9：发布（/ship → CI → staging → 生产）
+Phase 2：需求规格（执行 spec-kit 规格链路：specify → clarify → checklist。生成初稿 → 重复澄清至无歧义 → 推荐在 plan 前执行 checklist，高风险或高歧义需求强制执行 → 锁定 spec.md）
+Phase 3：技术方案（spec-kit plan → /plan-eng-review → arch-review.md）
+Phase 4：任务拆解（spec-kit tasks → tasks.md）
+Phase 5：一致性分析 + TDD（spec-kit analyze → 先写失败测试 → 提交测试基线）
+Phase 6：实施（spec-kit implement；必要时配合 agency / 外部代理编排能力 → 绿灯 → 原子提交）
+Phase 7：审查（执行 review + security-engineer；未安装 gstack 时改为人工审查或 CI 替代）
+Phase 8：QA（执行 qa → qa-reports/；feature branch 默认 diff-aware；未安装 gstack 时改为人工或 CI 验证）
+Phase 9：发布（按 Phase 9 发布链路执行；未安装 gstack 时走宿主常规发布流程）
 ```
 
 **关键约束**：
@@ -96,21 +114,21 @@ Phase 9：发布（/ship → CI → staging → 生产）
 
 ---
 
-## 场景 C：小功能 / bug fix
+## 场景 C：小变更
 
 > bug fix 详细流程 → `references/ref-05-legacy-onboarding.md § 7.5`
 
-**小功能（< 50 行 / 单文件）**：从 Phase 2 开始，跳过 Phase 1（产品方向），走 Phase 2→9。
+**C1 小功能**：单文件且**非 bug fix**，或 < 50 行净变更。从 Phase 2 开始，跳过 Phase 1（产品方向），走 Phase 2→9。
 
-**bug fix / 单文件改动**：直接从 Phase 5 开始，不可跳步：
+**C2 Bug Fix**：以修复缺陷为目的时，走 **Phase 5B 简化流**，而不是复用完整 Phase 5 定义。适用于单文件或多文件修复，但不适用于新增需求或扩 scope。
 
 ```
 ① 先写失败/复现测试（固化问题，防止回归）
 ② 定位并修复
-③ /review（仅审改动范围）
+③ 已安装 gstack 时执行 /review（仅审改动范围）；未安装时改为人工审查或 CI 校验
 ④ 确认测试通过
-⑤ /qa（feature branch 默认 diff-aware；需要显式模式时再加 --quick / --regression）
-⑥ /ship
+⑤ 已安装 gstack 时执行 /qa（feature branch 默认 diff-aware；需要显式模式时再加 --quick / --regression）；未安装时改为人工或 CI 验证
+⑥ 已安装 gstack 时执行 /ship；未安装时走宿主常规发布流程
 ⑦ 踩坑追加写入 memory/issues.md
 ```
 
@@ -143,7 +161,7 @@ Phase 9：发布（/ship → CI → staging → 生产）
 | spec-kit 项目文件 | `specify init --here --force --ai <your-agent>` |
 | gitleaks | `brew upgrade gitleaks` |
 | agency-agents | `git -C <agency-agents-path> pull origin main && <agency-agents-path>/scripts/install.sh --tool claude-code` |
-| oh-my-claudecode | `/oh-my-claudecode:omc-setup` |
+| oh-my-claudecode | `/oh-my-claudecode:omc-setup`（若当前宿主提供等价编排入口，按宿主能力替代） |
 
 进入场景 E 或用户明确要求时，代理 SHOULD 按 `§ 10.7` 检查核心工具版本；默认不在每次会话开始时自动升级工具。
 
@@ -167,9 +185,9 @@ cd ../project-feature-b && claude
 
 | 场景 | 方案 |
 |------|------|
-| 同一任务内多模型分工实现 | `/oh-my-claudecode:team` |
-| 启动 Codex / Gemini CLI worker | `/oh-my-claudecode:omc-teams` |
-| 同一 diff 多模型交叉审查 | `/oh-my-claudecode:ccg` |
+| 同一任务内多模型分工实现 | `/oh-my-claudecode:team`（或宿主等价团队编排能力） |
+| 启动 Codex / Gemini CLI worker | `/oh-my-claudecode:omc-teams`（或宿主等价 worker 编排能力） |
+| 同一 diff 多模型交叉审查 | `/oh-my-claudecode:ccg`（或宿主等价交叉评审能力） |
 | 并行功能开发 | 多个独立代理实例（各自 worktree） |
 
 ---
@@ -207,12 +225,12 @@ cd ../project-feature-b && claude
 |---------|---------|
 | 新项目 / 方向未定 / MVP 边界未定 / 架构重大影响 | → 场景 A（全流程） |
 | 方向已定的新功能（多文件或新模块） | → 场景 B |
-| 小功能（<50行）/ bug fix / 单文件改动 | → 场景 C |
+| 小变更（小功能或 bug fix） | → 场景 C |
 | 接入存量旧项目 | → 场景 D |
 | 工具安装、配置、升级 | → 场景 E |
 | 多功能并行开发 | → 场景 F |
 
-意图模糊时先询问：「是 A 新项目 / B 新功能 / C 小功能 bug fix / D 存量接入？」
+意图模糊时先询问：「是 A 新项目 / B 新功能 / C 小变更 / D 存量接入 / E 工具配置升级 / F 并行开发？」
 ```
 
 **验证**：新开一个对话，说「帮我做一个功能」，确认 Claude 会主动询问任务类型，而不是直接写代码。
@@ -236,14 +254,14 @@ cd ../project-feature-b && claude
 |---------|---------|
 | 新项目 / 方向未定 / MVP 边界未定 / 架构重大影响 | → 场景 A（全流程） |
 | 方向已定的新功能（多文件或新模块） | → 场景 B |
-| 小功能（<50行）/ bug fix / 单文件改动 | → 场景 C |
+| 小变更（小功能或 bug fix） | → 场景 C |
 | 接入存量旧项目 | → 场景 D |
 | 工具安装、配置、升级 | → 场景 E |
 | 多功能并行开发 | → 场景 F |
 
-意图模糊时先询问：「是 A 新项目 / B 新功能 / C 小功能 bug fix / D 存量接入？」
+意图模糊时先询问：「是 A 新项目 / B 新功能 / C 小变更 / D 存量接入 / E 工具配置升级 / F 并行开发？」
 
-> **工具命令说明**：工作流详细步骤中的 `/speckit.*` 命令通过 `specify` CLI 命令行工具使用；在 Codex CLI 中，spec-kit 对应使用 `$speckit-*` 形式。`/review`、`/qa`、`/ship` 等 gstack 能力是否可用，取决于是否已按当前 host（如 Claude Code / Codex）正确安装 gstack；未安装时再降级为人工审查或 CI 流程替代。
+> **工具命令说明**：工作流详细步骤中的 `/speckit.*` 命令通过 `specify` CLI 命令行工具使用；在 Codex CLI 中，spec-kit 对应使用 `$speckit-*` 形式。`/review`、`/qa`、`/ship` 等 gstack 能力是否可用，取决于是否已按当前 host（如 Claude Code / Codex）正确安装 gstack；未安装时降级为人工审查、测试命令或 CI 流程替代。`/oh-my-claudecode:*` 命令表示外部代理编排能力；若当前宿主提供等价入口，应使用宿主等价能力，而不是硬依赖命名空间字面值。
 ```
 
 **验证**：新开一个 Codex CLI 会话，说「帮我做一个功能」，确认会主动询问任务类型。

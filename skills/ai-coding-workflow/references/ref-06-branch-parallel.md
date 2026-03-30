@@ -52,15 +52,15 @@ cd ../project-feature-b && claude
 |------|------|
 | 简单任务 | 单代理直接完成 |
 | 细分子任务 | 主代理 + subagent（Claude Code 内置） |
-| 同一任务内多模型分工实现 | `oh-my-claudecode:team` |
-| 明确要启 Codex / Gemini CLI worker | `oh-my-claudecode:omc-teams` |
-| 同一 diff 做多模型交叉审查 | `oh-my-claudecode:ccg` |
+| 同一任务内多模型分工实现 | 外部代理编排能力（例如 `oh-my-claudecode:team`） |
+| 明确要启 Codex / Gemini CLI worker | 外部代理编排能力（例如 `oh-my-claudecode:omc-teams`） |
+| 同一 diff 做多模型交叉审查 | 外部代理编排能力（例如 `oh-my-claudecode:ccg`） |
 | 并行功能开发 | 多个独立代理实例（各自 worktree） |
 | 复杂大型项目 | Multi-Agent 架构（谨慎使用，优先简单方案） |
 
 ### 9.1 OMC 并行协作补充
 
-- 同一 feature 内的任务并行，优先使用 `tasks.md` 中的 `[P]` 标记做拆分，再决定是否启用 OMC
-- `oh-my-claudecode:team` 适合"主代理统筹 + 多个外部 agent 分工"；`oh-my-claudecode:omc-teams` 适合你已经明确要启动 Codex/Gemini CLI worker
+- 同一 feature 内的任务并行，优先使用 `tasks.md` 中的 `[P]` 标记做拆分，再决定是否启用外部代理编排能力（例如 OMC）
+- `oh-my-claudecode:team` 适合"主代理统筹 + 多个外部 agent 分工"；`oh-my-claudecode:omc-teams` 适合你已经明确要启动 Codex/Gemini CLI worker；其他宿主可用等价编排入口替代
 - 代码实现时，优先按文件或模块边界拆分；代码审查时，优先按视角拆分，例如 Codex 看正确性与安全，Gemini 看可读性与 UX
-- OMC 并行执行结束后，当前 Claude Code 主代理 MUST 负责回收结论、解决冲突、补测试并统一提交
+- 外部代理编排能力并行执行结束后，当前主代理 MUST 负责回收结论、解决冲突、补测试并统一提交

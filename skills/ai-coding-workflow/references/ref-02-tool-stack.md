@@ -32,7 +32,7 @@
 
 ### 2.3 OMC 接入原则
 
-- `oh-my-claudecode` SHOULD 作为 Claude Code 的外部代理编排层，而不是替代主代理
+- `oh-my-claudecode` SHOULD 作为 Claude Code 的外部代理编排层，而不是替代主代理；在其他宿主中，文档内同类命令表示“外部代理编排能力”，可用宿主等价入口替代
 - 代码实现阶段，IF 任务可拆成彼此独立的子任务，THEN MAY 用 `/oh-my-claudecode:team` 或 `/oh-my-claudecode:omc-teams` 并行调用 Codex / Gemini
 - 代码审查阶段，IF 需要交叉验证架构、安全、可读性或 UX 风险，THEN SHOULD 追加 `/oh-my-claudecode:ccg` 或 `/oh-my-claudecode:ask <model>`
 - OMC 外部 agent 输出 MUST 视为"辅助结论"，最终是否采纳 MUST 由当前 Claude Code 主代理结合测试、审查结果和人工判断统一裁决

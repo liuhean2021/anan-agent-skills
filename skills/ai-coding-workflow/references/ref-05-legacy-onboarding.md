@@ -44,14 +44,14 @@
 
 ### 7.5 存量项目 Bug Fix 流程
 
-IF 任务为 bug fix，THEN 代理 MUST 按以下简化流程执行，MUST NOT 走完整 Phase 流程：
+IF 任务为 bug fix，THEN 代理 MUST 按以下 **Phase 5B：Bug Fix 简化流** 执行，MUST NOT 误写成“从完整 Phase 5 开始”：
 
 ```
 1. 先写复现测试（固化问题，防止回归）
 2. 定位并修复
-3. /review（仅审改动范围）
+3. 已安装 gstack 时执行 /review（仅审改动范围）；未安装时改为人工审查或 CI 校验
 4. 确认测试通过
-5. /qa（feature branch 默认 diff-aware）
-6. /ship
+5. 已安装 gstack 时执行 /qa（feature branch 默认 diff-aware）；未安装时改为人工或 CI 验证
+6. 已安装 gstack 时执行 /ship；未安装时走宿主常规发布流程
 7. 将踩坑内容追加写入 memory/issues.md
 ```
