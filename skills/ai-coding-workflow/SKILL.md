@@ -187,9 +187,13 @@ cd ../project-feature-b && claude
 
 ## 初次配置（全局强制生效）
 
-技能部署到 `~/.claude/skills/` 后属于按需触发，若需在**所有项目**中自动强制遵守，需在全局 CLAUDE.md 中添加引用。
+技能部署后属于按需触发。若需在**所有项目**中自动强制遵守，按所用 AI agent 选择对应配置步骤。
 
-**步骤：在 `~/.claude/CLAUDE.md` 末尾追加以下内容**
+---
+
+### Claude Code（主力 agent，推荐）
+
+在 `~/.claude/CLAUDE.md` 末尾追加以下内容：
 
 ```markdown
 ## AI Coding 工作流（强制遵守）
@@ -202,7 +206,7 @@ cd ../project-feature-b && claude
 
 | 用户意图 | 执行场景 |
 |---------|---------|
-| 新项目 / 方向未定 / MVP 边界未定 | → 场景 A（全流程） |
+| 新项目 / 方向未定 / MVP 边界未定 / 架构重大影响 | → 场景 A（全流程） |
 | 方向已定的新功能（多文件或新模块） | → 场景 B |
 | 小功能（<50行）/ bug fix / 单文件改动 | → 场景 C |
 | 接入存量旧项目 | → 场景 D |
@@ -213,6 +217,52 @@ cd ../project-feature-b && claude
 ```
 
 **验证**：新开一个对话，说「帮我做一个功能」，确认 Claude 会主动询问任务类型，而不是直接写代码。
+
+---
+
+### OpenAI Codex CLI
+
+在 `~/.codex/AGENTS.md` 末尾追加以下内容（文件不存在则新建）：
+
+```markdown
+## AI Coding 工作流（强制遵守）
+
+进行任何开发任务时，**必须**遵循以下规则（完整工作流见 `<your-skills-path>/ai-coding-workflow/SKILL.md`）：
+
+**核心原则**：规格驱动 → 测试先行 → 最小改动 → 审查验证 → 持续复盘
+
+**场景识别**（意图模糊时先询问用户）：
+
+| 用户意图 | 执行场景 |
+|---------|---------|
+| 新项目 / 方向未定 / MVP 边界未定 / 架构重大影响 | → 场景 A（全流程） |
+| 方向已定的新功能（多文件或新模块） | → 场景 B |
+| 小功能（<50行）/ bug fix / 单文件改动 | → 场景 C |
+| 接入存量旧项目 | → 场景 D |
+| 工具安装、配置、升级 | → 场景 E |
+| 多功能并行开发 | → 场景 F |
+
+意图模糊时先询问：「是 A 新项目 / B 新功能 / C 小功能 bug fix / D 存量接入？」
+
+> **工具命令说明**：工作流详细步骤中的 `/speckit.*` 命令通过 `specify` CLI 命令行工具使用；`/review`、`/qa`、`/ship` 等 gstack 命令为 Claude Code CLI 专属，Codex CLI 中无等价实现，对应阶段改为人工审查或 CI 流程替代。
+```
+
+**验证**：新开一个 Codex CLI 会话，说「帮我做一个功能」，确认会主动询问任务类型。
+
+---
+
+### 其他 Agent 快速参考
+
+| Agent | 全局配置文件 | 角色定位 | 注意事项 |
+|-------|-----------|---------|---------|
+| Google Gemini CLI | `~/.gemini/GEMINI.md` | CLI 主力（辅助） | gstack 命令需人工或 CI 替代 |
+| Cursor | `~/.cursor/rules/ai-coding-workflow.mdc` | 辅助编写 | 编码前先确认 spec.md 已存在 |
+| Windsurf | 项目级 `.windsurfrules` | 辅助编写 | 同上 |
+| GitHub Copilot | `.github/copilot-instructions.md` | 辅助编写 | 同上 |
+
+各配置文件写入内容与上方 Claude Code 版内容块一致，将技能路径替换为实际路径；Gemini CLI 同样附加工具命令说明注释。
+
+> IDE-based agents（Cursor / Windsurf / Copilot）定位为**辅助编写角色**，负责代码补全与单文件修改；规格生成、审查、QA、发布等阶段由 Claude Code CLI 主导完成。
 
 ---
 
