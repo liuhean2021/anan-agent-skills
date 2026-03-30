@@ -48,7 +48,7 @@ description: 当用户需要统一的 AI 编程工作流时使用，涵盖新项
 **执行顺序**：
 
 **A0 项目初始化**（一次性）  
-`specify init . --ai claude` → `/speckit.constitution` → 补写 `AGENTS.md` / `CLAUDE.md`
+`specify init . --ai <your-agent>` → `/speckit.constitution` → 补写 `AGENTS.md` / `CLAUDE.md`
 
 **A1 产品方向**  
 先用 `/office-hours` 梳理问题空间，再执行 `/plan-ceo-review`，确认 MVP 边界。将结论写入 `specs/<feature-id>/ceo-review.md`。
@@ -82,8 +82,8 @@ description: 当用户需要统一的 AI 编程工作流时使用，涵盖新项
 Phase 2：需求规格（/speckit.specify 生成初稿 → 重复 /speckit.clarify 至无歧义 → /speckit.checklist 闭环规格质量问题 → 锁定 spec.md）
 Phase 3：技术方案（/speckit.plan → /plan-eng-review → arch-review.md）
 Phase 4：任务拆解（/speckit.tasks → tasks.md）
-Phase 5：一致性分析 + TDD（/speckit.analyze → 先写失败测试 → wip commit）
-Phase 6：实施（/speckit.implement / agency / OMC → 绿灯 → wip commits）
+Phase 5：一致性分析 + TDD（/speckit.analyze → 先写失败测试 → 提交测试基线）
+Phase 6：实施（/speckit.implement / agency / OMC → 绿灯 → 原子提交）
 Phase 7：审查（/review + security-engineer → review-findings.md）
 Phase 8：QA（/qa → qa-reports/；feature branch 默认 diff-aware）
 Phase 9：发布（/ship → CI → staging → 生产）
@@ -91,7 +91,7 @@ Phase 9：发布（/ship → CI → staging → 生产）
 
 **关键约束**：
 - 模型与推理档位遵循当前 CLI / 仓库默认配置，MUST NOT 在工作流文档中硬编码固定模型分工
-- 每完成一个原子任务执行 `/commit-message`，确认后再提交（格式：`wip: [task-id] 描述`）
+- 每完成一个原子任务执行 `/commit-message`，确认后再提交；提交信息格式以 `/commit-message` 技能定义为准，如需标识 task-id，可写入摘要或说明列表
 - 发现规格有误 MUST 返回 Phase 2 正式修改，MUST NOT 绕过
 
 ---
@@ -145,7 +145,7 @@ Phase 9：发布（/ship → CI → staging → 生产）
 | agency-agents | `git -C <agency-agents-path> pull origin main && <agency-agents-path>/scripts/install.sh --tool claude-code` |
 | oh-my-claudecode | `/oh-my-claudecode:omc-setup` |
 
-代理 SHOULD 在每次会话开始时静默并行检查核心工具版本（详见 `§ 10.7`）。
+进入场景 E 或用户明确要求时，代理 SHOULD 按 `§ 10.7` 检查核心工具版本；默认不在每次会话开始时自动升级工具。
 
 ---
 
@@ -243,7 +243,7 @@ cd ../project-feature-b && claude
 
 意图模糊时先询问：「是 A 新项目 / B 新功能 / C 小功能 bug fix / D 存量接入？」
 
-> **工具命令说明**：工作流详细步骤中的 `/speckit.*` 命令通过 `specify` CLI 命令行工具使用；`/review`、`/qa`、`/ship` 等 gstack 命令为 Claude Code CLI 专属，Codex CLI 中无等价实现，对应阶段改为人工审查或 CI 流程替代。
+> **工具命令说明**：工作流详细步骤中的 `/speckit.*` 命令通过 `specify` CLI 命令行工具使用；在 Codex CLI 中，spec-kit 对应使用 `$speckit-*` 形式。`/review`、`/qa`、`/ship` 等 gstack 能力是否可用，取决于是否已按当前 host（如 Claude Code / Codex）正确安装 gstack；未安装时再降级为人工审查或 CI 流程替代。
 ```
 
 **验证**：新开一个 Codex CLI 会话，说「帮我做一个功能」，确认会主动询问任务类型。
@@ -254,7 +254,7 @@ cd ../project-feature-b && claude
 
 | Agent | 全局配置文件 | 角色定位 | 注意事项 |
 |-------|-----------|---------|---------|
-| Google Gemini CLI | `~/.gemini/GEMINI.md` | CLI 主力（辅助） | gstack 命令需人工或 CI 替代 |
+| Google Gemini CLI | `~/.gemini/GEMINI.md` | CLI 主力（辅助） | gstack/spec-kit 能力以该 host 的实际安装情况为准，未安装时走人工或 CI 替代 |
 | Cursor | `~/.cursor/rules/ai-coding-workflow.mdc` | 辅助编写 | 编码前先确认 spec.md 已存在 |
 | Windsurf | 项目级 `.windsurfrules` | 辅助编写 | 同上 |
 | GitHub Copilot | `.github/copilot-instructions.md` | 辅助编写 | 同上 |

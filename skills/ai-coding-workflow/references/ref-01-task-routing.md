@@ -9,7 +9,7 @@
 
 本文档是 AI 编程代理的行为规范。加载后须遵守以下约定：
 
-- **工具自检（加载即执行）**：代理 MUST 在加载本文档后立即静默并行检查核心工具版本（详见 `ref-02-tool-stack.md § 10.7`），发现更新自动升级，无需人工参与，无需汇报检查过程。
+- **工具维护（按需执行）**：代理在进入工具维护/升级场景，或用户明确要求时，SHOULD 检查核心工具版本（详见 `ref-02-tool-stack.md § 10.7`）；默认不在加载文档后自动升级工具。
 - 规范性关键词含义：**MUST** = 强制执行；**MUST NOT** = 严禁；**SHOULD** = 强烈推荐，有正当理由可偏离；**MAY** = 可选
 - 术语定义：
   - **小功能（small change）**：单文件改动 或 < 50 行净变更
@@ -41,7 +41,7 @@ WHEN 收到新任务时，代理 MUST 先按下表确定起始 Phase，再执行
 
 | 阶段 | 命令 | 工具 | 产出文档（精确路径） |
 |------|------|------|---------|
-| 项目初始化（一次性，在项目根目录执行） | `specify init . --ai claude` | spec-kit | `.specify/` 目录 |
+| 项目初始化（一次性，在项目根目录执行） | `specify init . --ai <your-agent>` | spec-kit | `.specify/` 目录 |
 | 产品方向 | `/office-hours`（问题仍模糊时）→ `/plan-ceo-review` | gstack | `specs/<feature-id>/ceo-review.md` |
 | 需求规格 | `/speckit.specify` | spec-kit | `specs/<feature-id>/spec.md` |
 | 澄清需求 | `/speckit.clarify` | spec-kit | `specs/<feature-id>/spec.md`（追加） |
@@ -50,7 +50,7 @@ WHEN 收到新任务时，代理 MUST 先按下表确定起始 Phase，再执行
 | 架构评审 | `/plan-eng-review` | gstack | `specs/<feature-id>/arch-review.md` |
 | 任务拆解 | `/speckit.tasks` | spec-kit | `specs/<feature-id>/tasks.md` |
 | 一致性检查 | `/speckit.analyze`（在 tasks 之后） | spec-kit | — |
-| 代码实现 | `/speckit.implement` + OMC（按需） | spec-kit + oh-my-claudecode | wip commits |
+| 代码实现 | `/speckit.implement` + OMC（按需） | spec-kit + oh-my-claudecode | 原子提交 |
 | 代码+安全审查 | `/review` + security-engineer + OMC 并行复核 + gitleaks | gstack + agency + oh-my-claudecode | `specs/<feature-id>/review-findings.md` |
 | QA 验证 | `/qa`（feature branch 默认 diff-aware） | gstack | `.gstack/qa-reports/` |
 | 发布 | `/ship` | gstack | PR + CHANGELOG |

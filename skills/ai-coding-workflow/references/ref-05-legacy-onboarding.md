@@ -28,7 +28,7 @@
 
 **在 A 的基础上：**
 
-- [ ] 执行 `specify init . --ai claude` 初始化 spec-kit；仅对**新功能**运行 specify，旧代码无需补写 spec
+- [ ] 执行 `specify init . --ai <your-agent>` 初始化 spec-kit（Codex CLI 常用 `--ai codex --ai-skills`）；仅对**新功能**运行 specify，旧代码无需补写 spec
 - [ ] TDD 仅对新增代码要求；bug fix 时 MUST 先写复现测试，代替完整 TDD
 - [ ] 首次运行 `/review`，结果按以下规则处理：
   - IF 阻断性问题 THEN 立即修复

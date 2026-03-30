@@ -55,14 +55,14 @@ uv tool install specify-cli --from git+https://github.com/github/spec-kit.git
 uv tool install specify-cli --force --from git+https://github.com/github/spec-kit.git@vX.Y.Z
 
 # 一次性使用（无需安装）
-uvx --from git+https://github.com/github/spec-kit.git@vX.Y.Z specify init . --ai claude
+uvx --from git+https://github.com/github/spec-kit.git@vX.Y.Z specify init . --ai <your-agent>
 
 # 项目初始化（一次性）
-specify init . --ai claude                          # 在当前目录初始化
-specify init --here --ai claude                     # 等价写法
-specify init . --ai claude --force                  # 强制合并，跳过确认
-specify init . --ai claude --ai-skills              # 同时安装 agent skills（Codex CLI 需要此项）
-specify init . --ai claude --branch-numbering timestamp  # 时间戳分支编号（分布式团队推荐，避免编号冲突）
+specify init . --ai <your-agent>                          # 在当前目录初始化
+specify init --here --ai <your-agent>                     # 等价写法
+specify init . --ai <your-agent> --force                  # 强制合并，跳过确认
+specify init . --ai codex --ai-skills                     # Codex CLI 常用写法：同时安装 agent skills
+specify init . --ai <your-agent> --branch-numbering timestamp  # 时间戳分支编号（分布式团队推荐，避免编号冲突）
 specify check                                       # 验证工具是否就绪
 specify status                                      # 查看当前 feature 状态（v0.3.1+）
 specify doctor                                      # 项目健康诊断（v0.3.0+）
@@ -130,7 +130,7 @@ specify preset remove <name>         # 卸载预设
 
 ### 10.3 agency-agents 常用角色
 
-上游仓库：`git@github.com:msitarzewski/agency-agents.git`
+上游仓库：`https://github.com/msitarzewski/agency-agents`
 
 当前 Claude Code 推荐安装方式：在 `agency-agents` 仓库目录执行官方安装脚本。
 
@@ -212,11 +212,11 @@ chmod +x .git/hooks/pre-commit
 - `.env` 文件 MUST 加入 `.gitignore`；MUST 提供 `.env.example` 作为模板
 - CI 流水线 MUST 同样运行 gitleaks，作为第二道防线
 
-### 10.7 工具版本静默自检（核心 5 件套）
+### 10.7 工具版本检查（核心 5 件套）
 
-代理 SHOULD 在每次会话开始时，静默并行检查以下 5 个工具是否为最新版本，无需人工参与。发现有更新时，代理自动执行升级后继续工作；无需向用户汇报"正在检查"等过程信息，仅在升级完成后简短告知结果。其他工具（Claude Code CLI、Codex CLI、Gemini CLI 等）不在检查范围内。
+进入工具维护/升级场景，或用户明确要求时，代理 SHOULD 检查以下 5 个工具是否需要升级。默认不在每次会话开始时自动检查或自动升级；若升级需要网络、写权限或交互确认，则按宿主环境规范处理。其他工具（Claude Code CLI、Codex CLI、Gemini CLI 等）不在该清单范围内。
 
-**静默检查脚本（并行执行）：**
+**建议检查脚本（可并行执行）：**
 
 ```bash
 # gstack
@@ -245,7 +245,7 @@ git -C <agency-agents-path> fetch --dry-run 2>/dev/null
 | **agency-agents** | `git -C <agency-agents-path> pull origin main && <agency-agents-path>/scripts/install.sh --tool claude-code` |
 | **oh-my-claudecode** | `/oh-my-claudecode:omc-setup` |
 
-> `<agency-agents-path>` 替换为实际克隆路径。gstack 升级有内置交互确认流程，其余工具静默升级。
+> `<agency-agents-path>` 替换为实际克隆路径。gstack 升级通常带有宿主侧安装/确认流程；其余升级动作也应遵守当前宿主的权限、网络和交互约束。
 
 ---
 

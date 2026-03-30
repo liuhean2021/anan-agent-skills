@@ -42,7 +42,7 @@
 
 ### 6.1 项目启动（一次性）
 
-- [ ] `specify init . --ai claude` 初始化 spec-kit
+- [ ] `specify init . --ai <your-agent>` 初始化 spec-kit（Codex CLI 常用 `--ai codex --ai-skills`）
 - [ ] `/speckit.constitution` 建立项目原则
 - [ ] 补充 `AGENTS.md` / `CLAUDE.md`
 - [ ] 确认 context7 MCP 已启用
@@ -63,7 +63,7 @@
 
 - [ ] 模型与推理档位遵循当前 CLI / 仓库默认配置，MUST NOT 在工作流文档中硬编码固定模型分工
 - [ ] TDD：先写失败测试，再写实现
-- [ ] 每完成一个原子任务，执行 `/commit-message` 生成提交信息，确认后再提交（`wip: [task-id] 描述`）；MUST NOT 直接调用 `git commit`；提交信息默认使用中文，除非用户明确要求英文
+- [ ] 每完成一个原子任务，执行 `/commit-message` 生成提交信息，确认后再提交；MUST NOT 直接调用 `git commit`；提交信息格式以该技能定义为准，默认使用中文，除非用户明确要求英文
 - [ ] 踩坑立即追加写入 `memory/issues.md`
 - [ ] 架构决策立即追加写入 `memory/decisions.md`
 - [ ] IF 发现规格有误：返回 Phase 2 正式修改，MUST NOT 绕过
@@ -75,7 +75,7 @@
 - [ ] `/qa` QA 验证通过，截图已存档（feature branch 默认 diff-aware）
 - [ ] IF 本次前面生成了 `/speckit.checklist`：其中阻断项已闭环
 - [ ] `/ship` → CI 全绿 + ≥ 1 人 Review Approve 后合并
-- [ ] CD 自动部署 staging，CI 触发 `/qa --quick` 验证通过
+- [ ] CD 自动部署 staging；若团队已将 agent runtime 接入 CI，则可自动触发 `/qa --quick`，否则由人工或本地 agent 完成 staging 快速验证
 - [ ] 人工批准生产部署，上线后观察 5 分钟；IF 有问题 THEN 立即执行 `git revert HEAD` + `/ship`
 
 ### 6.5 功能完成后
