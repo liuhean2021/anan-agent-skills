@@ -52,9 +52,10 @@
 
 - [ ] 按 Section 1.1 判断任务规模，确定起始 Phase
 - [ ] IF 方向未定、MVP 边界未定、或影响重大：先执行 `/office-hours`，再执行 `/plan-ceo-review`，将结论写入 `specs/<feature-id>/ceo-review.md`
+- [ ] IF 涉及陌生库、新版本 SDK、或近期变化的工具行为：先查对应官方文档（优先 `context7` 或官方站点），再进入规格 / 方案动作
 - [ ] IF 方向已定且需求明确：执行 `/speckit.specify` + `/speckit.clarify`，锁定规格（变更须回 Phase 2 正式修改）
+- [ ] 推荐在 `/speckit.plan` 前执行 `/speckit.checklist`；复杂需求、高风险或高歧义需求 MUST 执行，并补齐需求完整性/清晰度/一致性问题
 - [ ] 执行 `/speckit.plan` + `/plan-eng-review`，将结论写入 `specs/<feature-id>/arch-review.md`
-- [ ] 复杂需求推荐执行 `/speckit.checklist`，补齐需求完整性/清晰度问题
 - [ ] `/speckit.tasks` 生成任务列表
 - [ ] `/speckit.analyze` 在 `tasks.md` 生成后执行并通过
 - [ ] IF 并行开发：使用 `git worktree`，MUST NOT 切分支代替
@@ -63,6 +64,7 @@
 
 - [ ] 模型与推理档位遵循当前 CLI / 仓库默认配置，MUST NOT 在工作流文档中硬编码固定模型分工
 - [ ] TDD：先写失败测试，再写实现
+- [ ] IF 需要专业判断或并行执行：使用 `agency-agents` 或外部代理编排能力，并明确文件所有权、输入上下文与验收条件
 - [ ] 每完成一个原子任务，执行 `/commit-message` 生成提交信息，确认后再提交；MUST NOT 直接调用 `git commit`；提交信息格式以该技能定义为准，默认使用中文，除非用户明确要求英文
 - [ ] 踩坑立即追加写入 `memory/issues.md`
 - [ ] 架构决策立即追加写入 `memory/decisions.md`

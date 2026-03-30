@@ -7,7 +7,9 @@
 
 ## Section 2：工具体系总览（Tool Stack）
 
-### 2.1 核心工具栈
+AI Coding Workflow 以 `Phase 0~10 / 5B` 为主线推进。以下工具与角色是**阶段内介入能力**，用于帮助代理完成同一条工作流，而不是多条彼此分离的流程。
+
+### 2.1 工作流组成能力
 
 | 层级 | 工具 | 职责 |
 |------|------|------|
@@ -37,6 +39,21 @@
 - 代码审查阶段，IF 需要交叉验证架构、安全、可读性或 UX 风险，THEN SHOULD 追加 `/oh-my-claudecode:ccg` 或 `/oh-my-claudecode:ask <model>`
 - OMC 外部 agent 输出 MUST 视为"辅助结论"，最终是否采纳 MUST 由当前 Claude Code 主代理结合测试、审查结果和人工判断统一裁决
 - 外部 agent 只应接收完成任务所需的最小上下文；敏感信息边界仍受 Section 3：AI 治理（ref-04）约束
+
+### 2.4 上游依据与映射原则
+
+本技能应优先参考上游官方文档与官方仓库，按阶段映射到本地工作流；尽量少在技能中写死易随版本变化的固定细节。
+
+| 上游来源 | 在本工作流中的用途 |
+|------|------|
+| `spec-kit` 官方文档 / 官方仓库 | 校准 Phase 0 / 2 / 3 / 4 / 5 / 6 的规格链路顺序、核心命令与产物定义 |
+| `gstack` 官方站 / 官方仓库 | 校准 Phase 1 / 3 / 7 / 8 / 9 / 10 的评审、QA、发布、复盘类职责边界 |
+| 其他工具官方文档 / 官方仓库 | 校准 `agency-agents`、外部代理编排、`context7`、`gitleaks` 等阶段辅助能力的真实用法 |
+
+**规则**：
+- 当本技能与上游工具当前行为存在冲突或歧义时，SHOULD 先复核上游官方文档，再回写本技能
+- 本技能负责定义“阶段与工具如何组合”，不负责替代上游文档去冻结所有版本细节
+- 若任务依赖新版本库、陌生 SDK、或近期变化的工具行为，MUST 优先查官方文档，而不是只依赖技能内静态描述
 
 ---
 
@@ -251,12 +268,14 @@ git -C <agency-agents-path> fetch --dry-run 2>/dev/null
 
 ## Section 11：参考来源（References）
 
-| 工具 | 来源 |
+| 工具 / 主题 | 来源 |
 |------|------|
-| spec-kit | https://github.com/github/spec-kit |
-| gstack | https://github.com/garrytan/gstack |
+| spec-kit 官方仓库 | https://github.com/github/spec-kit |
+| spec-kit 官方 Quick Start | https://github.github.com/spec-kit/quickstart.html |
+| gstack 官方站 | https://gstacks.org/ |
+| gstack 官方仓库 | https://github.com/garrytan/gstack |
 | context7 MCP | https://github.com/upstash/context7 |
 | hooks 配置 | https://docs.anthropic.com/en/docs/claude-code |
 | agency-agents | https://github.com/msitarzewski/agency-agents |
 | oh-my-claudecode | https://github.com/Yeachan-Heo/oh-my-claudecode |
-| 双模型架构 | aider architect 模式思路 |
+| gitleaks | https://github.com/gitleaks/gitleaks |
