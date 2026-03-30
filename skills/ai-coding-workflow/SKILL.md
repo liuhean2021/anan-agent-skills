@@ -1,17 +1,6 @@
 ---
 name: ai-coding-workflow
-description: >
-  AI Coding 工作流技能，适用于 Claude Code CLI 主导的 AI 辅助开发。
-  覆盖从产品方向到发布复盘的完整研发流程，包括规格驱动开发（spec-kit）、
-  架构评审（gstack）、TDD、代码审查、QA验证、并行开发等环节。
-  触发词包括：新项目、新功能、产品方向、需求规格、技术方案、任务拆解、
-  代码实现、代码审查、QA验证、发布、复盘、存量接入、存量项目、bug fix、
-  并行开发、spec-kit、gstack、agency-agents、工作流、ai-coding、
-  context7、worktree、TDD、测试先行、架构评审、ceo-review、speckit。
-  模糊场景（如「帮我做一个功能」）先确认任务类型再匹配场景。
-metadata:
-  author: liuhean
-  email: allsmy.com@gmail.com
+description: 当用户需要统一的 AI 编程工作流时使用，涵盖新项目、新功能、bug fix、规划、代码审查、QA、发布及存量项目接入，代理据此将任务路由至正确的上游工具（spec-kit / gstack）和对应阶段。
 ---
 
 > **⚠️ 初次安装必做**：将本技能加入全局强制规则 → 跳至文末「[初次配置](#初次配置全局强制生效)」章节，完成后再回来阅读。
@@ -26,11 +15,11 @@ metadata:
 > | `references/ref-04-governance-checklist.md` | §3 AI治理（数据边界/高风险操作/人工责任/留痕）+ §6 最佳实践清单（5组 checklist） |
 > | `references/ref-05-legacy-onboarding.md` | §7 存量项目接入（三档策略 A/B/C + Bug Fix 简化流程） |
 > | `references/ref-06-branch-parallel.md` | §8 分支策略（主干开发、PR合并规则）+ §9 并行开发（Git Worktree + OMC 多代理选型） |
-> | `references/ref-07-advanced-practices.md` | §12 进阶实践（P1 测试分层/依赖安全/DORA/Hooks；P2 AI信任边界/环境策略/合规审查/成本管理）|
+> | `references/ref-07-advanced-practices.md` | §12 进阶实践（P1 测试分层/依赖安全/DORA/Hooks；P2 AI信任边界/环境策略/合规审查/成本管理） |
 
 # AI Coding 工作流
 
-**核心原则**：规格驱动 → 测试先行 → 最小改动 → 审查验证 → 持续复盘
+**核心原则**：规格驱动 → 测试先行 → 最小改动 → 审查验证 → 持续复盘  
 **适用**：Claude Code CLI 主导的 AI 辅助开发（新项目 / 新功能 / bug fix / 存量接入）
 
 工具层级：spec-kit（规格）→ agency-agents（专业角色）→ gstack（评审验证）→ OMC（并行编排）
@@ -58,29 +47,29 @@ metadata:
 
 **执行顺序**：
 
-**A0 项目初始化**（一次性）
+**A0 项目初始化**（一次性）  
 `specify init . --ai claude` → `/speckit.constitution` → 补写 `AGENTS.md` / `CLAUDE.md`
 
-**A1 产品方向**
-执行 `/plan-ceo-review`，寻找最优版本，确认 MVP 边界。将结论写入 `.specify/specs/<feature-id>/ceo-review.md`。
+**A1 产品方向**  
+先用 `/office-hours` 梳理问题空间，再执行 `/plan-ceo-review`，确认 MVP 边界。将结论写入 `.specify/specs/<feature-id>/ceo-review.md`。
 
-**A2 需求规格**
-执行 `/speckit.specify "功能描述"` 生成初稿 → **重复执行** `/speckit.clarify` 直到规格无歧义 → 锁定 `spec.md`。
+**A2 需求规格**  
+执行 `/speckit.specify "功能描述"` 生成初稿 → **重复执行** `/speckit.clarify` 直到规格无歧义 → 锁定 `spec.md`。  
 注意：`/speckit.clarify` 追加写入，可多次执行；`/speckit.specify` 会覆盖整个 spec.md，仅在推倒重来时使用。
 
-**A3 技术方案**
+**A3 技术方案**  
 执行 `/speckit.plan "<技术栈>"` → `/plan-eng-review`，生成 `plan.md`、`research.md`、`arch-review.md`。
 
-**A4 一致性 + 任务拆解**
-`/speckit.analyze` → `/speckit.checklist` → `/speckit.tasks`，生成 `tasks.md`（含 `[P]` 并行标记）。
+**A4 质量检查 + 任务拆解**  
+复杂需求先执行 `/speckit.checklist` 做规格质量检查 → `/speckit.tasks` 生成 `tasks.md` → `/speckit.analyze` 进行跨文档一致性分析。
 
-**A5 TDD + 实施**（详见 `§ Phase 6-7`）
+**A5 TDD + 实施**（详见 `§ Phase 6-7`）  
 先写失败测试 → 执行 `/speckit.implement`（或 agency-agents / OMC 并行）→ 绿灯。
 
-**A6 审查 + QA + 发布**（详见 `§ Phase 8-10`）
-`/review` + security-engineer 并行 → `/qa --mode=diff-aware` → `/ship` → staging → 生产。
+**A6 审查 + QA + 发布**（详见 `§ Phase 8-10`）  
+`/review` + security-engineer 并行 → `/qa`（feature branch 默认 diff-aware）→ `/ship` → staging → 生产。
 
-**A7 复盘**
+**A7 复盘**  
 `/retro` → 有价值经验写入 `memory/patterns.md`。
 
 ---
@@ -92,17 +81,17 @@ metadata:
 ```
 Phase 2：需求规格（/speckit.specify 生成初稿 → 重复 /speckit.clarify 至无歧义 → 锁定 spec.md）
 Phase 3：技术方案（/speckit.plan → /plan-eng-review → arch-review.md）
-Phase 4：一致性检查（/speckit.analyze → /speckit.checklist）
+Phase 4：规格质量检查（/speckit.checklist，复杂需求推荐）
 Phase 5：任务拆解（/speckit.tasks → tasks.md）
-Phase 6：TDD（先写失败测试 → wip commit）
+Phase 6：一致性分析 + TDD（/speckit.analyze → 先写失败测试 → wip commit）
 Phase 7：实施（/speckit.implement / agency / OMC → 绿灯 → wip commits）
 Phase 8：审查（/review + security-engineer → review-findings.md）
-Phase 9：QA（/qa --mode=diff-aware → qa-reports/）
+Phase 9：QA（/qa → qa-reports/；feature branch 默认 diff-aware）
 Phase 10：发布（/ship → CI → staging → 生产）
 ```
 
 **关键约束**：
-- 计划/架构阶段用 Opus，实现阶段用 Sonnet
+- 模型与推理档位遵循当前 CLI / 仓库默认配置，MUST NOT 在工作流文档中硬编码固定模型分工
 - 每完成一个原子任务执行 `/commit-message`，确认后再提交（格式：`wip: [task-id] 描述`）
 - 发现规格有误 MUST 返回 Phase 2 正式修改，MUST NOT 绕过
 
@@ -121,7 +110,7 @@ Phase 10：发布（/ship → CI → staging → 生产）
 ② 定位并修复
 ③ /review（仅审改动范围）
 ④ 确认测试通过
-⑤ /qa --mode=diff-aware
+⑤ /qa（feature branch 默认 diff-aware；需要显式模式时再加 --quick / --regression）
 ⑥ /ship
 ⑦ 踩坑追加写入 memory/issues.md
 ```
@@ -151,12 +140,13 @@ Phase 10：发布（/ship → CI → staging → 生产）
 | 工具 | 升级命令 |
 |------|---------|
 | gstack | `/gstack-upgrade` |
-| specify-cli | `uv tool install specify-cli --force --from git+...@vX.Y.Z` |
+| specify-cli（CLI） | `uv tool install specify-cli --force --from git+https://github.com/github/spec-kit.git@vX.Y.Z` |
+| spec-kit 项目文件 | `specify init --here --force --ai <your-agent>` |
 | gitleaks | `brew upgrade gitleaks` |
-| agency-agents | `git pull origin main`（在仓库目录） |
+| agency-agents | `git -C <agency-agents-path> pull origin main && <agency-agents-path>/scripts/install.sh --tool claude-code` |
 | oh-my-claudecode | `/oh-my-claudecode:omc-setup` |
 
-代理 SHOULD 在每次会话开始时静默并行检查核心 5 件套版本（详见 `§ 10.7`）。
+代理 SHOULD 在每次会话开始时静默并行检查核心工具版本（详见 `§ 10.7`）。
 
 ---
 

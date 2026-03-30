@@ -42,17 +42,17 @@ WHEN 收到新任务时，代理 MUST 先按下表确定起始 Phase，再执行
 | 阶段 | 命令 | 工具 | 产出文档（精确路径） |
 |------|------|------|---------|
 | 项目初始化（一次性，在项目根目录执行） | `specify init . --ai claude` | spec-kit | `.specify/` 目录 |
-| 产品方向 | `/plan-ceo-review` | gstack | `.specify/specs/<feature-id>/ceo-review.md` |
+| 产品方向 | `/office-hours`（问题仍模糊时）→ `/plan-ceo-review` | gstack | `.specify/specs/<feature-id>/ceo-review.md` |
 | 需求规格 | `/speckit.specify` | spec-kit | `.specify/specs/<feature-id>/spec.md` |
 | 澄清需求 | `/speckit.clarify` | spec-kit | `.specify/specs/<feature-id>/spec.md`（追加） |
 | 技术方案 | `/speckit.plan` | spec-kit | `.specify/specs/<feature-id>/plan.md` `.specify/specs/<feature-id>/research.md` `.specify/specs/<feature-id>/contracts/` |
 | 架构评审 | `/plan-eng-review` | gstack | `.specify/specs/<feature-id>/arch-review.md` |
-| 一致性检查 | `/speckit.analyze` | spec-kit | — |
-| 验收清单 | `/speckit.checklist` | spec-kit | `.specify/specs/<feature-id>/checklists/` |
+| 规格质量清单 | `/speckit.checklist` | spec-kit | `.specify/specs/<feature-id>/checklists/` |
 | 任务拆解 | `/speckit.tasks` | spec-kit | `.specify/specs/<feature-id>/tasks.md` |
+| 一致性检查 | `/speckit.analyze`（在 tasks 之后） | spec-kit | — |
 | 代码实现 | `/speckit.implement` + OMC（按需） | spec-kit + oh-my-claudecode | wip commits |
 | 代码+安全审查 | `/review` + security-engineer + OMC 并行复核 + gitleaks | gstack + agency + oh-my-claudecode | `.specify/specs/<feature-id>/review-findings.md` |
-| QA 验证 | `/qa --mode=diff-aware` | gstack | `.gstack/qa-reports/` |
+| QA 验证 | `/qa`（feature branch 默认 diff-aware） | gstack | `.gstack/qa-reports/` |
 | 发布 | `/ship` | gstack | PR + CHANGELOG |
 | 周复盘 | `/retro` | gstack | `.context/retros/` |
 
@@ -62,17 +62,19 @@ WHEN 收到新任务时，代理 MUST 先按下表确定起始 Phase，再执行
 
 | 目标场景 | 使用命令 |
 |---------|--------|
-| 方向判断 / MVP 收敛 | `/plan-ceo-review` |
+| 方向判断 / MVP 收敛 | `/office-hours`（需求仍模糊时）→ `/plan-ceo-review` |
 | 需求落规格 | `/speckit.specify` → `/speckit.clarify` |
-| 新项目或新功能：方向未定时先做方向判断，再落规格 | `/plan-ceo-review` → `/speckit.specify` |
+| 新项目或新功能：方向未定时先做方向判断，再落规格 | `/office-hours` → `/plan-ceo-review` → `/speckit.specify` |
 | 新项目或新功能：方向已定时快速落规格 | `/plan-ceo-review`（简版，可选）→ `/speckit.specify` |
 | 生成技术方案 | `/speckit.plan` → `/plan-eng-review` |
+| 规格质量检查 | `/speckit.checklist` |
 | 拆解任务 | `/speckit.tasks` |
+| 实施前一致性分析 | `/speckit.analyze` |
 | 代码实现（任务明确） | `/speckit.implement` |
 | 代码实现（需并行外部 agent） | `/oh-my-claudecode:team` 或 `/oh-my-claudecode:omc-teams` |
 | 代码实现（需专业判断） | agency-agents 对应角色 |
 | 代码审查 | `/review` + security-engineer + `/oh-my-claudecode:ccg`（按需并行） |
-| 功能测试 | `/qa --mode=diff-aware` |
+| 功能测试 | `/qa`（feature branch 默认 diff-aware） |
 | 发布上线 | `/ship` → staging 验证 → 合并 |
 | 问题回滚 | `git revert HEAD` + `/ship` |
 | 记录架构决策 | 写入 `memory/decisions.md` |
