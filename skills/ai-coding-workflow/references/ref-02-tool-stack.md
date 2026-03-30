@@ -253,10 +253,10 @@ git -C <agency-agents-path> fetch --dry-run 2>/dev/null
 
 | 工具 | 来源 |
 |------|------|
-| spec-kit | github/spec-kit |
-| gstack | garrytan/gstack |
-| context7 MCP | upstash/context7 |
-| hooks 配置 | Claude Code 官方文档 |
-| agency-agents | msitarzewski/agency-agents |
-| oh-my-claudecode | bryanlrobinson/oh-my-claudecode |
+| spec-kit | https://github.com/github/spec-kit |
+| gstack | https://github.com/garrytan/gstack |
+| context7 MCP | https://github.com/upstash/context7 |
+| hooks 配置 | https://docs.anthropic.com/en/docs/claude-code |
+| agency-agents | https://github.com/msitarzewski/agency-agents |
+| oh-my-claudecode | https://github.com/Yeachan-Heo/oh-my-claudecode |
 | 双模型架构 | aider architect 模式思路 |

@@ -54,7 +54,7 @@ description: 当用户需要统一的 AI 编程工作流时使用，涵盖新项
 先用 `/office-hours` 梳理问题空间，再执行 `/plan-ceo-review`，确认 MVP 边界。将结论写入 `specs/<feature-id>/ceo-review.md`。
 
 **A2 需求规格**
-执行 `/speckit.specify "功能描述"` 生成初稿 → **重复执行** `/speckit.clarify` 直到规格无歧义 → 执行 `/speckit.checklist` 并闭环问题 → 锁定 `spec.md`。
+执行 `/speckit.specify "功能描述"` 生成初稿 → **重复执行** `/speckit.clarify` 直到规格无歧义 → 推荐在 `plan` 前执行 `/speckit.checklist` 并闭环问题；高风险或高歧义需求 MUST 执行 → 锁定 `spec.md`。
 注意：`/speckit.clarify` 追加写入，可多次执行；`/speckit.specify` 会覆盖整个 spec.md，仅在推倒重来时使用。
 
 **A3 技术方案**
@@ -79,7 +79,7 @@ description: 当用户需要统一的 AI 编程工作流时使用，涵盖新项
 > 详细流程 → `references/ref-03-full-workflow.md § Phase 2-9`
 
 ```
-Phase 2：需求规格（/speckit.specify 生成初稿 → 重复 /speckit.clarify 至无歧义 → /speckit.checklist 闭环规格质量问题 → 锁定 spec.md）
+Phase 2：需求规格（/speckit.specify 生成初稿 → 重复 /speckit.clarify 至无歧义 → 推荐在 plan 前执行 /speckit.checklist，高风险或高歧义需求强制执行 → 锁定 spec.md）
 Phase 3：技术方案（/speckit.plan → /plan-eng-review → arch-review.md）
 Phase 4：任务拆解（/speckit.tasks → tasks.md）
 Phase 5：一致性分析 + TDD（/speckit.analyze → 先写失败测试 → 提交测试基线）
