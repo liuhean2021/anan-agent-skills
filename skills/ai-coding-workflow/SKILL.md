@@ -30,6 +30,8 @@ description: 当用户需要统一的 AI 编程工作流时使用，涵盖新项
 
 详细阶段、工具映射与治理规则见下方章节和 `references/`。
 
+涉及前端交互需求时，本工作流只在**需求阶段**锁定交互设计与可视化基线；页面实现、组件开发、视觉还原属于后续实施阶段。
+
 ## 命令映射
 
 正文优先描述“动作”，不重复绑定宿主命令；具体命令按下表选择：
@@ -103,19 +105,20 @@ Phase 10 复盘
 
 **A2 需求规格**
 执行 spec-kit 规格链路：specify → clarify → checklist。先生成初稿 → **重复澄清** 直到规格无歧义 → 推荐在 `plan` 前执行 checklist 并闭环问题；高风险或高歧义需求 MUST 执行 → 锁定 `spec.md`。
+若需求涉及页面、组件、弹窗、表单、导航、状态切换或操作反馈，则视为涉及前端交互需求；MUST 在本阶段补齐 `interaction-design.md` 与 `design-assets/`，仅有文字需求时 MUST NOT 直接进入后续实现阶段。
 注意：clarify 追加写入，可多次执行；specify 会覆盖整个 `spec.md`，仅在推倒重来时使用。
 
 **A3 技术方案**
-执行 spec-kit plan → `/plan-eng-review`，生成 `plan.md`、`research.md`、`data-model.md`、`contracts/`、`arch-review.md`。
+执行 spec-kit plan → `/plan-eng-review`，生成 `plan.md`、`research.md`、`data-model.md`、`contracts/`、`arch-review.md`。若已产出前端交互设计，则 `plan.md` MUST 引用 `interaction-design.md`，说明后续前端实现如何消费设计产物。
 
 **A4 任务拆解**
-执行 spec-kit tasks，生成 `tasks.md`。
+执行 spec-kit tasks，生成 `tasks.md`。若已产出前端交互设计，则前端任务 MUST 基于 `interaction-design.md` 拆解，而不是只依据文字规格。
 
 **A5 TDD + 实施**（详见 `§ Phase 5-6`）
-执行一致性分析 → 先写失败测试 → 执行实现（或 agency-agents / 外部代理编排能力并行）→ 绿灯。
+执行一致性分析 → 先写失败测试 → 执行实现（或 agency-agents / 外部代理编排能力并行）→ 绿灯。具体页面实现与组件开发在 Phase 6 执行，不在需求阶段提前落代码。
 
 **A6 审查 + QA + 发布**（详见 `§ Phase 7-9`）
-执行审查 → QA → 按 Phase 9 发布链路进入 CI / Review / 合并 / staging quick QA / production。若当前 host 未安装 gstack，则用人工审查、测试命令或 CI 流程替代对应命令。
+执行审查 → QA → 按 Phase 9 发布链路进入 CI / Review / 合并 / staging quick QA / production。若涉及前端交互，QA MUST 将 `interaction-design.md` / `design-assets/` 作为对照输入之一。若当前 host 未安装 gstack，则用人工审查、测试命令或 CI 流程替代对应命令。
 
 **A7 复盘**  
 `/retro` → 有价值经验写入 `memory/patterns.md`。
@@ -127,13 +130,13 @@ Phase 10 复盘
 > 详细流程 → `references/ref-03-full-workflow.md § Phase 2-9`
 
 ```
-Phase 2：需求规格（执行 spec-kit 规格链路：specify → clarify → checklist。生成初稿 → 重复澄清至无歧义 → 推荐在 plan 前执行 checklist，高风险或高歧义需求强制执行 → 锁定 spec.md）
-Phase 3：技术方案（spec-kit plan → /plan-eng-review → arch-review.md）
-Phase 4：任务拆解（spec-kit tasks → tasks.md）
-Phase 5：一致性分析 + TDD（spec-kit analyze → 先写失败测试 → 提交测试基线）
+Phase 2：需求规格（执行 spec-kit 规格链路：specify → clarify → checklist。生成初稿 → 重复澄清至无歧义 → 推荐在 plan 前执行 checklist，高风险或高歧义需求强制执行 → 锁定 spec.md；若涉及前端交互，MUST 同步产出 `interaction-design.md` 与 `design-assets/`）
+Phase 3：技术方案（spec-kit plan → /plan-eng-review → arch-review.md；若涉及前端交互，`plan.md` MUST 引用 `interaction-design.md` 作为实现输入）
+Phase 4：任务拆解（spec-kit tasks → tasks.md；若涉及前端交互，前端任务 MUST 基于设计产物拆解）
+Phase 5：一致性分析 + TDD（spec-kit analyze → 对 `spec.md` / `interaction-design.md` / `plan.md` / `tasks.md` 做一致性分析 → 先写失败测试 → 提交测试基线）
 Phase 6：实施（spec-kit implement；必要时配合 agency / 外部代理编排能力 → 绿灯 → 原子提交）
 Phase 7：审查（执行 review + security-engineer；未安装 gstack 时改为人工审查或 CI 替代）
-Phase 8：QA（执行 qa → qa-reports/；feature branch 默认 diff-aware；未安装 gstack 时改为人工或 CI 验证）
+Phase 8：QA（执行 qa → qa-reports/；feature branch 默认 diff-aware；若涉及前端交互，MUST 对照 `interaction-design.md` / `design-assets/` 验证；未安装 gstack 时改为人工或 CI 验证）
 Phase 9：发布（按 Phase 9 发布链路执行；未安装 gstack 时走宿主常规发布流程）
 ```
 

@@ -55,8 +55,12 @@
 - [ ] IF 涉及陌生库、新版本 SDK、或近期变化的工具行为：先查对应官方文档（优先 `context7` 或官方站点），再进入规格 / 方案动作
 - [ ] IF 方向已定且需求明确：执行 `/speckit.specify` + `/speckit.clarify`，锁定规格（变更须回 Phase 2 正式修改）
 - [ ] 推荐在 `/speckit.plan` 前执行 `/speckit.checklist`；复杂需求、高风险或高歧义需求 MUST 执行，并补齐需求完整性/清晰度/一致性问题
+- [ ] IF 涉及前端交互需求：在锁定规格前补齐 `specs/<feature-id>/interaction-design.md`
+- [ ] IF 已有设计文件、原型、分享链接或截图：归档到 `specs/<feature-id>/design-assets/`，并将在线来源写入 `specs/<feature-id>/design-assets/source-links.md`
 - [ ] 执行 `/speckit.plan` + `/plan-eng-review`，将结论写入 `specs/<feature-id>/arch-review.md`
+- [ ] IF 涉及前端交互需求：确认 `plan.md` 已引用 `interaction-design.md` 作为后续实现输入
 - [ ] `/speckit.tasks` 生成任务列表
+- [ ] IF 涉及前端交互需求：确认 `tasks.md` 已按设计产物拆出页面结构实现、交互实现、状态处理、视觉验证、回归验证
 - [ ] `/speckit.analyze` 在 `tasks.md` 生成后执行并通过
 - [ ] IF 并行开发：使用 `git worktree`，MUST NOT 切分支代替
 
@@ -69,12 +73,14 @@
 - [ ] 踩坑立即追加写入 `memory/issues.md`
 - [ ] 架构决策立即追加写入 `memory/decisions.md`
 - [ ] IF 发现规格有误：返回 Phase 2 正式修改，MUST NOT 绕过
+- [ ] IF 涉及前端交互需求：页面实现从 Phase 6 开始，输入 MUST 来自 `spec.md`、`interaction-design.md`、`design-assets/`、`plan.md`、`tasks.md`
 
-### 6.4 上线前（七关 MUST 全过）
+### 6.4 上线前（关键 gate MUST 全过）
 
 - [ ] gitleaks Secret 扫描通过（pre-commit hook 自动触发，CI 二次校验）
 - [ ] `/review` + security-engineer 代码+安全审查通过，将结论写入 `specs/<feature-id>/review-findings.md`，修复后重审
 - [ ] `/qa` QA 验证通过，截图已存档（feature branch 默认 diff-aware）
+- [ ] IF 涉及前端交互需求：QA 已对照 `interaction-design.md` / `design-assets/` 验证关键页面结构、交互流转、状态矩阵、响应式规则
 - [ ] IF 本次前面生成了 `/speckit.checklist`：其中阻断项已闭环
 - [ ] `/ship` → CI 全绿 + ≥ 1 人 Review Approve 后合并
 - [ ] CD 自动部署 staging；若团队已将 agent runtime 接入 CI，则可自动触发 `/qa --quick`，否则由人工或本地 agent 完成 staging 快速验证

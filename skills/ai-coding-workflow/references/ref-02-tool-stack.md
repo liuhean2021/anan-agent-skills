@@ -124,10 +124,10 @@ specify preset remove <name>         # 卸载预设
 /office-hours                    # 方向模糊/问题定义不清时先做产品梳理
 /plan-ceo-review                 # 产品方向评审（寻找最优版本）
 /plan-eng-review                 # 架构深度评审（图表、边界、失败模式）
-/plan-design-review              # 设计方案评审（视觉一致性、交互合理性）
+/plan-design-review              # 设计方案评审（视觉一致性、交互合理性；涉及前端交互且设计复杂时建议接在 Phase 2/3）
 /design-consultation             # 产品设计咨询（理解产品、研究对标、方案建议）
 /design-shotgun                  # 多变体设计生成（并行产出多个方向供比较）
-/design-html                     # 设计落地：将批准的 mockup 转为 Pretext-native HTML（v0.14.0）
+/design-html                     # 设计落地：将批准的 mockup 转为 Pretext-native HTML（v0.14.0；不属于需求阶段默认主线）
 
 # 开发 & 审查
 /review                          # 代码审查（生产级 bug）

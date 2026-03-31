@@ -46,6 +46,7 @@ WHEN 收到新任务时，代理 MUST 先按下表确定起始 Phase，再执行
 | 需求规格 | `/speckit.specify` | spec-kit | `specs/<feature-id>/spec.md` |
 | 澄清需求 | `/speckit.clarify` | spec-kit | `specs/<feature-id>/spec.md`（追加） |
 | 规格质量清单 | `/speckit.checklist` | spec-kit | `specs/<feature-id>/checklists/` |
+| 前端交互设计归档（如适用） | 与规格链路同步完成 | 手动 / 设计工具 / gstack | `specs/<feature-id>/interaction-design.md` `specs/<feature-id>/design-assets/` |
 | 技术方案 | `/speckit.plan` | spec-kit | `specs/<feature-id>/plan.md` `specs/<feature-id>/research.md` `specs/<feature-id>/contracts/` |
 | 架构评审 | `/plan-eng-review` | gstack | `specs/<feature-id>/arch-review.md` |
 | 任务拆解 | `/speckit.tasks` | spec-kit | `specs/<feature-id>/tasks.md` |
@@ -64,6 +65,7 @@ WHEN 收到新任务时，代理 MUST 先按下表确定起始 Phase，再执行
 |---------|--------|
 | 方向判断 / MVP 收敛 | `/office-hours`（需求仍模糊时）→ `/plan-ceo-review` |
 | 需求落规格 | Claude 用 `/speckit.specify` → `/speckit.clarify` → `/speckit.checklist`；Codex 用 `$speckit-specify` → `$speckit-clarify` → `$speckit-checklist` |
+| 前端交互需求落规格 | spec-kit 规格链路 + 补齐 `interaction-design.md`、`design-assets/`；复杂交互建议追加 `/plan-design-review` |
 | 新项目或新功能：方向未定时先做方向判断，再落规格 | `/office-hours` → `/plan-ceo-review` → spec-kit 规格链路 |
 | 新项目或新功能：方向已定时快速落规格 | `/plan-ceo-review`（简版，可选）→ spec-kit 规格链路 |
 | 生成技术方案 | Claude 用 `/speckit.plan`；Codex 用 `$speckit-plan` → `/plan-eng-review` |
@@ -89,7 +91,7 @@ WHEN 收到新任务时，代理 MUST 先按下表确定起始 Phase，再执行
 
 > 代理 MUST 在对应 Phase 结束后，将产出内容写入下表标注的精确路径，无需等待人工确认。
 
-当前 spec-kit 目录架构分为两层：`.specify/` 保存模板、脚本、constitution、扩展与预设等框架元数据；业务级 feature 文档统一放在项目根目录 `specs/<feature-id>/` 下，包含 `spec.md`、`plan.md`、`tasks.md`、`checklists/`、`contracts/` 等实际交付物。
+当前 spec-kit 目录架构分为两层：`.specify/` 保存模板、脚本、constitution、扩展与预设等框架元数据；业务级 feature 文档统一放在项目根目录 `specs/<feature-id>/` 下，包含 `spec.md`、`interaction-design.md`、`design-assets/`、`plan.md`、`tasks.md`、`checklists/`、`contracts/` 等实际交付物。
 
 ### 文件路径速查表（精确路径，代理直接使用）
 
@@ -107,6 +109,9 @@ WHEN 收到新任务时，代理 MUST 先按下表确定起始 Phase，再执行
 | 产品方向结论 | `specs/<feature-id>/ceo-review.md` | 代理写入 | Phase 1 |
 | 需求规格 | `specs/<feature-id>/spec.md` | `/speckit.specify` | Phase 2 |
 | 验收 checklist | `specs/<feature-id>/checklists/` | `/speckit.checklist` | Phase 2 |
+| 前端交互设计说明 | `specs/<feature-id>/interaction-design.md` | 代理写入 | Phase 2 |
+| 前端设计资料目录 | `specs/<feature-id>/design-assets/` | 代理整理 / 设计工具导出 | Phase 2 |
+| 前端设计来源索引 | `specs/<feature-id>/design-assets/source-links.md` | 代理写入 | Phase 2 |
 | 技术实现方案 | `specs/<feature-id>/plan.md` | `/speckit.plan` | Phase 3 |
 | 技术调研 | `specs/<feature-id>/research.md` | `/speckit.plan` | Phase 3 |
 | 数据模型 | `specs/<feature-id>/data-model.md` | `/speckit.plan` | Phase 3 |
