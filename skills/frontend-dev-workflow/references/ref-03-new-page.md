@@ -52,6 +52,7 @@
 - 参考模板：[找到项目中布局最相似的已有页面]
 - 可复用组件：[列出可复用的公共组件/业务组件]
 - 样式方案：使用项目现有变量 / token / 主题，不创建等价重复组件
+- Design Token：引用 `docs/ds-context.md` 中的语义 token（如 `--color-primary`），MUST NOT 使用裸色值或裸间距（如 `#3b82f6` / `24px`）
 
 ← 以上是初步建议，请确认或说明需要调整的地方
 ```
@@ -94,6 +95,13 @@
    - 必须复用已有组件和样式 token。
 3. **跑测试直到全绿**：修复代码直到测试全部通过，不准为了让测试通过而改测试本身。
 4. **视觉验证**：截图并与预期对比（如有设计图），确保 1440px 和 768px 下均表现正常。
+
+**业务逻辑单测规则**：页面代码中出现以下逻辑时，MUST 抽离为纯函数并补单测（Vitest/Jest），不允许只靠 E2E 测试覆盖：
+- 表单校验器（validator / validation rules）
+- 数据转换/映射（mapper / formatter）
+- 权限判断函数（permission predicate）
+- 提交适配器（submit adapter / payload builder）
+- store / composable / hook 中的业务逻辑
 
 ### 4.5 新页面 data-testid 规范
 

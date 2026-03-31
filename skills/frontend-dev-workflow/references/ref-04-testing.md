@@ -866,8 +866,11 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck --if-present
+      - run: npm run test:unit --if-present
+      - run: npm run test:component --if-present
       - run: npx playwright install --with-deps chromium webkit
       - run: npm run test:e2e
+      - run: npm run build
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
@@ -880,7 +883,7 @@ jobs:
 
 ```
 MUST（最低要求）：
-  ✅ CI 全绿才能合并（lint + typecheck + tests）
+  ✅ CI 全绿才能合并（lint + typecheck + unit + component + e2e + build）
   ✅ 测试失败时上传 Playwright 报告，方便排查
   ✅ 至少 1 人 Code Review Approve
 
@@ -889,6 +892,16 @@ SHOULD（推荐）：
   ☑ snapshot 更新（--update-snapshots）只允许 PR 作者操作，reviewer 确认
   ☑ 新增页面/组件的 PR 必须包含对应测试文件
 ```
+
+#### 视觉回归触发矩阵
+
+| 改动类型 | 触发方式 | 说明 |
+|---------|---------|------|
+| 改公共组件 / 全局样式 / 主题 token | MUST `toHaveScreenshot()` | 影响范围广，必须自动对比 |
+| 改关键页面布局 / 复杂响应式 | MUST `toHaveScreenshot()` | 防止多断点下布局漂移 |
+| 修改已有页面局部样式（场景 B） | SHOULD `.baseline/` 人工对比 | 截图改前改后，PR 描述附图 |
+| 新增页面（场景 C） | SHOULD `.baseline/` 初始截图存档 | 建立新基线，后续改动有据可查 |
+| 纯逻辑/文案改动 | MAY 跳过视觉验证 | 无 UI 变更时可省略 |
 
 #### 测试失败处理流程
 

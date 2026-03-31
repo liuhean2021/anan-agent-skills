@@ -64,6 +64,9 @@ metadata:
 先列出建议截图清单，等用户确认后，再截图关键页面保存到 `.baseline/`（加入 `.gitignore`）。
 > 注意：`.baseline/` 仅用于人工对比；`toHaveScreenshot()` 生成的 snapshot 文件**必须**纳入 git。
 
+**A4 生成 Design Token 上下文**（`§ 2.4`）
+扫描项目设计系统配置（Tailwind config / CSS variables / 主题文件 / UI 库 token），提取语义化 token 别名表，写入 `docs/ds-context.md`。内容包含：颜色语义别名、间距规格、字体层级、组件变体映射。场景 B/C 在使用或创建 token 前 MUST 先读此文件，禁止使用裸色值/裸间距。
+
 ---
 
 ## 场景 B：修改已有页面
