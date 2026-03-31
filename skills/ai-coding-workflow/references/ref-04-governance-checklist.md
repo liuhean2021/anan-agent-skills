@@ -59,8 +59,11 @@
 - [ ] IF 已有设计文件、原型、分享链接或截图：归档到 `specs/<feature-id>/design-assets/`，并将在线来源写入 `specs/<feature-id>/design-assets/source-links.md`
 - [ ] 执行 `/speckit.plan` + `/plan-eng-review`，将结论写入 `specs/<feature-id>/arch-review.md`
 - [ ] IF 涉及前端交互需求：确认 `plan.md` 已引用 `interaction-design.md` 作为后续实现输入
+- [ ] **[P0-3]** IF 涉及 DB schema 变更：确认 `plan.md` 已包含迁移方案（兼容性分类、上线顺序、回滚脚本、staging dry-run 要求）
+- [ ] **[P0-4]** IF 涉及 API 变更：确认已先更新 `contracts/` 再写实现；breaking change 已在 `arch-review.md` 标注并获得架构确认
 - [ ] `/speckit.tasks` 生成任务列表
 - [ ] IF 涉及前端交互需求：确认 `tasks.md` 已按设计产物拆出页面结构实现、交互实现、状态处理、视觉验证、回归验证
+- [ ] **[P0-1]** IF 涉及前端 UI 实现：确认 `tasks.md` 中每条前端任务已标注 `[复用]` / `[扩展]` / `[新增]`，且新增组件任务已说明理由
 - [ ] `/speckit.analyze` 在 `tasks.md` 生成后执行并通过
 - [ ] IF 并行开发：使用 `git worktree`，MUST NOT 切分支代替
 

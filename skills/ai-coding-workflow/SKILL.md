@@ -225,6 +225,28 @@ cd ../project-feature-b && claude
 
 ---
 
+## 场景 G：UI 快车道（纯视觉微调）
+
+**适用条件**（MUST 同时满足）：
+- 改动仅涉及视觉层：颜色、间距、字号、图标、文案、排版
+- 不新增组件、不改逻辑、不改接口、不改路由
+- 改动文件 ≤ 3 个
+
+IF 以上任一条件不满足，THEN MUST 退回场景 B 或 C，走完整流程。
+
+**执行顺序**：
+
+```
+① 用一句话描述要改什么（不需要写 spec.md）
+② Phase 6：直接实施改动
+③ Phase 8：视觉 Review（截图对比或人工确认）
+④ Phase 9：按常规发布流程上线
+```
+
+**不产出** `spec.md` / `plan.md` / `tasks.md`，改动记录写入 commit message 即可。
+
+---
+
 ## AI 治理（核心边界）
 
 > 完整规则 → `references/ref-04-governance-checklist.md §3`；进阶实践（测试分层/依赖安全/合规/成本）→ `references/ref-07-advanced-practices.md`
