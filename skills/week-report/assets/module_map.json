@@ -1,0 +1,10 @@
+{
+  "comment": "仓库名关键词 → 所属模块，按顺序匹配，先匹配先用。请根据实际项目修改 keyword 和 module。",
+  "rules": [
+    { "keyword": "project-a", "module": "模块A" },
+    { "keyword": "project-b", "module": "模块A" },
+    { "keyword": "project-c", "module": "模块B" },
+    { "keyword": "project-d", "module": "模块B" }
+  ],
+  "default": "其他"
+}
