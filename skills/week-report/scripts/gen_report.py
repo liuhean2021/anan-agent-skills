@@ -81,11 +81,20 @@ def resolve_versioned_path(output_path):
     """
     自动版本化输出路径，避免覆盖已有文件。
     规则：
-      - 不存在 → 直接使用（如 xxx.xlsx）
-      - 已存在 → 查找下一个可用版本号
-        xxx.xlsx 存在 → xxx_v2.xlsx → xxx_v3.xlsx ...
+      - output_path 是目录 → 在目录下生成 前端工作周报M月第N周.xlsx
+      - 文件不存在 → 直接使用
+      - 文件已存在 → 查找下一个可用版本号（_v2, _v3 ...）
     """
     import os
+    from datetime import datetime
+
+    # 如果 output 是目录，自动生成文件名
+    if os.path.isdir(output_path):
+        now = datetime.now()
+        week_num = calc_week_of_month(now.strftime("%Y-%m-%d"))
+        filename = f"前端工作周报{now.month}月第{week_num}周.xlsx"
+        output_path = os.path.join(output_path, filename)
+
     if not os.path.exists(output_path):
         return output_path
 
