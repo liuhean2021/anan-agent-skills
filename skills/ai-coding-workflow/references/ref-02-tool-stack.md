@@ -117,29 +117,32 @@ specify preset remove <name>         # 卸载预设
 ### 10.2 gstack
 
 ```bash
+# 初始安装（Claude Code）
+git clone --single-branch --depth 1 https://github.com/garrytan/gstack.git ~/.claude/skills/gstack && cd ~/.claude/skills/gstack && ./setup
+
+# 初始安装（Codex CLI / 宿主等价路径）
+git clone --single-branch --depth 1 https://github.com/garrytan/gstack.git ~/.codex/skills/gstack && cd ~/.codex/skills/gstack && ./setup
+
 # 升级
 /gstack-upgrade                  # 自动检测安装方式并升级到最新版本
 
-# 产品方向 & 设计
+# 产品方向
 /office-hours                    # 方向模糊/问题定义不清时先做产品梳理
 /plan-ceo-review                 # 产品方向评审（寻找最优版本）
 /plan-eng-review                 # 架构深度评审（图表、边界、失败模式）
-/plan-design-review              # 设计方案评审（视觉一致性、交互合理性；涉及前端交互且设计复杂时建议接在 Phase 2/3）
-/design-consultation             # 产品设计咨询（理解产品、研究对标、方案建议）
-/design-shotgun                  # 多变体设计生成（并行产出多个方向供比较）
-/design-html                     # 设计落地：将批准的 mockup 转为 Pretext-native HTML（v0.14.0；不属于需求阶段默认主线）
 
 # 开发 & 审查
 /review                          # 代码审查（生产级 bug）
-/investigate                     # 系统性 debug，root cause 调查
-/learn                           # 跨会话项目学习记录（GStack Learns；v0.13.4）
+/browse                          # 持久化浏览器会话，用于页面操作、截图与交互验证
 
-# 测试 & 发布
+# 浏览器 & 测试
+/setup-browser-cookies           # 导入本机浏览器 cookies，测试登录后页面
 /qa                              # feature branch 默认走 diff-aware；最常用
+
+# 发布 & 复盘
 /qa --quick                      # 30 秒冒烟测试（staging 验证用）
 /qa --regression <baseline>      # 对比基线回归测试
 /ship                            # 发布
-/canary                          # 发布后金丝雀监控
 /retro                           # 周复盘
 ```
 
@@ -183,7 +186,8 @@ cp engineering/*.md ~/.claude/agents/
 
 ```bash
 # 升级
-/oh-my-claudecode:omc-setup      # 统一入口：安装、升级、诊断、MCP 配置
+omc update                       # 升级 CLI/plugin（不刷新 CLAUDE.md/config）
+/oh-my-claudecode:omc-setup      # 安装、刷新 CLAUDE.md/config、诊断、MCP 配置
 
 # 使用命令
 /oh-my-claudecode:ask codex "review this patch for security and correctness"
@@ -238,6 +242,7 @@ chmod +x .git/hooks/pre-commit
 ```bash
 # gstack
 ~/.claude/skills/gstack/bin/gstack-update-check --force 2>/dev/null
+~/.codex/skills/gstack/bin/gstack-update-check --force 2>/dev/null
 
 # specify-cli（对比 PyPI 最新版）
 uv tool list 2>/dev/null | grep specify-cli
@@ -249,7 +254,7 @@ brew outdated gitleaks 2>/dev/null
 git -C <agency-agents-path> fetch --dry-run 2>/dev/null
 
 # oh-my-claudecode
-/oh-my-claudecode:omc-setup --check 2>/dev/null
+omc update --check 2>/dev/null
 ```
 
 **升级命令（检测到更新时自动执行）：**
@@ -260,9 +265,11 @@ git -C <agency-agents-path> fetch --dry-run 2>/dev/null
 | **specify-cli** | `uv tool install specify-cli --force --from git+https://github.com/github/spec-kit.git@vX.Y.Z` |
 | **gitleaks** | `brew upgrade gitleaks` |
 | **agency-agents** | `git -C <agency-agents-path> pull origin main && <agency-agents-path>/scripts/install.sh --tool claude-code` |
-| **oh-my-claudecode** | `/oh-my-claudecode:omc-setup` |
+| **oh-my-claudecode** | `omc update`（安装/诊断用 `/oh-my-claudecode:omc-setup`） |
 
 > `<agency-agents-path>` 替换为实际克隆路径。gstack 升级通常带有宿主侧安装/确认流程；其余升级动作也应遵守当前宿主的权限、网络和交互约束。
+>
+> Codex CLI 安装写法表示“沿用同一套 gstack 安装脚本，但放到宿主等价技能目录”；若当前宿主的技能目录或加载机制不同，应按宿主规范调整路径。
 
 ---
 

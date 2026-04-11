@@ -16,7 +16,7 @@
   "mcpServers": {
     "playwright": {
       "command": "npx",
-      "args": ["@anthropic-ai/mcp-playwright@latest"]
+      "args": ["@playwright/mcp@latest"]
     },
     "context7": {
       "command": "npx",
