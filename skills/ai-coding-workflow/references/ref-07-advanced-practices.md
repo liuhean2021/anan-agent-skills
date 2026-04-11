@@ -1,5 +1,7 @@
 # §12 进阶实践（P1/P2 可选采纳）
 
+> 来源：ai-coding-workflow-best-practices.md §12
+> 适用：测试分层、依赖安全、DORA、hooks、AI 信任边界、环境策略、合规审查、成本管理
 > 本文档为主工作流的延伸参考，**不强制执行**，按团队规模和项目阶段按需采纳。
 > 关联文档：`ref-03-full-workflow.md`、`ref-04-governance-checklist.md`
 

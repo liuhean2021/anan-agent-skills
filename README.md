@@ -11,7 +11,7 @@
 | [oss-upload-online-access](skills/oss-upload-online-access/SKILL.md) | 上传文件到阿里云 OSS / 腾讯云 COS 并返回公网链接 |
 | [pre-commit-review](skills/pre-commit-review/SKILL.md) | 提交前代码审查，输出修改总结与结构化审查结论 |
 | [frontend-dev-workflow](skills/frontend-dev-workflow/SKILL.md) | 前端 AI Coding 工作流：接手项目、修改页面、新增页面，测试先行 + 视觉验证闭环 |
-| [ai-coding-workflow](skills/ai-coding-workflow/SKILL.md) | 统一 AI Coding 工作流：以 Phase 0~10 / 5B 为主线，集成 spec-kit、gstack、agency-agents、context7 等阶段能力 |
+| [ai-coding-workflow](skills/ai-coding-workflow/SKILL.md) | 统一 AI Coding 工作流：以 Phase 0~10 / 5B 为主线，集成 spec-kit、gstack、agency-agents、context7 等阶段能力，并补充 Claude Code / Codex / Gemini / CC Switch 安装指引 |
 | [week-report](skills/week-report/SKILL.md) | 从多个 git 仓库扫描本周提交记录，脱敏归纳后生成前端工作周报 Excel 文件 |
 
 ## 快速开始
@@ -51,6 +51,7 @@ cp ~/anan-agent-skills/skills/<技能名>/config.example.json ~/anan-agent-skill
 |-------|---------|
 | 通用（跨客户端） | `~/.agents/skills/` |
 | Claude Code | `~/.claude/skills/` |
+| Codex CLI | `~/.codex/skills/` |
 | Cursor | `~/.cursor/skills/` |
 
 ```bash
@@ -64,6 +65,8 @@ done
 完成后 Agent 自动识别技能；含依赖的技能在首次使用时由 Agent 自行安装。
 
 > `ai-coding-workflow` 属于全局规则型技能。安装后，还需按其 `SKILL.md` 中的「初次配置（全局强制生效）」章节，将最小必要规则写入对应 Agent 的全局规则文件（如 `~/.claude/CLAUDE.md`、`~/.codex/AGENTS.md`）。
+>
+> 如需安装 `Claude Code`、`Codex CLI`、`Gemini CLI`，或使用 `CC Switch` 做 provider / model 切换，参见 `skills/ai-coding-workflow/references/ref-08-host-installation-and-cc-switch.md`。
 
 ## 许可协议
 

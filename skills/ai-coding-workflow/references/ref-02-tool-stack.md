@@ -202,6 +202,10 @@ omc update                       # 升级 CLI/plugin（不刷新 CLAUDE.md/confi
 - 只有在任务可拆分、上下文边界清楚时才启用并行；否则单代理更稳
 - OMC 适合作为 Claude Code 的增强层，不替代 `spec-kit`、`gstack`、`agency-agents`
 
+### 10.5A 宿主 CLI 安装与 CC Switch
+
+`Claude Code`、`Codex CLI`、`Gemini CLI` 的安装步骤，以及 `CC Switch` 的 provider / model 切换说明，统一见 `ref-08-host-installation-and-cc-switch.md`。
+
 ### 10.6 Secret 扫描（gitleaks）
 
 ```bash
