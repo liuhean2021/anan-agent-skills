@@ -2,6 +2,8 @@
 
 遵循 [agentskills.io](https://agentskills.io/specification) 规范的 Agent 技能库，兼容 Claude Code、Cursor、Copilot 等支持该标准的 Agent。
 
+本仓库既面向人工使用，也面向具备文件系统与命令执行能力的 Agent 自动安装。下面的安装与配置步骤，两者都可以直接复用。
+
 ## 技能列表
 
 | 技能 | 说明 |
@@ -14,7 +16,7 @@
 | [ai-coding-workflow](skills/ai-coding-workflow/SKILL.md) | 统一 AI Coding 工作流：以 Phase 0~10 / 5B 为主线，集成 spec-kit、gstack、agency-agents、context7 等阶段能力，并补充 Claude Code / Codex / Gemini / CC Switch 安装指引 |
 | [week-report](skills/week-report/SKILL.md) | 从多个 git 仓库扫描本周提交记录，脱敏归纳后生成前端工作周报 Excel 文件 |
 
-## 快速开始
+## 安装说明（适用于人工与 Agent）
 
 ### 一键安装（推荐）
 
@@ -67,6 +69,18 @@ done
 > `ai-coding-workflow` 属于全局规则型技能。安装后，还需按其 `SKILL.md` 中的「初次配置（全局强制生效）」章节，将最小必要规则写入对应 Agent 的全局规则文件（如 `~/.claude/CLAUDE.md`、`~/.codex/AGENTS.md`）。
 >
 > 如需安装 `Claude Code`、`Codex CLI`、`Gemini CLI`，或使用 `CC Switch` 做 provider / model 切换，参见 `skills/ai-coding-workflow/references/ref-08-host-installation-and-cc-switch.md`。
+
+## 配置说明
+
+- 仅少数技能需要额外配置。
+- 需要本地配置时，请从 `config.example.json` 复制为本地 `config.json` 后再填写。
+- `config.json` 属于本地私有配置，不应提交到仓库。
+- 首次使用依赖脚本型技能时，如宿主未自动安装依赖，请按技能文档中的说明安装。
+
+## 仓库维护与贡献
+
+- 面向 Agent 的仓库工作约束见 [AGENTS.md](AGENTS.md)。
+- 新增或修改技能的贡献规范见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ## 许可协议
 

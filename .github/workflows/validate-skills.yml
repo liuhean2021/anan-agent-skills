@@ -1,0 +1,156 @@
+name: Validate Skills
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Check forbidden tracked files
+        run: |
+          set -euo pipefail
+          blocked="$(git ls-files | grep -E '(^|/)(config\.json|\.DS_Store|package-lock\.json)$|(^|/)(node_modules|\.omc/state)(/|$)' || true)"
+          if [ -n "$blocked" ]; then
+            echo "发现不应被跟踪的文件或目录："
+            echo "$blocked"
+            exit 1
+          fi
+
+      - name: Validate skill structure and frontmatter
+        run: |
+          python - <<'PY'
+          import pathlib
+          import re
+          import sys
+
+          root = pathlib.Path("skills")
+          if not root.exists():
+              print("缺少 skills/ 目录")
+              sys.exit(1)
+
+          errors = []
+          skill_dirs = sorted([p for p in root.iterdir() if p.is_dir()])
+          if not skill_dirs:
+              errors.append("skills/ 下没有技能目录")
+
+          pattern = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+          required = {"name", "description"}
+          optional = {"license", "compatibility", "metadata", "allowed-tools"}
+
+          def parse_frontmatter(text: str):
+              if not text.startswith("---\n"):
+                  return None, "文件未以 YAML frontmatter 开始"
+              try:
+                  _, rest = text.split("---\n", 1)
+                  raw, _body = rest.split("\n---\n", 1)
+              except ValueError:
+                  return None, "frontmatter 结束标记缺失"
+
+              data = {}
+              current_key = None
+              block_mode = False
+
+              for raw_line in raw.splitlines():
+                  if not raw_line.strip():
+                      continue
+                  if raw_line.startswith("  ") and current_key:
+                      if current_key == "metadata":
+                          stripped = raw_line.strip()
+                          if ":" not in stripped:
+                              return None, f"metadata 行格式非法: {raw_line}"
+                          mk, mv = stripped.split(":", 1)
+                          data.setdefault("metadata", {})[mk.strip()] = mv.strip().strip('"')
+                      elif block_mode:
+                          data[current_key] += " " + raw_line.strip()
+                      else:
+                          return None, f"字段缩进行格式非法: {raw_line}"
+                      continue
+
+                  if ":" not in raw_line:
+                      return None, f"frontmatter 行格式非法: {raw_line}"
+
+                  key, value = raw_line.split(":", 1)
+                  key = key.strip()
+                  value = value.strip()
+
+                  if value == ">":
+                      data[key] = ""
+                      current_key = key
+                      block_mode = True
+                      continue
+
+                  block_mode = False
+                  current_key = key
+                  if key == "metadata" and value == "":
+                      data[key] = {}
+                  else:
+                      data[key] = value.strip('"')
+
+              return data, None
+
+          for skill_dir in skill_dirs:
+              skill_md = skill_dir / "SKILL.md"
+              if not skill_md.exists():
+                  errors.append(f"{skill_dir}: 缺少 SKILL.md")
+                  continue
+
+              data, err = parse_frontmatter(skill_md.read_text(encoding="utf-8"))
+              if err:
+                  errors.append(f"{skill_md}: {err}")
+                  continue
+
+              missing = required - set(data.keys())
+              if missing:
+                  errors.append(f"{skill_md}: 缺少字段 {sorted(missing)}")
+
+              unknown = set(data.keys()) - required - optional
+              if unknown:
+                  errors.append(f"{skill_md}: 存在未知字段 {sorted(unknown)}")
+
+              name = data.get("name", "")
+              if name != skill_dir.name:
+                  errors.append(f"{skill_md}: name 与目录名不一致")
+              if name and not pattern.fullmatch(name):
+                  errors.append(f"{skill_md}: name 不符合命名规范")
+
+              description = data.get("description", "").strip()
+              if not description:
+                  errors.append(f"{skill_md}: description 不能为空")
+              elif len(description) > 1024:
+                  errors.append(f"{skill_md}: description 超过 1024 字符")
+
+              compatibility = data.get("compatibility")
+              if compatibility is not None and len(compatibility.strip()) > 500:
+                  errors.append(f"{skill_md}: compatibility 超过 500 字符")
+
+              metadata = data.get("metadata")
+              if metadata is not None:
+                  if not isinstance(metadata, dict):
+                      errors.append(f"{skill_md}: metadata 必须是键值映射")
+                  else:
+                      for mk, mv in metadata.items():
+                          if not isinstance(mk, str) or not isinstance(mv, str):
+                              errors.append(f"{skill_md}: metadata 必须是字符串键值")
+
+          if errors:
+              print("技能校验失败：")
+              for item in errors:
+                  print(f"- {item}")
+              sys.exit(1)
+
+          print(f"技能校验通过，共检查 {len(skill_dirs)} 个技能目录。")
+          PY
