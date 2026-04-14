@@ -1,6 +1,5 @@
 # §7 存量项目接入（Legacy Project Onboarding）
 
-> 来源：ai-coding-workflow-best-practices.md §7
 > 适用：接入存量旧项目时的分档策略与 Bug Fix 简化流程
 
 ---

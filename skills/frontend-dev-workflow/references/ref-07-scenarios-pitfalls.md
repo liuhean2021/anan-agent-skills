@@ -1,6 +1,5 @@
 # §8 常见场景速查 + §9 避坑指南
 
-> 来源：frontend-ai-coding-best-practices.md §8–§9
 > 适用：遇到具体场景快速查 prompt 模板；AI 改 UI 翻车预防
 
 ---

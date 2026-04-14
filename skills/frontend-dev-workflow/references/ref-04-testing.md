@@ -1,6 +1,5 @@
 # §5 测试体系：从零建立
 
-> 来源：frontend-ai-coding-best-practices.md §5
 > 适用：为存量/新项目建立 Playwright E2E、单元测试、组件测试体系
 
 ---

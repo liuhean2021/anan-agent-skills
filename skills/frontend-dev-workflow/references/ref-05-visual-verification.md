@@ -1,6 +1,5 @@
 # §6 视觉验证闭环
 
-> 来源：frontend-ai-coding-best-practices.md §6
 > 适用：日常改动后的视觉验证、设计还原度校验
 
 ---
@@ -87,3 +86,7 @@ Prompt 示例：
 | Figma 官方插件 | Figma（Claude Code 插件 `figma@claude-plugins-official`） | 高 | 配合 `/figma:figma-implement-design` 官方技能，Claude 直接读取设计上下文、截图和资产 |
 | 设计标注工具 | 蓝湖 / Zeplin / MockingBot 等 | 高 | 开发者查看标注，手动提取 |
 | 截图对比 | 任何工具 | 中 | 通用兜底方案，所有工具可用 |
+
+> **设计图来源与失效处理**：若设计图来自在线设计平台，在线链接 MUST 记录在 `interaction-design.md` 的「设计引用」章节，本地截图仅作临时参照。
+> - **优先路径**：链接可用时，直接从平台截图/导出后上传对比。
+> - **失效退化**：平台宕机或链接 404 时，以最近一次导出的**带时间戳截图/PDF** 作为临时基线，并在 `interaction-design.md` 中补注「设计链接失效，退化基线：[文件名 / 导出日期]」，待链接恢复后同步更新。

@@ -1,6 +1,5 @@
 # §8 分支策略 + §9 并行开发
 
-> 来源：ai-coding-workflow-best-practices.md §8–§9
 > 适用：分支管理规范、多功能并行开发、多代理编排选型
 
 ---

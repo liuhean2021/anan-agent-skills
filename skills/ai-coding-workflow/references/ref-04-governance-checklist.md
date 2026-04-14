@@ -1,6 +1,5 @@
 # §3 AI 治理 + §6 最佳实践清单
 
-> 来源：ai-coding-workflow-best-practices.md §3、§6
 > 适用：AI 使用边界约束、研发各阶段 checklist
 
 ---
@@ -56,7 +55,7 @@
 - [ ] IF 方向已定且需求明确：执行 `/speckit.specify` + `/speckit.clarify`，锁定规格（变更须回 Phase 2 正式修改）
 - [ ] 推荐在 `/speckit.plan` 前执行 `/speckit.checklist`；复杂需求、高风险或高歧义需求 MUST 执行，并补齐需求完整性/清晰度/一致性问题
 - [ ] IF 涉及前端交互需求：在锁定规格前补齐 `specs/<feature-id>/interaction-design.md`
-- [ ] IF 已有设计文件、原型、分享链接或截图：归档到 `specs/<feature-id>/design-assets/`，并将在线来源写入 `specs/<feature-id>/design-assets/source-links.md`
+- [ ] IF 已有设计文件、原型、分享链接或截图：MUST 将设计基线记录到 `interaction-design.md` 的「设计引用」章节（主入口）——在线平台提供链接则记链接，仅有离线文件（PDF / 截图）则记文件路径；仅维护多索引时可同步备份至 `source-links.md`；如需本地查看，可临时拉取到 `specs/<feature-id>/design-assets/`（须加入 `.gitignore`）
 - [ ] 执行 `/speckit.plan` + `/plan-eng-review`，将结论写入 `specs/<feature-id>/arch-review.md`
 - [ ] IF 涉及前端交互需求：确认 `plan.md` 已引用 `interaction-design.md` 作为后续实现输入
 - [ ] **[P0-3]** IF 涉及 DB schema 变更：确认 `plan.md` 已包含迁移方案（兼容性分类、上线顺序、回滚脚本、staging dry-run 要求）
@@ -76,14 +75,14 @@
 - [ ] 踩坑立即追加写入 `memory/issues.md`
 - [ ] 架构决策立即追加写入 `memory/decisions.md`
 - [ ] IF 发现规格有误：返回 Phase 2 正式修改，MUST NOT 绕过
-- [ ] IF 涉及前端交互需求：页面实现从 Phase 6 开始，输入 MUST 来自 `spec.md`、`interaction-design.md`、`design-assets/`、`plan.md`、`tasks.md`
+- [ ] IF 涉及前端交互需求：页面实现从 Phase 6 开始，输入 MUST 来自 `spec.md`、`interaction-design.md`（含「设计引用」章节中的设计基线）、`plan.md`、`tasks.md`
 
 ### 6.4 上线前（关键 gate MUST 全过）
 
 - [ ] gitleaks Secret 扫描通过（pre-commit hook 自动触发，CI 二次校验）
 - [ ] `/review` + security-engineer 代码+安全审查通过，将结论写入 `specs/<feature-id>/review-findings.md`，修复后重审
 - [ ] `/qa` QA 验证通过，截图已存档（feature branch 默认 diff-aware）
-- [ ] IF 涉及前端交互需求：QA 已对照 `interaction-design.md` / `design-assets/` 验证关键页面结构、交互流转、状态矩阵、响应式规则
+- [ ] IF 涉及前端交互需求：QA 已对照 `interaction-design.md` 及「设计引用」章节中的设计基线（在线链接或离线文件）验证关键页面结构、交互流转、状态矩阵、响应式规则；若在线链接失效，按 `../../frontend-dev-workflow/references/ref-05-visual-verification.md` 失效退化路径处理
 - [ ] IF 本次前面生成了 `/speckit.checklist`：其中阻断项已闭环
 - [ ] `/ship` → CI 全绿 + ≥ 1 人 Review Approve 后合并
 - [ ] CD 自动部署 staging；若团队已将 agent runtime 接入 CI，则可自动触发 `/qa --quick`，否则由人工或本地 agent 完成 staging 快速验证

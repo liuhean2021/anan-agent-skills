@@ -1,6 +1,5 @@
 # §1 定位与适用范围 + §2 接手项目：第一天做什么
 
-> 来源：frontend-ai-coding-best-practices.md §1–§2
 > 适用：接手存量前端项目的第一天
 
 ---
@@ -180,3 +179,5 @@ npm run dev  # 或 npm start / ng serve 等
 这些截图是后续所有 UI 改动的"改前参照"。
 
 > **截图资产分类**：`.baseline/` 是本地人工对比用的临时截图，加入 `.gitignore`；Playwright `toHaveScreenshot()` 生成的 snapshot 基准图（存于 `tests/e2e/*.spec.ts-snapshots/`）是自动化视觉回归资产，MUST 纳入 git 版本管理。两者用途不同，不要混淆。
+> 
+> **设计资源临时缓存**：需求阶段从设计平台（蓝湖 / Figma 等）临时拉取到本地的 `design-assets/` 与 `.baseline/` 性质相同，仅作本地查看用，MUST 加入 `.gitignore`，不提交 Git。设计基线（在线链接或离线文件路径）MUST 记录到 `interaction-design.md` 的「设计引用」章节（主入口）；仅维护多索引时可同步备份至 `source-links.md`。

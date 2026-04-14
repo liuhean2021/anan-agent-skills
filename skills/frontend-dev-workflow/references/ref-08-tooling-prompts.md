@@ -1,6 +1,5 @@
 # §10 工具配置参考 + 附录 A Prompt 模板 + 附录 B 渐进式提取组件
 
-> 来源：frontend-ai-coding-best-practices.md §10、附录A、附录B
 > 适用：MCP 配置、Hooks、playwright.config.ts、6 个完整 Prompt 模板、组件提取原则
 
 ---

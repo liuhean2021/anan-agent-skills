@@ -1,6 +1,5 @@
 # §3 修改已有页面
 
-> 来源：frontend-ai-coding-best-practices.md §3
 > 适用：对存量页面做 UI / 样式改动
 
 ---
@@ -92,7 +91,9 @@
 
 #### 情况 A：有设计图
 
-设计图可能来自 Figma、Sketch、Adobe XD、Pixso、MasterGo、即时设计、Motiff 或其他工具。无论哪个工具，提取方式相同：
+设计图可能来自 Figma、Sketch、Adobe XD、Pixso、MasterGo、即时设计、Motiff、蓝湖或其他工具。无论哪个工具，提取方式相同：
+
+> **设计链接管理原则**：设计基线（在线链接或离线文件路径）MUST 记录到 `interaction-design.md` 的「设计引用」章节（主入口）；仅维护多索引时可同步备份至 `source-links.md`。本地临时下载的截图或资产仅作需求阶段对照用，可放入 `design-assets/` 并加入 `.gitignore`，不提交 Git。
 
 ```
 方式 1：设计工具 Dev Mode / 标注模式导出 CSS → 复制 token 给 AI

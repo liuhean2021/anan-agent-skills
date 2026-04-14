@@ -1,6 +1,5 @@
 # §4 新增页面
 
-> 来源：frontend-ai-coding-best-practices.md §4
 > 适用：TDD 模式新增页面，测试先行，data-testid 规范
 
 ---

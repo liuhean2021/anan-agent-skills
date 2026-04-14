@@ -1,6 +1,5 @@
 # §7 AI 协作规范
 
-> 来源：frontend-ai-coding-best-practices.md §7
 > 适用：AI 生成代码的验收、授权矩阵、PR 证据包规范
 
 ---
