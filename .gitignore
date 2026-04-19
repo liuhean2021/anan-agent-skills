@@ -7,3 +7,4 @@ package-lock.json
 drafts/
 docs/review/
 .omx/
+claude-code-params.txt

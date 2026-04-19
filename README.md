@@ -15,6 +15,7 @@
 | [frontend-dev-workflow](skills/frontend-dev-workflow/SKILL.md) | 前端 AI Coding 工作流：接手项目、修改页面、新增页面，测试先行 + 视觉验证闭环 |
 | [ai-coding-workflow](skills/ai-coding-workflow/SKILL.md) | 统一 AI Coding 工作流：以 Phase 0~10 / 5B 为主线，集成 spec-kit、gstack、agency-agents、context7 等阶段能力，并补充 Claude Code / Codex / Gemini / CC Switch 安装指引 |
 | [week-report](skills/week-report/SKILL.md) | 从多个 git 仓库扫描本周提交记录，脱敏归纳后生成前端工作周报 Excel 文件 |
+| [claude-code-params-calculator](skills/claude-code-params-calculator/SKILL.md) | 根据 AI 模型的实际上下文窗口大小（128K、256K、512K、1M 等）计算 Claude Code CLI 优化参数 |
 
 ## 安装说明（适用于人工与 Agent）
 

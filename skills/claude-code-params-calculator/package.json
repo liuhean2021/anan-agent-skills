@@ -1,0 +1,22 @@
+{
+  "name": "claude-code-params-calculator",
+  "version": "1.0.0",
+  "description": "Calculate optimal Claude Code CLI parameters based on AI model context window size",
+  "license": "MIT-0",
+  "private": true,
+  "main": "scripts/calculate.js",
+  "bin": {
+    "claude-code-params": "./scripts/calculate.js"
+  },
+  "scripts": {
+    "calculate": "node scripts/calculate.js"
+  },
+  "keywords": [
+    "claude-code",
+    "parameters",
+    "calculator",
+    "context-window",
+    "optimization"
+  ],
+  "author": "liuhean <allsmy.com@gmail.com>"
+}
