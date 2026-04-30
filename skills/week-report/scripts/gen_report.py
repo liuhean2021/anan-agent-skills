@@ -42,11 +42,21 @@ def calc_week_of_month(date_str):
 def generate(template_path, output_path, name, focus, items):
     openpyxl = check_openpyxl()
     from openpyxl import load_workbook
+    from openpyxl.styles import Alignment
 
     # 复制模板，不修改原文件
     shutil.copy2(template_path, output_path)
     wb = load_workbook(output_path)
     ws = wb.active
+
+    # 各列对齐方式（匹配模板格式）
+    col_align = {
+        1: Alignment(horizontal="left", vertical="center"),     # A-工作内容
+        2: Alignment(horizontal="center", vertical="center"),   # B-所属模块
+        3: Alignment(horizontal="center", vertical="center"),   # C-人员
+        4: Alignment(horizontal="left", vertical="center"),     # D-工作重点
+        5: Alignment(horizontal="center", vertical="center"),   # E-备注
+    }
 
     # 取消数据区所有合并（保留标题行 A1:E1）
     merges_to_remove = [str(m) for m in ws.merged_cells.ranges if str(m) != "A1:E1"]
@@ -57,6 +67,8 @@ def generate(template_path, output_path, name, focus, items):
     data_start = 3
     for i, item in enumerate(items):
         row = data_start + i
+        for col in range(1, 6):
+            ws.cell(row=row, column=col).alignment = col_align[col]
         ws.cell(row=row, column=1).value = item["work"]
         ws.cell(row=row, column=2).value = item["module"]
         ws.cell(row=row, column=3).value = name if i == 0 else ""
