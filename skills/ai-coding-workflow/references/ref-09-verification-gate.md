@@ -1,6 +1,6 @@
 # §13 验证铁律 + 阶段顺序纪律（Verification Gate & Phase Discipline）
 
-> 适用：使用 `ai-coding-workflow` 技能时的横切纪律层；Superpowers 插件为必装配套，但本文件规则内联生效，不依赖插件是否加载成功。
+> 适用：使用 `ai-coding-workflow` 技能时的横切纪律层；本文件规则内联生效，不依赖任何外部插件是否安装或加载成功，任何有能力的 agent（Claude Code、Codex、Gemini 或其他宿主）都应原生遵守。
 
 ---
 
@@ -12,7 +12,7 @@
 | 未使用 ai-coding-workflow（闲聊、查资料、其他独立技能） | 不适用 |
 | 使用哪个 Agent / IDE | **无关** |
 
-Superpowers 插件 MUST 已安装（见 `ref-02-tool-stack.md § 10.5` 与 `§ 10.6.B`）。未安装时 MUST NOT 进入 Phase 6 及之后；可先走场景 E 完成安装。
+本文件定义的验证纪律（阶段顺序、Iron Law、Gate Function）内置于本技能，与是否安装某个外部插件无关，始终生效（见 `ref-02-tool-stack.md § 10.5`）。
 
 ---
 
@@ -84,7 +84,7 @@ BEFORE 任何 success/completion 宣称：
 
 | Phase | 纪律层（退出前额外要求） |
 |-------|-------------------------|
-| **0** | Superpowers 必装检查 PASS（`§ 10.6.B`） |
+| **0** | 项目初始化产出物已就绪（`.specify/`、`AGENTS.md`/`CLAUDE.md`） |
 | **1** | `ceo-review.md` 已写入；禁止无文件宣称「方向定了」 |
 | **2** | `spec.md` 已锁定；禁止无 spec 进入 Phase 3+ |
 | **3** | `plan.md` 等产出物就绪；禁止无方案进入 Phase 4+ |
@@ -95,24 +95,23 @@ BEFORE 任何 success/completion 宣称：
 | **7** | `review-findings.md` 已处理；禁止无审查记录宣称「审过了」 |
 | **8** | 正式 QA 完成；Iron Law 仍适用于 Phase 8 内的每条验收结论 |
 | **9** | 合并/PR 前 MUST 再跑全量验证；禁止无证据宣称「可发布」 |
-| **10** | 复盘产出已写入；禁止无 `/retro` 或等价产物宣称「已复盘」 |
+| **10** | 复盘产出已写入；禁止无对应产物宣称「已复盘」 |
 
 ---
 
-## Section 13.5 与 Superpowers 插件的关系
+## Section 13.5 本纪律与外部工具的关系
 
 | 层面 | 说明 |
 |------|------|
-| **必装** | 使用 ai-coding-workflow 时 MUST 安装 Superpowers（与 Agent 无关） |
-| **内联规则** | 本文件（§ 13）为 workflow 自有铁律，**不依赖**插件会话 Hook |
-| **插件技能** | 已安装时 MAY 调用 `verification-before-completion`、`systematic-debugging`、`test-driven-development` 等加深执行；**不形成第二条 workflow** |
-| **与 gstack** | gstack 未装可降级；Superpowers 未装 **不可降级**（阻断 Phase 6+） |
+| **内置生效** | 本文件（§ 13）为 workflow 自有铁律，不依赖任何外部插件是否安装，任何有能力的 agent 原生遵守 |
+| **与评审/QA/发布能力** | 评审/QA/发布等阶段能力（见 `ref-02 § 10.2`）在 agent 无法执行对应子任务时可降级为人工/CI；验证纪律（Iron Law、Gate Function）**不可降级**，始终生效 |
+| **辅助技能** | 若当前环境恰好提供专项验证/调试/TDD 技能，MAY 调用以加深执行；**不形成第二条 workflow**，缺失时本文件规则仍原生生效 |
 
 ---
 
-## Section 13.6 无 gstack 时的最低验证命令
+## Section 13.6 agent 评审/QA 能力不可用时的最低验证命令
 
-gstack 不可用时，Phase 6/8/9 的 Gate Function 仍 MUST 执行。最低集合由项目 `AGENTS.md` 定义；若无定义，代理 SHOULD 按技术栈选用：
+agent 评审/QA 能力不可用时，Phase 6/8/9 的 Gate Function 仍 MUST 执行。最低集合由项目 `AGENTS.md` 定义；若无定义，代理 SHOULD 按技术栈选用：
 
 | 项目类型 | 建议命令（示例） |
 |---------|-----------------|

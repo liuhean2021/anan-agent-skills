@@ -15,7 +15,7 @@
 | [excel-to-pdf](skills/excel-to-pdf/SKILL.md) | macOS 用本机 Microsoft Excel 把 xlsx 转成排版正确的 PDF（自动铺满页宽、分页不切断合并单元格） |
 | [frontend-dev-workflow](skills/frontend-dev-workflow/SKILL.md) | 前端 AI Coding 工作流：接手项目、修改页面、新增页面，测试先行 + 视觉验证闭环 |
 | [design-md-author](skills/design-md-author/SKILL.md) | 从零为新前端项目生成设计系统契约 DESIGN.md（SSOT）+ tokens.css + 防漂移校验脚本 |
-| [ai-coding-workflow](skills/ai-coding-workflow/SKILL.md) | 统一 AI Coding 工作流：Phase 0~10 / 5B 为主线，集成 spec-kit、gstack、Superpowers（使用本技能时必装纪律插件）、Context7 MCP、gitleaks、OMC 等；强制阶段顺序与完成前验证 |
+| [ai-coding-workflow](skills/ai-coding-workflow/SKILL.md) | 统一 AI Coding 工作流：Phase 0~10 / 5B 为主线，集成 spec-kit、Context7 MCP、gitleaks 等，评审/QA/发布等能力由 agent 原生完成；强制阶段顺序与完成前验证 |
 
 > `ai-coding-workflow` 与 `frontend-dev-workflow` 均为独立技能，可单独安装和使用；二者不互相依赖。若同一项目同时使用，只通过通用产物（如 `spec.md`、`interaction-design.md`、`plan.md`、`tasks.md`）协作。
 
@@ -80,8 +80,6 @@ done
 > `ai-coding-workflow` 属于全局规则型技能。安装后，还需按其 `SKILL.md` 中的「初次配置（全局强制生效）」章节，将最小必要规则写入对应 Agent 的全局规则文件（如 `~/.claude/CLAUDE.md`、`~/.codex/AGENTS.md`）。
 >
 > 如需安装 `Claude Code`、`Codex CLI`、`Gemini CLI`，或使用 `CC Switch` 做 provider / model 切换，参见 `skills/ai-coding-workflow/references/ref-08-host-installation-and-cc-switch.md`。
->
-> 使用 **ai-coding-workflow** 时须安装 **Superpowers** 插件（与 Agent 无关）；安装说明见 `skills/ai-coding-workflow/references/ref-02-tool-stack.md § 10.5`。
 
 ## 配置说明
 

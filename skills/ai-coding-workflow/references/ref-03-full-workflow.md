@@ -8,9 +8,9 @@
 
 ### 5.1 阶段主线与工具介入原则
 
-- AI Coding Workflow 以 `Phase 0~10/5B` 为唯一主线；`spec-kit`、`gstack`、外部代理编排能力、Context7 MCP、`gitleaks`、`memory` 等都按阶段介入
+- AI Coding Workflow 以 `Phase 0~10/5B` 为唯一主线；`spec-kit`、agent 自身承载的评审/QA/发布能力、外部代理编排能力、Context7 MCP、`gitleaks`、`memory` 等都按阶段介入
 - `spec-kit` 主要提供规格、方案、任务、分析、实施骨架
-- `gstack` 主要提供方向评审、架构评审、审查、QA、发布、复盘能力
+- 方向评审、架构评审、审查、QA、发布、复盘由 agent 自身或专门子任务承载，不依赖特定外部工具
 - 外部代理编排能力主要用于并行实施或多模型交叉复核
 - Context7 优先通过 MCP 自动核对官方文档；无 MCP 时降级为 `use context7`/library ID/官方文档，避免在方案或实施阶段产生 API 幻觉
 - `gitleaks`、测试、CI、`memory/*` 等属于验证与沉淀能力，同样是工作流组成部分
@@ -25,9 +25,9 @@
 | 需多模型交叉复核实现方案 | `/ccg`、`/ask <model>` 或 `omc ask <model> ...` |
 | 需核对陌生库、新版本 SDK、官方 API | 优先使用 Context7 MCP 自动文档查验；无 MCP 时降级为 `use context7`/library ID/官方文档 |
 
-**gstack 降级规则**：IF 当前 host 未安装 gstack，THEN 本文件中的 `/review`、`/qa`、`/ship` 命令分别改为人工审查、手工测试或 CI 验证、宿主常规发布流程。
+**降级规则**：本文件中的 `/review`、`/qa`、`/ship` 对应的职责默认由 agent 自身或专注子任务原生完成（见 `ref-02 § 10.2`）；IF 当前环境确实缺乏执行这些任务的能力，THEN 分别降级为人工审查、手工测试或 CI 验证、宿主常规发布流程。
 
-**Superpowers 纪律层**：使用 ai-coding-workflow 时 Superpowers 插件 MUST 已安装（见 `ref-02 § 10.5`、`§ 10.6.B`）；未安装 MUST NOT 进入 Phase 6+。阶段顺序与验证铁律见 `ref-09-verification-gate.md`；各 Phase 退出前须满足该文件 § 13.4 纪律层要求。
+**验证纪律层**：阶段顺序、完成必验证规则内置于本技能（见 `ref-02 § 10.5`），任何有能力的 agent 原生遵守，不依赖任何外部插件。阶段顺序与验证铁律见 `ref-09-verification-gate.md`；各 Phase 退出前须满足该文件 § 13.4 纪律层要求。
 
 ### 前端交互需求附加规则
 
@@ -39,7 +39,7 @@ IF 任何 UI 可见变更（非纯逻辑/API 变更），THEN 视为前端交互
 - 在线设计稿记录长久分享链接；离线文件记录文件名与路径；临时 `specs/<feature-id>/design-assets/` MUST 加入 `.gitignore`。
 - IF 无在线设计稿、离线设计文件、截图、原型说明或线框图，THEN 按「设计基线分级 gate」判断：L3 级允许以文字需求锁定 spec.md；进入 Phase 6 前若仍缺少 L2 级以上设计基线，MUST 返回 Phase 2 补齐并重新锁定规格。
 - Phase 3 的 `plan.md` MUST 引用 `interaction-design.md` 和 `design-system-context.md`（或 `interaction-design.md` 中的 Design System Context 章节），说明页面模块、交互状态、接口依赖、组件复用边界与设计系统规则适用范围。
-- IF 设计复杂度较高、评审风险较高、交互边界不清、涉及多页面关键路径或核心转化路径，THEN SHOULD 执行 `/plan-design-review`。
+- IF 设计复杂度较高、评审风险较高、交互边界不清、涉及多页面关键路径或核心转化路径，THEN SHOULD 追加一次结构化设计评审（由 agent 自身或专门子任务完成）。
 - Phase 4 的前端任务 MUST 基于 `interaction-design.md` 拆解，并完成组件库扫描标注。前端任务 MUST 包含设计还原验证任务，明确截图/人工验收/视觉对比证据。
 - Phase 5 分析 MUST 纳入 `interaction-design.md` 和 `design-system-context.md`（或 `interaction-design.md` 中的 Design System Context 章节）；Phase 6 实施 MUST 同时以 `spec.md`、`interaction-design.md`、`design-system-context.md`（或 `interaction-design.md` 中的 Design System Context 章节）、`plan.md`、`tasks.md` 为输入；IF 涉及前端实施，THEN Agent MUST 将 `DESIGN.md` 中的 design tokens 映射为 CSS 变量或 Tailwind 配置，MUST NOT 在组件中硬编码颜色/字体/间距值。Phase 8 QA MUST 对照 `interaction-design.md`、`design-system-context.md`（或 `interaction-design.md` 中的 Design System Context 章节）与设计基线。
 - Phase 8 QA 报告 MUST 标注对照的设计引用、关键页面截图、差异结论；若存在偏差，MUST 标注是否阻断发布。若设计效果与目标基线不一致，MUST 返回 Phase 6 修复；若基线缺失或错误，返回 Phase 2。
@@ -174,7 +174,7 @@ IF 组件存在多状态流转（如加载→空→数据→错误→重试）�
 1. 执行 `specify init . --integration <agent-key>`（分布式团队可加 `--branch-numbering timestamp` 避免分支编号冲突；Codex CLI 常用 `--integration codex --integration-options="--skills"`），初始化 `.specify/` 目录
 2. 执行 `/speckit.constitution`，生成 `constitution.md`
 3. 补充 `AGENTS.md`/`CLAUDE.md`，写入项目规范（SHOULD 包含项目验证命令，供 `ref-09` Gate Function 使用）
-4. 执行 Superpowers 必装检查（`ref-02-tool-stack.md § 10.6.B`）；FAIL 则完成安装后再进入 Phase 6+
+4. 验证纪律内置生效，无需单独安装或检查外部插件（详见 `ref-02-tool-stack.md § 10.5`）
 
 **产出物**：`.specify/memory/constitution.md`、`AGENTS.md`（或 `CLAUDE.md`）
 
@@ -254,7 +254,7 @@ IF 组件存在多状态流转（如加载→空→数据→错误→重试）�
 >
 > 若 `spec.md`、`interaction-design.md`、`plan.md` 等文档中出现大量未标注的英文名词，则视为不满足本条原则，MUST 返回补充中文标注。
 
-**退出条件**：上述四项均已完成；Superpowers 必装检查 PASS。
+**退出条件**：上述四项均已完成。
 
 ---
 
@@ -274,8 +274,8 @@ IF 满足以下条件，THEN MAY 以简版执行本 Phase：
 IF 任务为小功能或 bug fix，THEN 可跳过本 Phase。
 
 **必做动作**：
-1. IF 问题定义仍模糊、需要重构需求表述，THEN 先执行 `/office-hours`
-2. 执行 `/plan-ceo-review`，寻找最优版本，压力测试需求合理性
+1. IF 问题定义仍模糊、需要重构需求表述，THEN 先做结构化访谈式规划，梳理问题空间
+2. 做结构化产品方向评审，寻找最优版本，压力测试需求合理性
 3. 明确记录以下最小结论：目标用户、核心问题、MVP 边界、不做什么、成功指标、是否进入 `spec`
 4. IF 为简版执行，THEN 仍 MUST 记录"方向已锁定的依据"与"本次不再讨论的范围"
 5. 将评审结论写入 `specs/<feature-id>/ceo-review.md`
@@ -502,8 +502,8 @@ IF 功能涉及多个业务概念、组件或数据对象，THEN 列出关键实
 **必做动作**：
 1. IF 涉及陌生库、新版本 SDK、或近期变化的 API，THEN 优先使用 Context7 MCP 自动文档查验；无 MCP 时降级为 `use context7`/library ID/官方文档，防 API 幻觉，再确定方案
 2. 执行 `/speckit.plan "<技术栈>"`，生成 `plan.md`、`research.md`、`data-model.md`、`contracts/`
-3. IF 涉及前端交互需求，THEN `plan.md` MUST 引用 Phase 2 已锁定的 `interaction-design.md` 和 `design-system-context.md`（或 `interaction-design.md` 中的 Design System Context 章节）作为前端实现输入，并按触发条件决定是否执行 `/plan-design-review`；若任一设计文档或设计基线缺失，MUST 返回 Phase 2，MUST NOT 在本阶段补写
-4. 执行 `/plan-eng-review`，深度审查图表、边界条件、失败模式
+3. IF 涉及前端交互需求，THEN `plan.md` MUST 引用 Phase 2 已锁定的 `interaction-design.md` 和 `design-system-context.md`（或 `interaction-design.md` 中的 Design System Context 章节）作为前端实现输入，并按触发条件决定是否追加结构化设计评审；若任一设计文档或设计基线缺失，MUST 返回 Phase 2，MUST NOT 在本阶段补写
+4. 做结构化架构评审，深度审查图表、边界条件、失败模式
 5. 将架构评审结论写入 `specs/<feature-id>/arch-review.md`
 6. 将架构决策追加写入 `memory/decisions.md`
 7. **[P0-3 DB 迁移]** IF 本次改动涉及数据库 schema 变更（新增/修改/删除表、字段、索引、约束），THEN `plan.md` MUST 包含迁移方案说明，至少覆盖：
@@ -853,11 +853,11 @@ IF 功能涉及 UI 组件、服务状态、任务生命周期、CLI 执行或多
 **必做动作**：
 1. 先写复现测试，固化问题与回归边界
 2. 定位并修复
-3. 执行 `/review`（仅审改动范围）
+3. 由专注审查视角的子任务完成代码审查（仅审改动范围）
 4. IF 涉及鉴权、支付、隐私、权限、密钥、数据边界等安全敏感改动，THEN 追加安全专项审查，并将结论写入 `specs/<feature-id>/review-findings.md`，修复后重审
 5. 确认测试通过（MUST 按 `ref-09-verification-gate.md` Gate Function 执行，附 fresh 测试命令输出）
-6. 执行 `/qa`（feature branch 默认 diff-aware）
-7. 执行 `/ship`
+6. 由专注功能验证的子任务完成 QA（feature branch 默认 diff-aware）
+7. 走标准 git/PR 发布流程
 8. 将踩坑内容追加写入 `memory/issues.md`
 
 **产出物**：复现测试、修复提交、`memory/issues.md`（追加）
@@ -897,14 +897,14 @@ IF 功能涉及 UI 组件、服务状态、任务生命周期、CLI 执行或多
 **进入条件**：WHEN 所有改动完成，Phase 6 退出。
 
 **必做动作**：
-1. 执行 `/review`，审查生产级 bug（race condition、N+1、信任边界等）
+1. 由专注审查视角的子任务完成代码审查，审查生产级 bug（race condition、N+1、信任边界等）
 2. IF 涉及鉴权、支付、隐私、权限、密钥、数据边界等安全敏感改动，THEN 追加安全专项审查，并将结论写入同一审查文档
 3. IF 审查范围较大、风险较高、或需要多视角交叉验证，THEN SHOULD 追加外部代理编排能力做交叉复核：
    - `/ccg "Review this diff: Codex 看架构/类型/测试缺口，Gemini 看可读性/UX/文档"`
    - `/ask codex "review this patch for correctness, edge cases, and security assumptions"`
    - `/ask gemini "review this diff for readability, UX regressions, and unclear naming"`
 4. gitleaks pre-commit hook 在提交时自动触发 Secret 扫描
-5. 将 `/review`、安全专项审查、外部代理编排能力交叉复核中的有效发现统一汇总写入 `specs/<feature-id>/review-findings.md`，并标注来源
+5. 将代码审查、安全专项审查、外部代理编排能力交叉复核中的有效发现统一汇总写入 `specs/<feature-id>/review-findings.md`，并标注来源
 6. IF 存在审查发现，THEN 修复后 MUST 重新执行本 Phase
 
 **产出物**：`specs/<feature-id>/review-findings.md`
@@ -918,11 +918,11 @@ IF 功能涉及 UI 组件、服务状态、任务生命周期、CLI 执行或多
 **进入条件**：WHEN Phase 7 已通过。
 
 **必做动作**：
-1. 执行 `/qa`，生成 `qa-reports/`（feature branch 默认 diff-aware，含截图）
+1. 由专注功能验证的子任务完成 QA，生成 `qa-reports/`（feature branch 默认 diff-aware，含截图）
 2. 对照 checklist 逐条确认验收标准
 3. IF 涉及前端交互需求，THEN 按「前端交互需求附加规则」对照 `interaction-design.md`、`design-system-context.md`（或 `interaction-design.md` 中的 Design System Context 章节）与设计基线验证关键页面结构、交互流转、状态矩阵与响应式规则，并在 QA 报告中标注设计引用、关键页面截图、差异结论；差异需标注 `blocking`/`non-blocking`/`accepted`
 
-**产出物**：`.gstack/qa-reports/`（含截图）
+**产出物**：`specs/<feature-id>/qa-reports/`（含截图）
 
 **退出条件**：所有验收条目通过，截图已存档；若涉及前端交互需求，则设计对照验证已通过，QA 报告已记录设计引用、关键页面截图、差异结论与差异分级。若设计效果与目标基线不一致，MUST 返回 Phase 6 修复；若基线缺失或错误，返回 Phase 2。Phase 8 内每条验收结论 MUST 符合 `ref-09` Iron Law（附 fresh 验证证据）。
 
@@ -933,16 +933,16 @@ IF 功能涉及 UI 组件、服务状态、任务生命周期、CLI 执行或多
 **进入条件**：WHEN Phase 8 已通过。
 
 **必做动作**：
-1. 执行 `/ship`，创建 PR + CHANGELOG
-2. IF 团队已将 agent runtime 接入 CI，THEN 可自动执行 `/review` + 安全扫描 + 测试套件 作为 CI gate；否则 CI 至少执行静态检查、测试与安全扫描（失败则阻断合并）
+1. 走标准 git/PR 发布流程，创建 PR + CHANGELOG
+2. IF 团队已将 agent runtime 接入 CI，THEN 可自动执行代码审查 + 安全扫描 + 测试套件 作为 CI gate；否则 CI 至少执行静态检查、测试与安全扫描（失败则阻断合并）
 3. **[P0-4 API 契约]** IF 本次改动包含 API 变更，THEN CI MUST 执行消费者契约测试（如 Pact），失败则阻断合并
 4. 人工 Code Review：至少 1 人 Approve（CODEOWNERS 强制）
 5. **[P0-3 DB 迁移]** IF 本次改动包含 DB schema 变更，THEN 合并前 MUST 先在 staging 执行 migration dry-run，确认无报错、数据无损后再继续；MUST NOT 跳过 staging 直接在生产执行迁移
 6. 合并后 CD 自动部署到 staging
-7. IF 团队已将 agent runtime 接入 CI，THEN 可自动触发 `/qa https://staging.<domain> --mode=quick`；否则由人工或本地 agent 在 staging 执行快速验证
+7. IF 团队已将 agent runtime 接入 CI，THEN 可自动触发针对 `https://staging.<domain>` 的快速 QA 验证；否则由人工或本地 agent 在 staging 执行快速验证
 8. 通过后人工批准生产部署
 9. 上线后观察 5 分钟（监控告警）
-10. IF 发现问题，THEN MUST 立即执行 `git revert HEAD` + `/ship` 回滚；IF 已执行 DB 迁移且不可逆，THEN MUST 执行回滚脚本并通知 DBA
+10. IF 发现问题，THEN MUST 立即执行 `git revert HEAD` 并走标准发布流程回滚；IF 已执行 DB 迁移且不可逆，THEN MUST 执行回滚脚本并通知 DBA
 
 **产出物**：PR、CHANGELOG、staging QA 报告
 
@@ -955,7 +955,7 @@ IF 功能涉及 UI 组件、服务状态、任务生命周期、CLI 执行或多
 **进入条件**：WHEN 每周结束时，或功能上线后。
 
 **必做动作**：
-1. 执行 `/retro`，生成复盘快照到 `.context/retros/`
+1. 生成结构化复盘快照到 `.context/retros/`
 2. IF 有价值经验，THEN 按 `ref-10-experience-quality.md` 判定后追加写入 `memory/patterns.md`（三镜头 + 九类垃圾排除 + 与历史去重/合并；宁漏勿错）
 3. 复盘输出末尾执行「收尾反思两问」并如实作答：
    - **① 眼下最没把握的是什么？** —— 本次迭代中置信度最低、最需验证的判断

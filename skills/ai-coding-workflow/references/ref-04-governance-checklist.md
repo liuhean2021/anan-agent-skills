@@ -42,16 +42,14 @@
 ### 6.1 项目启动（一次性）
 
 - [ ] `specify init . --integration <agent-key>` 初始化 spec-kit（Codex CLI 常用 `--integration codex --integration-options="--skills"`）
-- [ ] **Superpowers 插件已安装**（使用 ai-coding-workflow 时 MUST；见 `ref-02 § 10.6.B`）
 - [ ] `/speckit.constitution` 建立项目原则
 - [ ] 补充 `AGENTS.md`/`CLAUDE.md`
 - [ ] 确认 Context7 MCP 已启用；无 MCP 时明确降级路径为 `use context7`/library ID/官方文档
 
 ### 6.2 每个功能开始前
 
-- [ ] **Superpowers 必装检查 PASS**（若尚未在 Phase 0 确认）
 - [ ] 按 Section 1.1 判断任务规模，确定起始 Phase；**禁止无产出物跳阶段**（`ref-09 § 13.2`）
-- [ ] IF 方向未定、MVP 边界未定、或影响重大：先执行 `/office-hours`，再执行 `/plan-ceo-review`，将结论写入 `specs/<feature-id>/ceo-review.md`
+- [ ] IF 方向未定、MVP 边界未定、或影响重大：先做结构化访谈式规划，再做结构化产品方向评审，将结论写入 `specs/<feature-id>/ceo-review.md`
 - [ ] IF 涉及陌生库、新版本 SDK、或近期变化的工具行为：优先使用 Context7 MCP 自动文档查验；无 MCP 时降级为 `use context7`/library ID/官方文档，再进入规格/方案动作
 - [ ] IF 方向已定且需求明确：执行 `/speckit.specify` + `/speckit.clarify`，锁定规格（变更须回 Phase 2 正式修改）
 - [ ] `spec.md`、`plan.md` 等文档满足"中文为主、英文为辅"原则：大量英文名词已追加中文标注，未标注的 MUST 返回补充
@@ -67,7 +65,7 @@
 - [ ] IF 生成或修改 `DESIGN.md`，THEN SHOULD 运行 `npx @google/design.md lint DESIGN.md` 验证格式
 - [ ] IF 涉及前端 UI/UX，THEN `design-system-context.md` MAY 降级为 `interaction-design.md` 中的 Design System Context 章节；若仅引用 ≤5 个 token，SHOULD 直接列出 token 引用表
 - [ ] IF 涉及前端交互需求：按设计基线分级 gate（L1/L2/L3）判断是否可锁定 spec.md 与进入后续阶段；L3 级进入 Phase 6 前若仍缺少 L2 级以上基线，MUST 返回 Phase 2 补齐并重新锁定规格
-- [ ] 执行 `/speckit.plan` + `/plan-eng-review`，将结论写入 `specs/<feature-id>/arch-review.md`
+- [ ] 执行 `/speckit.plan` + 结构化架构评审，将结论写入 `specs/<feature-id>/arch-review.md`
 - [ ] IF 涉及前端交互需求：确认 `plan.md` 已引用 `interaction-design.md` 和 `design-system-context.md`（或 `interaction-design.md` 中的 Design System Context 章节）作为后续实现输入
 - [ ] **[P0-3]** IF 涉及 DB schema 变更：确认 `plan.md` 已包含迁移方案（兼容性分类、上线顺序、回滚脚本、staging dry-run 要求）
 - [ ] **[P0-4]** IF 涉及 API 变更：确认已先更新 `contracts/` 再写实现；breaking change 已在 `arch-review.md` 标注并获得架构确认
@@ -93,17 +91,17 @@
 
 - [ ] **验证铁律**：所有完成/通过类结论已附本消息内 freshly run 的验证命令输出（`ref-09 § 13.3`）
 - [ ] gitleaks Secret 扫描通过（pre-commit hook 自动触发，CI 二次校验）
-- [ ] `/review` 代码审查通过；安全敏感改动已追加安全专项审查，将结论写入 `specs/<feature-id>/review-findings.md`，修复后重审
-- [ ] `/qa` QA 验证通过，截图已存档（feature branch 默认 diff-aware）
+- [ ] 代码审查通过；安全敏感改动已追加安全专项审查，将结论写入 `specs/<feature-id>/review-findings.md`，修复后重审
+- [ ] QA 验证通过，截图已存档（feature branch 默认 diff-aware）
 - [ ] IF 涉及前端交互需求：QA 已对照 `interaction-design.md`、`design-system-context.md`（或 `interaction-design.md` 中的 Design System Context 章节）及「设计引用」章节中的设计基线（在线链接或离线文件）验证关键页面结构、交互流转、状态矩阵、响应式规则；QA 报告已记录设计引用、关键页面截图、差异结论，并将差异标注为 `blocking`/`non-blocking`/`accepted`；若在线链接失效，则以最近一次导出的带时间戳截图/PDF 作为临时比对输入，并返回 Phase 2/spec 阶段补注退化基线
 - [ ] IF QA 发现实现效果与设计基线不一致，THEN MUST 返回 Phase 6 修复；若设计基线缺失或错误，返回 Phase 2
 - [ ] IF 本次前面生成了 `/speckit.checklist`：其中阻断项已闭环
-- [ ] `/ship` → CI 全绿 + ≥ 1 人 Review Approve 后合并
-- [ ] CD 自动部署 staging；若团队已将 agent runtime 接入 CI，则可自动触发 `/qa --quick`，否则由人工或本地 agent 完成 staging 快速验证
-- [ ] 人工批准生产部署，上线后观察 5 分钟；IF 有问题 THEN 立即执行 `git revert HEAD` + `/ship`
+- [ ] 走标准 git/PR 发布流程 → CI 全绿 + ≥ 1 人 Review Approve 后合并
+- [ ] CD 自动部署 staging；若团队已将 agent runtime 接入 CI，则可自动触发快速 QA 验证，否则由人工或本地 agent 完成 staging 快速验证
+- [ ] 人工批准生产部署，上线后观察 5 分钟；IF 有问题 THEN 立即执行 `git revert HEAD` 并走标准发布流程
 
 ### 6.5 功能完成后
 
-- [ ] `/retro` 周复盘（每周一次）
+- [ ] 结构化周复盘（每周一次）
 - [ ] 有价值经验按 `ref-10-experience-quality.md` 判定后追加写入 `memory/patterns.md`（三镜头 + 九类垃圾排除 + 与历史去重/合并；宁漏勿错）
 - [ ] IF `AGENTS.md` 有变化：同步更新

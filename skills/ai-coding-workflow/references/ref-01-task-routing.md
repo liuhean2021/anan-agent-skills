@@ -8,8 +8,8 @@
 
 本文档是 AI 编程代理的行为规范。加载后须遵守以下约定：
 
-- **工具维护（按需执行）**：代理在进入工具维护/升级场景，或用户明确要求时，SHOULD 检查能力工具版本（详见 `ref-02-tool-stack.md § 10.6.A`）；默认不在加载文档后自动升级工具。
-- **Superpowers 必装（使用 ai-coding-workflow 时）**：MUST 在 Phase 0 及每次确认走本 workflow 时执行 `§ 10.6.B` 检查；未安装 MUST NOT 进入 Phase 6+。与 Agent 种类无关。
+- **工具维护（按需执行）**：代理在进入工具维护/升级场景，或用户明确要求时，SHOULD 检查能力工具版本（详见 `ref-02-tool-stack.md § 10.6`）；默认不在加载文档后自动升级工具。
+- **验证纪律始终生效**：阶段顺序、完成必验证等规则内置于本技能（见 `ref-09-verification-gate.md`），任何有能力的 agent 原生遵守，不依赖任何外部插件是否安装。与 Agent 种类无关。
 - **阶段顺序**：Phase 按 `ref-03-full-workflow.md` 文档顺序推进；当前 Phase 退出条件未满足前 MUST NOT 进入下一 Phase。详见 `ref-09-verification-gate.md § 13.2`。
 - **验证铁律**：任何完成/通过类宣称 MUST 附本消息内 freshly run 的验证命令输出。详见 `ref-09-verification-gate.md § 13.3`。
 - 规范性关键词含义：**MUST** = 强制执行；**MUST NOT** = 严禁；**SHOULD** = 强烈推荐，有正当理由可偏离；**MAY** = 可选
@@ -43,23 +43,23 @@ WHEN 收到新任务时，代理 MUST 先按下表确定起始 Phase，再执行
 
 | 阶段 | 命令 | 工具 | 产出文档（精确路径） |
 |------|------|------|---------|
-| 项目初始化（一次性，在项目根目录执行） | `specify init . --integration <agent-key>` + Superpowers 必装检查 | spec-kit + Superpowers | `.specify/` 目录 |
-| 产品方向 | `/office-hours`（问题仍模糊时）→ `/plan-ceo-review` | gstack | `specs/<feature-id>/ceo-review.md` |
+| 项目初始化（一次性，在项目根目录执行） | `specify init . --integration <agent-key>` | spec-kit | `.specify/` 目录 |
+| 产品方向 | 结构化访谈式规划（问题仍模糊时）→ 结构化产品方向评审 | agent 自身能力 | `specs/<feature-id>/ceo-review.md` |
 | 需求规格 | `/speckit.specify` | spec-kit | `specs/<feature-id>/spec.md` |
 | 澄清需求 | `/speckit.clarify` | spec-kit | `specs/<feature-id>/spec.md`（追加） |
 | 规格质量清单 | `/speckit.checklist` | spec-kit | `specs/<feature-id>/checklists/` |
-| 前端交互设计归档（如适用） | 与规格链路同步完成 | 手动/设计工具/gstack | `specs/<feature-id>/interaction-design.md`（按 L1/L2/L3 分级填写；设计基线记录于「设计引用」章节；`design-system-context.md` MAY 降级为其中章节）；如需本地查看，临时拉取到 `specs/<feature-id>/design-assets/`（不提交 Git） |
+| 前端交互设计归档（如适用） | 与规格链路同步完成 | 手动/设计工具/agent 辅助评审 | `specs/<feature-id>/interaction-design.md`（按 L1/L2/L3 分级填写；设计基线记录于「设计引用」章节；`design-system-context.md` MAY 降级为其中章节）；如需本地查看，临时拉取到 `specs/<feature-id>/design-assets/`（不提交 Git） |
 | 技术方案 | `/speckit.plan` | spec-kit | `specs/<feature-id>/plan.md` `specs/<feature-id>/research.md` `specs/<feature-id>/contracts/` |
-| 架构评审 | `/plan-eng-review` | gstack | `specs/<feature-id>/arch-review.md` |
+| 架构评审 | 结构化架构评审 | agent 自身能力 | `specs/<feature-id>/arch-review.md` |
 | 原型验证（可选） | 手动指导 AI 搭建原型，快速验证方向和盲区 | 手动/AI | 原型代码（不提交主仓库）、`plan.md`（追加原型验证记录） |
 | 任务拆解 | `/speckit.tasks` | spec-kit | `specs/<feature-id>/tasks.md` |
 | 转 GitHub Issues（可选） | Claude `/speckit.taskstoissues`；Codex `$speckit-taskstoissues`（tasks 后、implement 前） | spec-kit | GitHub Issues 列表 |
 | 一致性检查 | `/speckit.analyze`（在 tasks 之后） | spec-kit | — |
 | 代码实现 | Claude 用 `/speckit.implement`；Codex 用 `$speckit-implement`；外部代理编排能力按需 | spec-kit + 外部代理编排能力 | 原子提交 |
-| 代码+安全审查 | 已安装 gstack 时执行 `/review`；安全敏感改动追加安全专项审查；按需使用外部代理编排能力并行复核 + gitleaks；否则人工审查/CI 替代 | gstack + 外部代理编排能力 | `specs/<feature-id>/review-findings.md` |
-| QA 验证 | 已安装 gstack 时执行 `/qa`（feature branch 默认 diff-aware）；否则人工或 CI 验证；UI/UX 不一致时 Phase 8 失败并返回 Phase 6，基线缺失返回 Phase 2 | gstack | `.gstack/qa-reports/` |
-| 发布 | 已安装 gstack 时执行 `/ship`；否则宿主常规发布流程 | gstack | PR + CHANGELOG |
-| 周复盘 | `/retro` | gstack | `.context/retros/` |
+| 代码+安全审查 | 由专注审查视角的子任务完成（安全敏感改动追加安全专项审查；按需使用外部代理编排能力并行复核 + gitleaks）；agent 能力不可用时人工审查/CI 替代 | agent 自身能力 + 外部代理编排能力 | `specs/<feature-id>/review-findings.md` |
+| QA 验证 | 由专注功能验证的子任务完成（feature branch 默认 diff-aware）；agent 能力不可用时人工或 CI 验证；UI/UX 不一致时 Phase 8 失败并返回 Phase 6，基线缺失返回 Phase 2 | agent 自身能力 | `specs/<feature-id>/qa-reports/` |
+| 发布 | 走标准 git/PR 发布流程；agent 能力不可用时宿主常规发布流程 | agent 自身能力 | PR + CHANGELOG |
+| 周复盘 | 结构化复盘产出 | agent 自身能力 | `.context/retros/` |
 
 > 产出文档标注"★"的阶段：命令结束后，代理 MUST 将输出内容写入对应文件路径（见各 Phase 说明）。
 
@@ -67,12 +67,12 @@ WHEN 收到新任务时，代理 MUST 先按下表确定起始 Phase，再执行
 
 | 目标场景 | 使用命令 |
 |---------|--------|
-| 方向判断/MVP 收敛 | `/office-hours`（需求仍模糊时）→ `/plan-ceo-review` |
+| 方向判断/MVP 收敛 | 结构化访谈式规划（需求仍模糊时）→ 结构化产品方向评审 |
 | 需求落规格 | Claude 用 `/speckit.specify` → `/speckit.clarify` → `/speckit.checklist`；Codex 用 `$speckit-specify` → `$speckit-clarify` → `$speckit-checklist` |
-| 前端交互需求落规格 | spec-kit 规格链路 + 按 L1/L2/L3 分级补齐 `interaction-design.md`（设计基线记录于「设计引用」章节）+ `design-system-context.md`（MAY 降级为 `interaction-design.md` 章节）；复杂交互建议追加 `/plan-design-review` |
-| 新项目或新功能：方向未定时先做方向判断，再落规格 | `/office-hours` → `/plan-ceo-review` → spec-kit 规格链路 |
-| 新项目或新功能：方向已定时快速落规格 | `/plan-ceo-review`（简版，可选）→ spec-kit 规格链路 |
-| 生成技术方案 | Claude 用 `/speckit.plan`；Codex 用 `$speckit-plan` → `/plan-eng-review` |
+| 前端交互需求落规格 | spec-kit 规格链路 + 按 L1/L2/L3 分级补齐 `interaction-design.md`（设计基线记录于「设计引用」章节）+ `design-system-context.md`（MAY 降级为 `interaction-design.md` 章节）；复杂交互建议追加一次结构化设计评审 |
+| 新项目或新功能：方向未定时先做方向判断，再落规格 | 结构化访谈式规划 → 结构化产品方向评审 → spec-kit 规格链路 |
+| 新项目或新功能：方向已定时快速落规格 | 结构化产品方向评审（简版，可选）→ spec-kit 规格链路 |
+| 生成技术方案 | Claude 用 `/speckit.plan`；Codex 用 `$speckit-plan` → 结构化架构评审 |
 | 规格质量检查 | `/speckit.checklist` |
 | 拆解任务 | Claude 用 `/speckit.tasks`；Codex 用 `$speckit-tasks` |
 | 转 GitHub Issues（可选） | Claude `/speckit.taskstoissues`；Codex `$speckit-taskstoissues` |
@@ -80,10 +80,10 @@ WHEN 收到新任务时，代理 MUST 先按下表确定起始 Phase，再执行
 | 代码实现（任务明确） | Claude 用 `/speckit.implement`；Codex 用 `$speckit-implement` |
 | 代码实现（需并行外部 agent） | 使用外部代理编排能力（例如 `/team`、`omc team N:codex "..."`、`/omc-teams` 兼容入口或宿主等价能力） |
 | 代码实现（需专业判断） | 在 `plan.md`/`arch-review.md` 中先明确判断结论；必要时使用外部代理编排能力复核 |
-| 代码审查 | 已安装 gstack 时执行 `/review`；安全敏感改动追加安全专项审查；按需使用外部代理编排能力交叉复核；否则人工审查/CI 替代 |
-| 功能测试 | 已安装 gstack 时执行 `/qa`（feature branch 默认 diff-aware）；否则人工或 CI 验证；UI/UX 不一致时返回 Phase 6 修复，基线缺失返回 Phase 2 |
+| 代码审查 | 由专注审查视角的子任务完成；安全敏感改动追加安全专项审查；按需使用外部代理编排能力交叉复核；agent 能力不可用时人工审查/CI 替代 |
+| 功能测试 | 由专注功能验证的子任务完成（feature branch 默认 diff-aware）；agent 能力不可用时人工或 CI 验证；UI/UX 不一致时返回 Phase 6 修复，基线缺失返回 Phase 2 |
 | 发布上线 | 按 `ref-03-full-workflow.md` 的 Phase 9 发布链路执行 |
-| 问题回滚 | `git revert HEAD` + `/ship` |
+| 问题回滚 | `git revert HEAD` + 标准发布流程 |
 | 记录架构决策 | 写入 `memory/decisions.md` |
 | 记录已知问题 | 写入 `memory/issues.md` |
 | 生成 commit 信息 | `/commit-message` |
@@ -132,9 +132,9 @@ WHEN 收到新任务时，代理 MUST 先按下表确定起始 Phase，再执行
 | 架构决策 ADR | `memory/decisions.md` | 代理追加 | Phase 3/Phase 6 |
 | 已知问题 | `memory/issues.md` | 代理追加 | Phase 6/bug fix |
 | 项目代码模式 | `memory/patterns.md`（写入前按 `ref-10-experience-quality.md` 判定） | 代理追加 | Phase 10 |
-| QA 报告 + 截图 | `.gstack/qa-reports/` | `/qa` 自动生成 | Phase 8 |
-| 发布日志 | `CHANGELOG.md` | `/ship` 自动生成 | Phase 9 |
-| 周复盘快照 | `.context/retros/` | `/retro` 自动生成 | Phase 10 |
+| QA 报告 + 截图 | `specs/<feature-id>/qa-reports/` | QA 验证自动生成 | Phase 8 |
+| 发布日志 | `CHANGELOG.md` | 发布流程自动生成 | Phase 9 |
+| 周复盘快照 | `.context/retros/` | 复盘产出自动生成 | Phase 10 |
 
 > 所有前端设计文档和设计基线只允许在 Phase 2/spec 阶段创建、补齐和锁定。Phase 3 之后只消费这些文档；若发现缺失、失效或错误，MUST 返回 Phase 2 修正，MUST NOT 在技术方案、任务拆解、实施、审查或 QA 阶段临场补写设计文档。`design-system-context.md` MAY 降级为 `interaction-design.md` 中的 Design System Context 章节。设计基线按 L1/L2/L3 分级 gate 判定，L3 级允许以文字需求锁定 spec.md；进入 Phase 6 前若仍缺少 L2 级以上基线，MUST 返回 Phase 2 补齐并重新锁定规格。
 

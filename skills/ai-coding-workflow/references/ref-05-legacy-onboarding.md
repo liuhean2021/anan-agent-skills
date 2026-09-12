@@ -29,7 +29,7 @@
 
 - [ ] 执行 `specify init . --integration <agent-key>` 初始化 spec-kit（Codex CLI 常用 `--integration codex --integration-options="--skills"`）；仅对**新功能**运行 specify，旧代码无需补写 spec
 - [ ] TDD 仅对新增代码要求；bug fix 时 MUST 先写复现测试，代替完整 TDD
-- [ ] 首次运行 `/review`，结果按以下规则处理：
+- [ ] 首次做一次代码审查，结果按以下规则处理：
   - IF 阻断性问题 THEN 立即修复
   - IF 非阻断性问题 THEN 记入 `memory/issues.md` 排期处理
 
@@ -39,7 +39,7 @@
 
 - [ ] 对核心模块反向补写 spec（从现有代码推导规格）
 - [ ] 对高风险模块补充测试覆盖
-- [ ] 定期执行 `/retro` 追踪迁移进度
+- [ ] 定期做结构化复盘追踪迁移进度
 
 ### 7.5 存量项目 Bug Fix 流程
 
