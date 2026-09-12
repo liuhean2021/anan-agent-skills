@@ -1,0 +1,15 @@
+# 真实凭证配置文件（含SMTP授权码/收件人邮箱/Resend API Key），不提交到仓库
+config.json
+
+# Python编译缓存，非源码不应入库
+__pycache__/
+*.pyc
+
+# 数据采集中间态临时文件（SKILL.md流程中的临时产物）
+ai_daily_report_tmp_collected.md
+
+# 每日生成的日报输出（运行产物，不随源码一起入库）
+outputs/日报/
+
+# 实体状态表：技能运行时自动读写维护的基线数据，非源码
+ai_daily_report_entity_state.json

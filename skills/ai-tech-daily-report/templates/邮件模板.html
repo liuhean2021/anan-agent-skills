@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>科技AI日报</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f5f7; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f5f7;">
+        <tr>
+            <td align="center" style="padding: 40px 20px;">
+                <!-- 主容器 -->
+                <table role="presentation" width="680" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
+                    
+                    <!-- 头部 Banner -->
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 40px 30px;">
+                            <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">科技AI日报</h1>
+                            <p style="margin: 10px 0 0; color: rgba(255,255,255,0.9); font-size: 16px;">{{DATE}}</p>
+                        </td>
+                    </tr>
+                    
+                    <!-- 信息栏 -->
+                    <tr>
+                        <td style="padding: 20px 40px; background-color: #f8f9fc; border-bottom: 1px solid #e8eaed;">
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                                <tr>
+                                    <td style="color: #5f6368; font-size: 13px;">
+                                        <span style="display: inline-block; padding: 4px 12px; background-color: #e8f0fe; color: #1a73e8; border-radius: 12px; margin-right: 12px;">{{VERSION}}</span>
+                                        生成时间：{{TIME}} · 数据范围：当日 + 过去7日
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- 内容区 -->
+                    <tr>
+                        <td style="padding: 30px 40px;">
+                            {{CONTENT}}
+                        </td>
+                    </tr>
+                    
+                    <!-- 核心要点卡片 -->
+                    <tr>
+                        <td style="padding: 0 40px 30px;">
+                            <div style="background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); border-radius: 12px; padding: 24px;">
+                                <h3 style="margin: 0 0 16px; color: #c44536; font-size: 16px; font-weight: 600;">🎯 今日要点</h3>
+                                {{KEYPOINTS}}
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <!-- 统计栏 -->
+                    <tr>
+                        <td style="padding: 0 40px 30px;">
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f8f9fc; border-radius: 12px; overflow: hidden;">
+                                <tr>
+                                    <td style="padding: 20px; text-align: center; border-right: 1px solid #e8eaed;">
+                                        <div style="font-size: 32px; font-weight: 700; color: #667eea;">{{TOTAL_NEWS}}</div>
+                                        <div style="font-size: 13px; color: #5f6368; margin-top: 4px;">条动态</div>
+                                    </td>
+                                    <td style="padding: 20px; text-align: center; border-right: 1px solid #e8eaed;">
+                                        <div style="font-size: 32px; font-weight: 700; color: #667eea;">{{TOTAL_SOURCES}}</div>
+                                        <div style="font-size: 13px; color: #5f6368; margin-top: 4px;">个信源</div>
+                                    </td>
+                                    <td style="padding: 20px; text-align: center;">
+                                        <div style="font-size: 32px; font-weight: 700; color: #667eea;">{{SECTIONS}}</div>
+                                        <div style="font-size: 13px; color: #5f6368; margin-top: 4px;">个栏目</div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- 底部 -->
+                    <tr>
+                        <td style="padding: 24px 40px; background-color: #f8f9fc; border-top: 1px solid #e8eaed; text-align: center;">
+                            <p style="margin: 0; color: #5f6368; font-size: 13px;">本报告基于公开信息整理，仅陈述事实，供行业参考</p>
+                        </td>
+                    </tr>
+                    
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

@@ -1,0 +1,256 @@
+# 科技与AI行业每日动态简报工作计划
+
+## 1. 核心目标
+### 目标概述
+每日提供全球顶级科技公司、AI大模型、科技领袖、AI开源生态（含OpenClaw、OpenRouter等）以及近七日要闻的**纯事实摘要**，帮助用户高效掌握行业前沿动态，无需主动搜索。
+
+### 背景与动机
+用户需要每日追踪科技与AI行业的关键动态，包括顶级公司动向、大模型进展、技术领袖动态、开源生态趋势以及短期热点脉络。简报需保持客观性，仅陈述事实，不加分析点评。
+
+## 2. 要求与标准
+- **产出要求**：
+  - **每日简报**：每日一期，周一至周日，上午7:00前交付
+  - **内容结构**：6个固定栏目（顶级科技公司动态、AI应用与大模型进展、科技领袖动态、开源与技术创新、前端技术动态、OpenRouter排名与OpenClaw生态）
+  - **摘要风格**：纯事实陈述，每条提供100-200字核心摘要，标注来源链接
+  - **【强制】日期与来源标注**：每一条动态必须同时标注事件日期和信息来源，缺一不可：
+    - **日期格式**：`（5月15日）` 或 `（2026-05-15）`，写在摘要开头或标题之后，表示事件发生/发布的日期
+    - **来源格式**：`（来源：XX）` 或 `[来源标题](URL)`，写在摘要末尾，标明信息出处
+    - **完整示例**：`- **iPhone 17系列618大促**：（5月14日）苹果宣布启动618活动……（来源：新浪科技）` 或 `> **摘要**：5月14日苹果宣布…… **来源**：[新浪科技](https://...)`
+    - **禁止**：无日期、无来源的条目一律不得写入日报。如无法确认日期或来源，该条目不应收录
+  - **【强制】时效性要求**：
+    - **优先收录最近3天（含当日）的新闻动态**，超过7天的旧闻一般不收录
+    - 超过7天但在本周内具有重大影响的事件（如大型发布会、重磅财报、重大收购），可收录但必须在条目开头标注`【回顾】`
+    - **禁止收录**：超过14天的旧闻；促销/营销类信息（如电商降价、优惠活动）；泛泛的趋势预测/盘点文章（无具体新闻事件）
+    - **质量门槛**：每条动态必须是具体新闻事件（有明确的主体、动作、结果），不收录纯观点文章、无新信息的综述
+  - **开源项目要求**：所有开源项目必须提供项目链接（GitHub、GitLab等）
+  - **信息覆盖**：当日动态 + 过去7日重要进展
+  - **【强制】OpenRouter排名栏目要求**：
+    - 必须包含实际的模型排名数据（Top 10模型名称、排名、市场份额），禁止只列排名维度说明而无数据
+    - 数据必须从 `https://openrouter.ai/rankings` 实际获取，标注数据获取时间
+    - 如无法访问OpenRouter排名页面，该栏目应标注"本期暂未获取到实时排名数据"，不得用空洞描述填充
+  - **交付格式**：Markdown文档，保存至 `outputs/日报/`，命名如 `日报_YYYY-MM-DD.md`
+  - **通知规则**：简报生成后推送提醒
+
+- **风格偏好**：
+  - 客观事实陈述，不添加分析点评
+  - 信息量根据当日实际符合"顶级/重要"标准的动态筛选，不做硬性条数限制
+
+- **模板规范**：
+  - 每日简报必须使用已确认的六栏目模板（顶级科技公司动态、AI应用与大模型进展、科技领袖动态、开源与技术创新、前端技术动态、OpenRouter排名与OpenClaw生态）
+  - 模板文件：`.skills/skill_ai_tech_daily_report/templates/日报模板.md`
+  - 占位符替换：生成时需将模板中的占位符（如 `{{DATE}}`、`{{SUMMARY}}` 等）替换为实际内容
+
+- **数据准确性要求**：
+  - **关键平台数据验证**：对于OpenRouter LLM Leaderboard等权威排名数据，必须确保实时性和准确性，必要时进行截图比对验证
+  - **数据时间标注**：所有时间敏感数据（如排名、调用量）需标注具体获取时间
+  - **不一致处理**：如发现数据源不一致或疑似过时，需重新搜索验证或在报告中注明数据来源限制
+  - **【重要】指定实体官方查证**：以下类别的信息必须在写入日报前，到其官方渠道进行查证确认，禁止仅凭搜索结果或AI内部知识写入：
+    - **模型名称与版本号**：如OpenAI的GPT系列（当前最新为GPT-5.5，不存在GPT-6）、Anthropic的Claude系列、Google的Gemini/Gemma系列等，必须到各公司官网/官方博客确认当前最新版本
+    - **公司重大公告**：如CEO更替、收购合并、战略合作等，必须到公司官方新闻room确认
+    - **产品发布与功能更新**：必须到产品官方页面或官方公告确认，禁止基于二手信源或推测写入
+    - **财务数据**：必须以官方财报或权威财经媒体为准
+    - 查证方式：优先访问官方站点（如openai.com/blog、anthropic.com/news、ai.googleblog.com等），如官方未发布相关信息，则该信息不得写入日报，或在日报中明确标注"未经官方证实"
+  - **常见错误警示**：AI内部知识可能滞后或产生幻觉，以下已知错误需特别注意：
+    - ❌ GPT-6（不存在，当前最新为GPT-5.5）
+    - ❌ Claude Opus 5（需确认当前最新版本）
+    - ❌ 任何未在官方渠道发布的模型/产品名称
+  - **【重要】公司归属关系核验**：写入日报时必须严格遵守以下规则，防止公司归属混淆：
+    - 每条新闻必须归入正确的公司条目下，严禁将独立公司的动态错误归类到其他公司名下
+    - **常见易混淆归属**（务必牢记）：
+      - ❌ "字节跳动（MiniMax）"→ MiniMax是独立公司，不是字节跳动子公司
+      - ❌ "阿里巴巴（月之暗面）"→ 月之暗面是独立公司，不是阿里子公司
+      - ❌ "腾讯（智谱AI）"→ 智谱AI是独立公司，不是腾讯子公司
+      - ❌ "百度（MiniMax）"→ MiniMax与百度无归属关系
+    - 如果搜索到的新闻涉及的公司不在已有清单中，应新建独立条目，而不是挂靠到"看起来相近"的公司下
+    - 如对公司归属关系不确定，必须搜索确认后再写入
+
+- **文件目录规则**：
+  - **核心交付资产**：`outputs/日报/`（每日简报存放位置）
+  - **过程数据与缓存**：`temp/`（临时素材、中间结果）
+  - **逻辑脚本与工具**：`.skills/skill_daily_report/scripts/`（邮件发送脚本）
+
+- **数据依赖**：
+  - 网络搜索：高质量科技/AI媒体、博客、官方渠道、开源社区（GitHub、Hugging Face、arXiv等）
+  - 关键监控平台：OpenRouter（模型调用量排名）、GitHub Trending（趋势热点项目）
+
+- **通知规则**：
+  - 触发条件：每日简报生成完成后
+  - 通知内容：简报已生成，可点击链接查看 `outputs/日报/日报_{date}.md`
+  - **邮件通知**：简报生成后同步发送邮件到指定邮箱（收件人：见本地`config.json`配置，不在本文档中硬编码真实邮箱）。邮件格式要求：邮件标题格式为'科技AI日报 {date}'，其中{date}为简报日期（格式YYYY-MM-DD），**禁止**添加任何额外标注。报告正文以完整HTML格式发送（不截断），内容过大时可省略Markdown附件，优先保障HTML正文的完整性。**技术说明**：QQ邮箱发送不使用HTTP_PROXY/HTTPS_PROXY代理（网络通畅），直接使用SMTP配置发送。**文件命名规则**：日报文件名格式为`日报_YYYY-MM-DD_V{n}.md`，每次执行版本号递增（V1→V2→V3...），同一天多次执行不覆盖。定时任务默认生成V1。**执行限制**：每日仅执行一次（上午7:00前），禁止自动重复执行。
+
+## 3. 关键清单
+### 顶级科技公司（18家）
+1. Apple（苹果）
+2. Microsoft（微软）
+3. Google（Alphabet）
+4. Meta
+5. Amazon
+6. Tesla
+7. NVIDIA（英伟达）
+8. Intel（英特尔）
+9. AMD（超威）
+10. IBM
+11. Oracle
+12. Salesforce
+13. Netflix
+14. Uber
+15. Airbnb
+16. Samsung（三星）
+17. Tencent（腾讯）
+18. Alibaba（阿里巴巴）
+
+### AI/大模型公司（23家）
+1. OpenAI
+2. Anthropic
+3. Google DeepMind
+4. Meta AI
+5. Microsoft AI
+6. Amazon AI
+7. NVIDIA AI
+8. Midjourney
+9. Stability AI
+10. Cohere
+11. Hugging Face
+12. AI21 Labs
+13. Aleph Alpha
+14. Mistral AI
+15. xAI（Elon Musk）
+16. 百度（文心一言）
+17. 阿里巴巴（通义千问）
+18. 腾讯（混元）
+19. 科大讯飞（星火认知）
+20. 字节跳动（豆包）
+21. MiniMax（海螺AI）
+22. 月之暗面（Kimi）
+23. 智谱AI（GLM/ChatGLM）
+
+### 科技领袖（40位）
+#### CEO层（16位）
+1. Elon Musk（Tesla、SpaceX、X、Neuralink）
+2. Tim Cook（Apple CEO）
+3. Sundar Pichai（Alphabet/Google CEO）
+4. Satya Nadella（Microsoft CEO）
+5. Mark Zuckerberg（Meta CEO）
+6. Andy Jassy（Amazon CEO）
+7. Jensen Huang（黄仁勋，NVIDIA CEO）
+8. Sam Altman（OpenAI CEO）
+9. Dario Amthropic（Anthropic CEO）
+10. Demis Hassabis（DeepMind CEO）
+11. Brian Chesky（Airbnb CEO）
+12. Reed Hastings（Netflix 联合创始人）
+13. Larry Ellison（Oracle CTO）
+14. Marc Benioff（Salesforce CEO）
+15. Lisa Su（苏姿丰，AMD CEO）
+16. Pat Gelsinger（Intel CEO）
+
+#### 关键人物层（24位）
+1. Craig Federighi（Apple，软件工程高级副总裁）
+2. Brad Smith（Microsoft，总裁）
+3. Jeff Dean（Google，首席科学家）
+4. Andrew Bosworth（Meta，CTO）
+5. Werner Vogels（Amazon，CTO）
+6. Drew Baglino（Tesla，能源工程高级副总裁）
+7. Bill Dally（NVIDIA，首席科学家）
+8. Raja Koduri（前Intel GPU架构师）
+9. Mark Papermaster（AMD，CTO）
+10. Dario Gil（IBM，研究高级副总裁）
+11. Safra Catz（Oracle，CEO）
+12. Parker Harris（Salesforce，联合创始人）
+13. Ted Sarandos（Netflix，联合CEO）
+14. Dara Khosrowshahi（Uber，CEO）
+15. Nathan Blecharczyk（Airbnb，联合创始人）
+16. Jong-Hee Han（Samsung，副董事长兼CEO）
+17. Martin Lau（Tencent，总裁）
+18. Daniel Zhang（前Alibaba CEO）
+19. Ilya Sutskever（OpenAI，联合创始人）
+20. Jared Kaplan（Anthropic，联合创始人）
+21. Koray Kavukcuoglu（Google DeepMind，副总裁）
+22. Yann LeCun（Meta AI，首席AI科学家）
+23. Kevin Scott（Microsoft AI，CTO）
+24. Swami Sivasubramanian（Amazon AI，副总裁）
+
+### AI开源影响力人物（10位）
+1. Soumith Chintala（PyTorch 联合创始人）
+2. Clement Delangue（Hugging Face 联合创始人）
+3. Julien Chaumond（Hugging Face CTO）
+4. Jeremy Howard（fast.ai 创始人）
+5. François Chollet（Keras 作者）
+6. Andrej Karpathy（前特斯拉AI总监，参与OpenAI早期工作）
+7. Diederik P. Kingma（Adam优化器共同发明人，OpenAI研究员）
+8. Jonathan Frankle（彩票假设提出者，MosaicML联合创始人）
+9. Chris Lattner（LLVM、Swift创始人，现专注于AI编译器Mojo）
+10. Linus Torvalds（Linux内核创始人，开源方法论影响深远）
+
+### 前端开发重要影响力人物（10位）
+1. Dan Abramov（React核心开发者，Redux作者）
+2. Evan You（尤雨溪，Vue.js 创始人）
+3. Ryan Dahl（Node.js创始人，Deno创始人）
+4. Miško Hevery（Angular框架创始人）
+5. Rich Harris（Svelte创始人）
+6. Sebastian McKenzie（Babel、Yarn、Rome作者）
+7. Jason Miller（Preact、WMR作者）
+8. Addy Osmani（Chrome团队工程经理，Web性能专家）
+9. Rachel Andrew（CSS Grid专家，Web标准倡导者）
+10. Lea Verou（CSS专家，MIT研究员）
+
+### 重点监控的开源产品与平台
+| 产品/平台 | 监控重点 |
+|-----------|----------|
+| **OpenClaw** | 版本发布、Pi Skills生态扩展、工具集成进展 |
+| **OpenRouter** | **LLM Leaderboard（模型调用量排名）**——这是模型调用量的权威数据源，需每日关注排名变化、各模型调用占比、响应时间趋势。**准确性要求**：1. 必须直接访问官方页面 `https://openrouter.ai/rankings` 获取最新数据；2. 排名数据需与当日实际截图核对验证；3. 报告中需注明数据获取时间（如"截至{时间}的排名"）；4. 如发现数据不一致，需重新搜索验证或注明数据来源限制 |
+| **LangChain** | 版本更新、新工具链、应用案例 |
+| **Hugging Face Transformers** | 新模型发布、社区动态 |
+| **vLLM / MLC LLM** | 推理优化进展、性能对比 |
+| **Stable Diffusion生态** | 主流WebUI及模型更新 |
+| **前端框架/工具**（React、Vue、Vite等） | 版本发布、生态工具更新 |
+| **GitHub Trending** | 每日/每周各语言、各领域趋势项目，Stars增长最快项目 |
+
+### 前端重要开源技术范围
+- **框架/库**：React、Vue.js、Angular、Svelte、Preact、Solid
+- **构建工具**：Webpack、Vite、Rollup、Parcel、esbuild
+- **开发工具**：Next.js、Nuxt.js、Gatsby、Astro、Remix
+- **状态管理**：Redux、MobX、Vuex、Pinia、Zustand
+- **测试工具**：Jest、Cypress、Playwright、Testing Library
+- **CSS工具**：Tailwind CSS、Styled Components、Sass、LESS
+
+### 前端重要闭源技术范围
+- **部署平台**：Vercel、Netlify、AWS Amplify、Azure Static Web Apps、Cloudflare Pages
+- **云服务**：Firebase、Supabase、AWS AppSync、Google Cloud Run
+- **无服务器计算**：Cloudflare Workers、AWS Lambda、Azure Functions、Google Cloud Functions
+- **设计工具**：Figma、Adobe XD、Sketch、InVision Studio
+- **监控与分析**：Sentry、Datadog、New Relic、Google Analytics、Mixpanel
+- **低代码平台**：Webflow、Bubble、Adalo、OutSystems
+
+## 4. 执行路线图
+### 第一阶段：初始化（Day 0）
+- [ ] **事项1：信源配置**：搜索并筛选10‑15个高质量科技/AI媒体、博客、官方渠道，特别覆盖AI开源社区（Hugging Face博客、PyTorch官网、arXiv最新论文）、前端技术社区、GitHub Trending等
+- [ ] **事项2：模板定制**：确认并正式化包含六个栏目的Markdown模板（顶级科技公司动态、AI应用与大模型进展、科技领袖动态、开源与技术创新、前端技术动态、七日动态回顾），模板已保存至 `.skills/skill_daily_report/templates/日报模板.md`
+- [ ] **事项3：试运行**：生成第一期简报，验证信源覆盖与模板效果，根据实际产出微调
+
+### 第二阶段：日常运行
+- [ ] **每日简报生成**：每日上午7:00前自动生成并推送简报，持续追踪所有清单范围内的动态
+- [ ] **定期复盘**：每周复盘信源效果，优化筛选标准，根据用户反馈调整关注范围
+
+### 第三阶段：持续优化
+- [ ] **动态调整**：根据行业变化和用户需求，适时更新公司、人物、产品清单
+- [ ] **体验优化**：优化信息呈现方式、推送频率或交互模式
+
+## 5. 经验沉淀
+### 上下文超限处理经验
+- **问题**：事项28因执行过程中积累过多搜索返回数据和网页内容，导致上下文长度超出系统阈值而中断
+- **解决方案**：对于涉及大量数据收集的任务，采用分阶段处理策略：
+  1. 第一阶段：专注信息收集与关键数据验证（如OpenRouter排名）
+  2. 第二阶段：基于第一阶段收集的中间产物（`temp/事项28_执行状态_部分数据汇总.md`）继续完成数据处理、报告生成与邮件发送
+- **推荐做法**：在规划类似任务时，主动拆分为「数据收集」和「报告生成」两个独立事项，避免一次性加载过多内容到上下文
+- **验证机制**：Worker执行时应定期检查上下文占用情况，及时保存中间状态
+
+### Skill迁移记录
+- **迁移日期**：2026-05-15
+- **原位置**：`长期计划/科技AI行业新闻日报/`
+- **新位置**：`.skills/skill_daily_report/`
+- **变更说明**：
+  - 将散落的文件整理为标准Skill结构
+  - 清理过时脚本版本（scripts/目录）
+  - 清理临时文件（temp/目录）
+  - 清理旧版模板（6点批次/目录）
+  - 保留最近7天日报输出

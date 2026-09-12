@@ -1,0 +1,13 @@
+{
+  "smtp_server": "smtp.qq.com",
+  "smtp_port": 465,
+  "smtp_use_ssl": true,
+  "email_address": "your-email@qq.com",
+  "auth_code": "your-auth-code",
+  "recipient": "recipient@example.com（未单独配置smtp_recipient/resend_recipient时的通用回退收件人）",
+  "smtp_recipient": "recipient@foxmail.com（可选，SMTP发送渠道专用收件人，不填则回退到recipient）",
+  "resend_recipient": "recipient@gmail.com（可选，Resend发送渠道专用收件人，不填则回退到recipient）",
+  "sender_name": "科技AI日报",
+  "resend_api_key": "re_xxx（可选，仅作为SMTP发送失败时的备用方式；不填则SMTP失败后直接报错）",
+  "resend_from": "onboarding@resend.dev（未验证自定义域名时只能发给Resend账号自己的注册邮箱，recipient需与该邮箱一致）"
+}
