@@ -78,8 +78,6 @@ done
 ```
 
 > `ai-coding-workflow` 属于全局规则型技能。安装后，还需按其 `SKILL.md` 中的「初次配置（全局强制生效）」章节，将最小必要规则写入对应 Agent 的全局规则文件（如 `~/.claude/CLAUDE.md`、`~/.codex/AGENTS.md`）。
->
-> 如需安装 `Claude Code`、`Codex CLI`、`Gemini CLI`，或使用 `CC Switch` 做 provider / model 切换，参见 `skills/ai-coding-workflow/references/ref-08-host-installation-and-cc-switch.md`。
 
 ## 配置说明
 

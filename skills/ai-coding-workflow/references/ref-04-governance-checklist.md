@@ -48,7 +48,7 @@
 
 ### 6.2 每个功能开始前
 
-- [ ] 按 Section 1.1 判断任务规模，确定起始 Phase；**禁止无产出物跳阶段**（`ref-09 § 13.2`）
+- [ ] 按 Section 1.1 判断任务规模，确定起始 Phase；**禁止无产出物跳阶段**（`ref-08 § 13.2`）
 - [ ] IF 方向未定、MVP 边界未定、或影响重大：先做结构化访谈式规划，再做结构化产品方向评审，将结论写入 `specs/<feature-id>/ceo-review.md`
 - [ ] IF 涉及陌生库、新版本 SDK、或近期变化的工具行为：优先使用 Context7 MCP 自动文档查验；无 MCP 时降级为 `use context7`/library ID/官方文档，再进入规格/方案动作
 - [ ] IF 方向已定且需求明确：执行 `/speckit.specify` + `/speckit.clarify`，锁定规格（变更须回 Phase 2 正式修改）
@@ -80,7 +80,7 @@
 
 - [ ] 模型与推理档位遵循当前 CLI/仓库默认配置，MUST NOT 在工作流文档中硬编码固定模型分工
 - [ ] TDD：先写失败测试，再写实现
-- [ ] IF 需要专业判断或并行执行：先在 `plan.md`/`arch-review.md` 中明确判断结论；使用外部代理编排能力时，明确文件所有权、输入上下文与验收条件
+- [ ] IF 需要专业判断或并行执行：先在 `plan.md`/`arch-review.md` 中明确判断结论；并行分工时，明确文件所有权、输入上下文与验收条件
 - [ ] 每完成一个原子任务，执行 `/commit-message` 生成提交信息，确认后再提交；MUST NOT 直接调用 `git commit`；提交信息格式以该技能定义为准，默认使用中文，除非用户明确要求英文
 - [ ] 踩坑立即追加写入 `memory/issues.md`
 - [ ] 架构决策立即追加写入 `memory/decisions.md`
@@ -89,7 +89,7 @@
 
 ### 6.4 上线前（关键 gate MUST 全过）
 
-- [ ] **验证铁律**：所有完成/通过类结论已附本消息内 freshly run 的验证命令输出（`ref-09 § 13.3`）
+- [ ] **验证铁律**：所有完成/通过类结论已附本消息内 freshly run 的验证命令输出（`ref-08 § 13.3`）
 - [ ] gitleaks Secret 扫描通过（pre-commit hook 自动触发，CI 二次校验）
 - [ ] 代码审查通过；安全敏感改动已追加安全专项审查，将结论写入 `specs/<feature-id>/review-findings.md`，修复后重审
 - [ ] QA 验证通过，截图已存档（feature branch 默认 diff-aware）
@@ -103,5 +103,5 @@
 ### 6.5 功能完成后
 
 - [ ] 结构化周复盘（每周一次）
-- [ ] 有价值经验按 `ref-10-experience-quality.md` 判定后追加写入 `memory/patterns.md`（三镜头 + 九类垃圾排除 + 与历史去重/合并；宁漏勿错）
+- [ ] 有价值经验按 `ref-09-experience-quality.md` 判定后追加写入 `memory/patterns.md`（三镜头 + 九类垃圾排除 + 与历史去重/合并；宁漏勿错）
 - [ ] IF `AGENTS.md` 有变化：同步更新

@@ -8,10 +8,9 @@
 
 ### 5.1 阶段主线与工具介入原则
 
-- AI Coding Workflow 以 `Phase 0~10/5B` 为唯一主线；`spec-kit`、agent 自身承载的评审/QA/发布能力、外部代理编排能力、Context7 MCP、`gitleaks`、`memory` 等都按阶段介入
+- AI Coding Workflow 以 `Phase 0~10/5B` 为唯一主线；`spec-kit`、agent 自身承载的评审/QA/发布能力、Context7 MCP、`gitleaks`、`memory` 等都按阶段介入
 - `spec-kit` 主要提供规格、方案、任务、分析、实施骨架
-- 方向评审、架构评审、审查、QA、发布、复盘由 agent 自身或专门子任务承载，不依赖特定外部工具
-- 外部代理编排能力主要用于并行实施或多模型交叉复核
+- 方向评审、架构评审、审查、QA、发布、复盘、并行实施与多模型交叉复核均由 agent 自身或专门子任务承载，不依赖特定外部工具
 - Context7 优先通过 MCP 自动核对官方文档；无 MCP 时降级为 `use context7`/library ID/官方文档，避免在方案或实施阶段产生 API 幻觉
 - `gitleaks`、测试、CI、`memory/*` 等属于验证与沉淀能力，同样是工作流组成部分
 
@@ -20,14 +19,13 @@
 | 情况 | 介入能力 |
 |------|--------|
 | 任务列表明确、完整功能、自动执行 | `/speckit.implement` |
-| 需要专业判断（复杂架构、安全、性能） | `plan.md`/`arch-review.md` 明确结论；必要时用外部代理编排能力复核 |
-| 需并行调用 Codex/Gemini 分工实施 | `/team`、`omc team N:codex "..."`（`/omc-teams` 已在 OMC 5.0.0 移除且不留别名） |
-| 需多模型交叉复核实现方案 | `/ask <model>` 或 `omc ask <model> ...`（多模型逐个调用） |
+| 需要专业判断（复杂架构、安全、性能） | `plan.md`/`arch-review.md` 明确结论 |
+| 需并行分工实施 | 主代理原生 subagent / 并行任务能力，按文件或模块边界拆分 |
 | 需核对陌生库、新版本 SDK、官方 API | 优先使用 Context7 MCP 自动文档查验；无 MCP 时降级为 `use context7`/library ID/官方文档 |
 
 **降级规则**：本文件中的 `/review`、`/qa`、`/ship` 对应的职责默认由 agent 自身或专注子任务原生完成（见 `ref-02 § 10.2`）；IF 当前环境确实缺乏执行这些任务的能力，THEN 分别降级为人工审查、手工测试或 CI 验证、宿主常规发布流程。
 
-**验证纪律层**：阶段顺序、完成必验证规则内置于本技能（见 `ref-02 § 10.5`），任何有能力的 agent 原生遵守，不依赖任何外部插件。阶段顺序与验证铁律见 `ref-09-verification-gate.md`；各 Phase 退出前须满足该文件 § 13.4 纪律层要求。
+**验证纪律层**：阶段顺序、完成必验证规则内置于本技能（见 `ref-02 § 10.4`），任何有能力的 agent 原生遵守，不依赖任何外部插件。阶段顺序与验证铁律见 `ref-08-verification-gate.md`；各 Phase 退出前须满足该文件 § 13.4 纪律层要求。
 
 ### 前端交互需求附加规则
 
@@ -173,8 +171,8 @@ IF 组件存在多状态流转（如加载→空→数据→错误→重试）�
 **必做动作**：
 1. 执行 `specify init . --integration <agent-key>`（分布式团队可加 `--branch-numbering timestamp` 避免分支编号冲突；Codex CLI 常用 `--integration codex --integration-options="--skills"`），初始化 `.specify/` 目录
 2. 执行 `/speckit.constitution`，生成 `constitution.md`
-3. 补充 `AGENTS.md`/`CLAUDE.md`，写入项目规范（SHOULD 包含项目验证命令，供 `ref-09` Gate Function 使用）
-4. 验证纪律内置生效，无需单独安装或检查外部插件（详见 `ref-02-tool-stack.md § 10.5`）
+3. 补充 `AGENTS.md`/`CLAUDE.md`，写入项目规范（SHOULD 包含项目验证命令，供 `ref-08` Gate Function 使用）
+4. 验证纪律内置生效，无需单独安装或检查外部插件（详见 `ref-02-tool-stack.md § 10.4`）
 
 **产出物**：`.specify/memory/constitution.md`、`AGENTS.md`（或 `CLAUDE.md`）
 
@@ -837,7 +835,7 @@ IF 功能涉及 UI 组件、服务状态、任务生命周期、CLI 执行或多
 **必做动作**：
 1. Claude 执行 `/speckit.analyze`，Codex 执行 `$speckit-analyze`，对 `spec.md`、`plan.md`、`tasks.md` 做只读一致性分析；涉及前端交互需求时按附加规则纳入 `interaction-design.md` 和 `design-system-context.md`（或 `interaction-design.md` 中的 Design System Context 章节）
 2. 按验收标准先写失败测试
-3. IF 后续实现预计会调用外部 agent，THEN 先在 `tasks.md` 标注可并行项与上下文边界，避免多个 agent 重复改同一文件
+3. IF 后续实现预计需要并行分工，THEN 先在 `tasks.md` 标注可并行项与上下文边界，避免多个 agent 重复改同一文件
 4. 执行 `/commit-message` 生成提交信息，等待确认后再执行提交；提交格式以该技能定义为准，如需标识 `<feature-id>`，可写入摘要或说明列表
 
 **产出物**：分析报告、失败测试文件、测试基线提交
@@ -855,14 +853,14 @@ IF 功能涉及 UI 组件、服务状态、任务生命周期、CLI 执行或多
 2. 定位并修复
 3. 由专注审查视角的子任务完成代码审查（仅审改动范围）
 4. IF 涉及鉴权、支付、隐私、权限、密钥、数据边界等安全敏感改动，THEN 追加安全专项审查，并将结论写入 `specs/<feature-id>/review-findings.md`，修复后重审
-5. 确认测试通过（MUST 按 `ref-09-verification-gate.md` Gate Function 执行，附 fresh 测试命令输出）
+5. 确认测试通过（MUST 按 `ref-08-verification-gate.md` Gate Function 执行，附 fresh 测试命令输出）
 6. 由专注功能验证的子任务完成 QA（feature branch 默认 diff-aware）
 7. 走标准 git/PR 发布流程
 8. 将踩坑内容追加写入 `memory/issues.md`
 
 **产出物**：复现测试、修复提交、`memory/issues.md`（追加）
 
-**退出条件**：缺陷已复现、已修复；步骤 5 MUST 经 `ref-09` Gate Function 验证并附 fresh 命令输出；审查与发布动作已完成。
+**退出条件**：缺陷已复现、已修复；步骤 5 MUST 经 `ref-08` Gate Function 验证并附 fresh 命令输出；审查与发布动作已完成。
 
 > 本简化流是 bug fix 特例，MUST NOT 视为完整 Phase 5/6 的等价替身。若修复过程实际演变为新增能力、范围调整或方案重构，THEN MUST 返回 Phase 2 正式建模。
 
@@ -874,12 +872,9 @@ IF 功能涉及 UI 组件、服务状态、任务生命周期、CLI 执行或多
 
 **必做动作**：
 1. IF 任务列表明确且为完整功能，THEN Claude 执行 `/speckit.implement`，Codex 执行 `$speckit-implement`
-2. IF 需要专业判断（复杂架构、安全、性能），THEN 先在 `plan.md`/`arch-review.md` 中明确判断结论；必要时使用外部代理编排能力复核方案
-3. IF 存在 `[P]` 并行任务，且已安装 `oh-my-claudecode`，THEN MAY 用以下方式接入外部 agent：
-   - `/team 3:executor "implement tasks <task-id list> with clear file ownership"`
-   - `omc team 2:codex "implement task <task-id> in <path> only"`
-   - `/ask gemini "review this implementation approach before coding"`
-4. 使用外部 agent 时，MUST 先明确每个 agent 的文件所有权、输入上下文和验收条件；MUST NOT 让多个 agent 同时改同一文件
+2. IF 需要专业判断（复杂架构、安全、性能），THEN 先在 `plan.md`/`arch-review.md` 中明确判断结论
+3. IF 存在 `[P]` 并行任务，THEN MAY 用主代理原生 subagent 能力分工实施
+4. 并行分工时，MUST 先明确每个 agent 的文件所有权、输入上下文和验收条件；MUST NOT 让多个 agent 同时改同一文件
 5. 每完成一个原子任务，MUST 立即执行 `/commit-message` 生成提交信息，等待确认后再提交；MUST NOT 直接调用 `git commit` 绕过该步骤；提交信息格式以 `/commit-message` 技能定义为准，默认使用中文，除非用户明确要求英文
 6. IF 遇到问题/踩坑，THEN MUST 将内容追加写入 `memory/issues.md`
 6a. **偏差日志（推荐）**：SHOULD 在 Phase 6 开始时建立临时 `DEVIATIONS.md`，记录实施过程中与 `plan.md`/`tasks.md` 不一致的发现、临时决策、计划外上下文和意外变更。这不是正式文档，而是过程中的即兴记录，用来防止实施到一半偏离方向而不自知。Phase 6 退出时将其中有价值的内容归入 `memory/issues.md` 或 `memory/decisions.md`，然后删除 `DEVIATIONS.md`。
@@ -888,7 +883,7 @@ IF 功能涉及 UI 组件、服务状态、任务生命周期、CLI 执行或多
 
 **产出物**：原子提交，`memory/issues.md`（如有追加）
 
-**退出条件**：所有原子任务完成，测试全部通过（绿灯）；退出 Phase 6 前 MUST freshly run 项目验证命令（见 `ref-09 § 13.4`），禁止无输出宣称实施完成。
+**退出条件**：所有原子任务完成，测试全部通过（绿灯）；退出 Phase 6 前 MUST freshly run 项目验证命令（见 `ref-08 § 13.4`），禁止无输出宣称实施完成。
 
 ---
 
@@ -899,11 +894,9 @@ IF 功能涉及 UI 组件、服务状态、任务生命周期、CLI 执行或多
 **必做动作**：
 1. 由专注审查视角的子任务完成代码审查，审查生产级 bug（race condition、N+1、信任边界等）
 2. IF 涉及鉴权、支付、隐私、权限、密钥、数据边界等安全敏感改动，THEN 追加安全专项审查，并将结论写入同一审查文档
-3. IF 审查范围较大、风险较高、或需要多视角交叉验证，THEN SHOULD 追加外部代理编排能力做交叉复核（`/ccg` 已在 OMC 5.0.0 移除且不留别名，改为逐个调用 `/ask <model>`）：
-   - `/ask codex "review this patch for correctness, edge cases, and security assumptions"`
-   - `/ask gemini "review this diff for readability, UX regressions, and unclear naming"`
+3. IF 审查范围较大、风险较高、或需要多视角交叉验证，THEN SHOULD 由专注审查视角的子任务分别覆盖架构/类型/测试缺口与可读性/UX/文档等角度做交叉复核
 4. gitleaks pre-commit hook 在提交时自动触发 Secret 扫描
-5. 将代码审查、安全专项审查、外部代理编排能力交叉复核中的有效发现统一汇总写入 `specs/<feature-id>/review-findings.md`，并标注来源
+5. 将代码审查、安全专项审查、多视角交叉复核中的有效发现统一汇总写入 `specs/<feature-id>/review-findings.md`，并标注来源
 6. IF 存在审查发现，THEN 修复后 MUST 重新执行本 Phase
 
 **产出物**：`specs/<feature-id>/review-findings.md`
@@ -923,7 +916,7 @@ IF 功能涉及 UI 组件、服务状态、任务生命周期、CLI 执行或多
 
 **产出物**：`specs/<feature-id>/qa-reports/`（含截图）
 
-**退出条件**：所有验收条目通过，截图已存档；若涉及前端交互需求，则设计对照验证已通过，QA 报告已记录设计引用、关键页面截图、差异结论与差异分级。若设计效果与目标基线不一致，MUST 返回 Phase 6 修复；若基线缺失或错误，返回 Phase 2。Phase 8 内每条验收结论 MUST 符合 `ref-09` Iron Law（附 fresh 验证证据）。
+**退出条件**：所有验收条目通过，截图已存档；若涉及前端交互需求，则设计对照验证已通过，QA 报告已记录设计引用、关键页面截图、差异结论与差异分级。若设计效果与目标基线不一致，MUST 返回 Phase 6 修复；若基线缺失或错误，返回 Phase 2。Phase 8 内每条验收结论 MUST 符合 `ref-08` Iron Law（附 fresh 验证证据）。
 
 ---
 
@@ -955,7 +948,7 @@ IF 功能涉及 UI 组件、服务状态、任务生命周期、CLI 执行或多
 
 **必做动作**：
 1. 生成结构化复盘快照到 `.context/retros/`
-2. IF 有价值经验，THEN 按 `ref-10-experience-quality.md` 判定后追加写入 `memory/patterns.md`（三镜头 + 九类垃圾排除 + 与历史去重/合并；宁漏勿错）
+2. IF 有价值经验，THEN 按 `ref-09-experience-quality.md` 判定后追加写入 `memory/patterns.md`（三镜头 + 九类垃圾排除 + 与历史去重/合并；宁漏勿错）
 3. 复盘输出末尾执行「收尾反思两问」并如实作答：
    - **① 眼下最没把握的是什么？** —— 本次迭代中置信度最低、最需验证的判断
    - **② 我最大的遗漏是什么？我没意识到什么？** —— 可能被忽略但会影响结果的地方

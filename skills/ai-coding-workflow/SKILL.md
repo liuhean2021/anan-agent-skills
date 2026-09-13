@@ -1,6 +1,6 @@
 ---
 name: ai-coding-workflow
-description: 当用户需要统一的 AI 编程工作流时使用，涵盖新项目、新功能、bug fix、规划、代码审查、QA、发布及存量项目接入。代理将任务路由至 spec-kit 规格链路与 agent 原生能力承载的评审/QA/发布等阶段能力，并强制 Phase 顺序与完成前验证（ref-09，验证纪律内置于本技能，不依赖任何外部插件）。
+description: 当用户需要统一的 AI 编程工作流时使用，涵盖新项目、新功能、bug fix、规划、代码审查、QA、发布及存量项目接入。代理将任务路由至 spec-kit 规格链路与 agent 原生能力承载的评审/QA/发布等阶段能力，并强制 Phase 顺序与完成前验证（ref-08，验证纪律内置于本技能，不依赖任何外部插件）。
 ---
 
 > **⚠️ 初次安装必做**：将本技能加入全局强制规则 → 跳至文末「[初次配置](#初次配置全局强制生效)」章节，完成后再回来阅读。
@@ -10,27 +10,26 @@ description: 当用户需要统一的 AI 编程工作流时使用，涵盖新项
 > | 文件 | 内容 |
 > |------|------|
 > | `references/ref-01-task-routing.md` | §0 规范导言（术语/MUST-SHOULD-MAY/Phase 结构规范）+ §1 任务路由（任务类型→Phase表、命令速查、场景→命令映射）+ §4 文档结构（文件路径速查表） |
-> | `references/ref-02-tool-stack.md` | §2 工具体系总览 + §10 各工具详细说明（spec-kit/评审-QA-发布能力/OMC/gitleaks/自检）+ §11 参考来源 |
+> | `references/ref-02-tool-stack.md` | §2 工具体系总览 + §10 各工具详细说明（spec-kit/评审-QA-发布能力/gitleaks/自检）+ §11 参考来源 |
 > | `references/ref-03-full-workflow.md` | §5 完整开发工作流 Phase 0~10（含 ceo-review 模板、spec 模板） |
 > | `references/ref-04-governance-checklist.md` | §3 AI治理（数据边界/高风险操作/人工责任/留痕）+ §6 最佳实践清单（5组 checklist） |
 > | `references/ref-05-legacy-onboarding.md` | §7 存量项目接入（三档策略 A/B/C + Bug Fix 简化流程） |
-> | `references/ref-06-branch-parallel.md` | §8 分支策略（主干开发、PR合并规则）+ §9 并行开发（Git Worktree + OMC 多代理选型） |
+> | `references/ref-06-branch-parallel.md` | §8 分支策略（主干开发、PR合并规则）+ §9 并行开发（Git Worktree + 主代理原生并行能力选型） |
 > | `references/ref-07-advanced-practices.md` | §12 进阶实践（P1 测试分层/依赖安全/DORA/Hooks；P2 AI信任边界/环境策略/合规审查/成本管理） |
-> | `references/ref-08-host-installation-and-cc-switch.md` | Claude Code/Codex/Gemini 安装 + CC Switch provider/model 切换 |
-> | `references/ref-09-verification-gate.md` | §13 验证铁律 + 阶段顺序纪律（本技能内置横切纪律层、Iron Law、Gate Function） |
-> | `references/ref-10-experience-quality.md` | §14 经验质量判定（三镜头 + 九类垃圾排除 + 写入前检查），`memory/patterns.md` 写入前必读 |
+> | `references/ref-08-verification-gate.md` | §13 验证铁律 + 阶段顺序纪律（本技能内置横切纪律层、Iron Law、Gate Function） |
+> | `references/ref-09-experience-quality.md` | §14 经验质量判定（三镜头 + 九类垃圾排除 + 写入前检查），`memory/patterns.md` 写入前必读 |
 
 # AI Coding 工作流
 
 **核心原则**：规格驱动 → 测试先行 → 最小改动 → 审查验证 → 持续复盘  
-**纪律层**：Phase 按文档顺序推进；任何完成宣称 **必须附 fresh 验证证据**（详见 `references/ref-09-verification-gate.md`）；该纪律内置于本技能，任何有能力的 agent 原生遵守，不依赖外部插件  
+**纪律层**：Phase 按文档顺序推进；任何完成宣称 **必须附 fresh 验证证据**（详见 `references/ref-08-verification-gate.md`）；该纪律内置于本技能，任何有能力的 agent 原生遵守，不依赖外部插件  
 **适用**：按 ai-coding-workflow 推进的 AI 辅助开发（新项目/新功能/bug fix/存量接入）；与具体 Agent / IDE 无关
 
 **何时使用**：当用户要你按统一研发流程处理开发任务时使用，典型包括：新项目、新功能、bug fix、存量项目接入、代码审查、QA、发布、工具升级、并行开发。
 
 **不适用**：纯闲聊、单次信息查询、纯文案改写、纯翻译、仅做简短说明而不进入研发流程的场景。
 
-本技能中的“工作流”默认指**统一的 AI Coding Workflow**。`Phase 0~10` 与 `Phase 5B` 是唯一主线阶段定义；验证纪律（阶段顺序、Iron Law、Gate Function，详见 `ref-09`）作为本技能自带的横切规则始终生效，任何有能力的 agent 原生遵守，与是否安装某个外部插件无关；`spec-kit`、评审/QA/发布等阶段能力（由 agent 自身或专门子任务完成，不依赖特定外部工具）、外部代理编排能力、Context7 MCP、`gitleaks`、`git worktree`、`AGENTS.md/CLAUDE.md/memory` 等都属于按阶段介入的工作流能力，MUST NOT 理解为彼此分离的并行流程。
+本技能中的“工作流”默认指**统一的 AI Coding Workflow**。`Phase 0~10` 与 `Phase 5B` 是唯一主线阶段定义；验证纪律（阶段顺序、Iron Law、Gate Function，详见 `ref-08`）作为本技能自带的横切规则始终生效，任何有能力的 agent 原生遵守，与是否安装某个外部插件无关；`spec-kit`、评审/QA/发布等阶段能力（由 agent 自身或专门子任务完成，不依赖特定外部工具）、Context7 MCP、`gitleaks`、`git worktree`、`AGENTS.md/CLAUDE.md/memory` 等都属于按阶段介入的工作流能力，MUST NOT 理解为彼此分离的并行流程。
 
 详细阶段、工具映射与治理规则见下方章节和 `references/`。
 
@@ -47,7 +46,7 @@ description: 当用户需要统一的 AI 编程工作流时使用，涵盖新项
 
 只有当前环境确实缺乏执行这些任务的能力（例如无法运行测试、无法访问代码仓库）时，才降级为人工审查、测试命令或 CI 流程。后续各 Phase 不再重复声明此规则。
 
-**验证纪律不可降级**：Iron Law、Gate Function（见 `ref-09-verification-gate.md`）是本技能自带的横切规则，任何有能力的 agent 原生遵守，不因工具可用性而降级。
+**验证纪律不可降级**：Iron Law、Gate Function（见 `ref-08-verification-gate.md`）是本技能自带的横切规则，任何有能力的 agent 原生遵守，不因工具可用性而降级。
 
 ## 命令映射
 
@@ -90,7 +89,7 @@ Phase 9  发布
 Phase 10 复盘
 ```
 
-每个阶段可按需接入不同能力：阶段顺序、验证铁律由本技能自带的横切纪律层保障（见 `ref-09`），`spec-kit` 负责规格/方案/任务/实现骨架，方向评审、架构评审、审查、QA、发布与复盘由 agent 自身或专门子任务承载（不依赖特定外部工具），外部代理编排能力负责并行执行或多模型复核，Context7 MCP 负责核对上游官方文档，`gitleaks` 负责 Secret 扫描，`memory` 负责沉淀决策与踩坑记录。
+每个阶段可按需接入不同能力：阶段顺序、验证铁律由本技能自带的横切纪律层保障（见 `ref-08`），`spec-kit` 负责规格/方案/任务/实现骨架，方向评审、架构评审、审查、QA、发布、复盘与多模型并行/交叉复核均由 agent 自身或专门子任务承载（不依赖特定外部工具），Context7 MCP 负责核对上游官方文档，`gitleaks` 负责 Secret 扫描，`memory` 负责沉淀决策与踩坑记录。
 
 ---
 
@@ -146,13 +145,13 @@ IF 涉及前端 UI/UX 且项目级 `DESIGN.md` 不存在，THEN 生成 `DESIGN.m
 执行 spec-kit tasks，生成 `tasks.md`。若已产出前端交互设计，则前端任务 MUST 基于 `interaction-design.md` 拆解，而不是只依据文字规格。前端任务 MUST 包含设计还原验证任务，明确截图/人工验收/视觉对比证据。
 
 **A5 TDD + 实施**（详见 `§ Phase 5-6`）
-执行一致性分析 → 先写失败测试 → 执行实现（必要时用外部代理编排能力并行）→ 绿灯。具体页面实现与组件开发在 Phase 6 执行，不在需求阶段提前落代码。IF 涉及前端实施，THEN Agent MUST 将 `DESIGN.md` 中的 design tokens 映射为 CSS 变量或 Tailwind 配置，MUST NOT 在组件中硬编码颜色/字体/间距值。
+执行一致性分析 → 先写失败测试 → 执行实现（必要时用主代理原生 subagent 能力并行）→ 绿灯。具体页面实现与组件开发在 Phase 6 执行，不在需求阶段提前落代码。IF 涉及前端实施，THEN Agent MUST 将 `DESIGN.md` 中的 design tokens 映射为 CSS 变量或 Tailwind 配置，MUST NOT 在组件中硬编码颜色/字体/间距值。
 
 **A6 审查 + QA + 发布**（详见 `§ Phase 7-9`）
 执行审查 → QA → 按 Phase 9 发布链路进入 CI/Review/合并/staging quick QA/production。若涉及前端交互，QA MUST 将 `interaction-design.md`、`design-system-context.md`（或 `interaction-design.md` 中的 Design System Context 章节）及「设计引用」章节中的设计基线（在线链接或离线文件路径）作为对照输入之一。若 QA 发现设计效果与目标基线不一致，MUST 返回 Phase 6 修复；若基线缺失或错误，返回 Phase 2。
 
 **A7 复盘**  
-结构化复盘 → 有价值经验写入 `memory/patterns.md`（写入前先按 `references/ref-10-experience-quality.md` 做质量判定：三镜头 + 九类垃圾排除 + 去重合并）。复盘输出末尾 MUST 执行「收尾反思两问」并如实作答：**① 眼下最没把握的是什么？② 我最大的遗漏是什么？我没意识到什么？**（前者源自 Sam Altman，后者源自 Claude；暴露本次迭代的置信度边界与盲点，不否定复盘结论）。
+结构化复盘 → 有价值经验写入 `memory/patterns.md`（写入前先按 `references/ref-09-experience-quality.md` 做质量判定：三镜头 + 九类垃圾排除 + 去重合并）。复盘输出末尾 MUST 执行「收尾反思两问」并如实作答：**① 眼下最没把握的是什么？② 我最大的遗漏是什么？我没意识到什么？**（前者源自 Sam Altman，后者源自 Claude；暴露本次迭代的置信度边界与盲点，不否定复盘结论）。
 
 ---
 
@@ -165,7 +164,7 @@ Phase 2：需求规格（执行 spec-kit 规格链路：specify → clarify → 
 Phase 3：技术方案（spec-kit plan → 结构化架构评审 → arch-review.md；若涉及前端交互，`plan.md` MUST 同时引用 `interaction-design.md` 和 `design-system-context.md`（或 `interaction-design.md` 中的 Design System Context 章节）作为实现输入）
 Phase 4：任务拆解（spec-kit tasks → tasks.md；若涉及前端交互，前端任务 MUST 基于设计产物拆解；前端任务 MUST 包含设计还原验证任务）
 Phase 5：一致性分析 + TDD（spec-kit analyze → 对 `spec.md`/`interaction-design.md`/`design-system-context.md`（或 `interaction-design.md` 中的 Design System Context 章节）/`plan.md`/`tasks.md` 做一致性分析 → 先写失败测试 → 提交测试基线）
-Phase 6：实施（spec-kit implement；必要时配合外部代理编排能力 → 绿灯 → 原子提交）
+Phase 6：实施（spec-kit implement；必要时用 subagent 并行 → 绿灯 → 原子提交）
 Phase 7：审查（执行 review；安全敏感改动追加安全专项审查）
 Phase 8：QA（执行 qa → qa-reports/；feature branch 默认 diff-aware；若涉及前端交互，MUST 对照 `interaction-design.md`、`design-system-context.md`（或 `interaction-design.md` 中的 Design System Context 章节）及「设计引用」章节中的设计基线验证；若设计效果不一致 MUST 返回 Phase 6 修复，基线缺失返回 Phase 2）
 Phase 9：发布（按 Phase 9 发布链路执行）
@@ -190,7 +189,7 @@ Phase 9：发布（按 Phase 9 发布链路执行）
 ① 先写失败/复现测试（固化问题，防止回归）
 ② 定位并修复
 ③ 用专注审查视角的子任务完成代码审查（仅审改动范围）；agent 能力不可用时改为人工审查或 CI 校验
-④ 按 ref-09 Gate Function 确认测试通过（附 fresh 命令输出）
+④ 按 ref-08 Gate Function 确认测试通过（附 fresh 命令输出）
 ⑤ 用专注功能验证的子任务完成 QA（feature branch 默认 diff-aware；需要冒烟测试或回归测试时显式说明测试范围）；agent 能力不可用时改为人工或 CI 验证
 ⑥ 走标准 git/PR 发布流程；agent 能力不可用时走宿主常规发布流程
 ⑦ 踩坑追加写入 memory/issues.md
@@ -216,22 +215,21 @@ Phase 9：发布（按 Phase 9 发布链路执行）
 
 ## 场景 E：工具配置与升级
 
-> 各工具安装/升级命令 → `references/ref-02-tool-stack.md`；宿主 CLI 安装与 `CC Switch` 切换 → `references/ref-08-host-installation-and-cc-switch.md`
+> 各工具安装/升级命令 → `references/ref-02-tool-stack.md`
 
 | 工具 | 升级命令 |
 |------|---------|
 | specify-cli（CLI） | `uv tool install specify-cli --force --from git+https://github.com/github/spec-kit.git@vX.Y.Z && uv cache clean` |
 | spec-kit 项目文件 | `specify init --here --force --integration <agent-key>` |
 | gitleaks | `brew upgrade gitleaks` |
-| oh-my-claudecode | `omc update` 或 `npm i -g oh-my-claude-sisyphus@latest`（npm 发布包名，项目品牌名相同）；刷新 config 需另跑 `omc setup` 或 `/omc-setup`（`/setup` 已在 OMC 5.0.0 移除且不留别名） |
 
-进入场景 E 或用户明确要求时，代理 SHOULD 按 `§ 10.6` 检查能力工具版本。默认不在每次会话开始时自动升级工具。
+进入场景 E 或用户明确要求时，代理 SHOULD 按 `§ 10.5` 检查能力工具版本。默认不在每次会话开始时自动升级工具。
 
 ---
 
 ## 场景 F：多功能并行开发
 
-> Git Worktree 命令 + OMC 多代理选型 → `references/ref-06-branch-parallel.md`
+> Git Worktree 命令 + 多代理并行选型 → `references/ref-06-branch-parallel.md`
 
 ```bash
 # 开两条并行 feature 线
@@ -247,9 +245,7 @@ cd ../project-feature-b && claude
 
 | 场景 | 方案 |
 |------|------|
-| 同一任务内多模型分工实现 | `/team`（Claude Code 会话内团队编排）或宿主等价能力 |
-| 启动 Codex/Gemini CLI worker | `omc team N:codex "..."`/`omc team N:gemini "..."`（`/omc-teams` 已在 OMC 5.0.0 移除且不留别名） |
-| 同一 diff 多模型交叉审查 | `/ask codex` + `/ask gemini`（或宿主等价交叉评审能力） |
+| 同一任务内多模型分工实现 | 主代理原生 subagent / 并行任务能力，按文件或模块边界拆分 |
 | 并行功能开发 | 多个独立代理实例（各自 worktree） |
 
 ---
@@ -354,8 +350,8 @@ memory/workflow.md              ← 项目定制层（参考技能，记录本�
 
 1. 进行开发任务时，默认使用 `~/.claude/skills/ai-coding-workflow/SKILL.md`。
 2. “工作流”指统一的 AI Coding Workflow，按 `Phase 0~10/Phase 5B` 顺序推进，不把 spec-kit 或按工具拆分的评审/QA/发布视为分离流程。
-3. Phase 退出条件未满足前不得进入下一 Phase；任何完成/通过宣称 MUST 附 fresh 验证命令输出（见技能 `ref-09-verification-gate.md`）——验证纪律内置于本技能，任何有能力的 agent 原生遵守，不依赖外部插件。
-4. 阶段内可按需使用 spec-kit、agent 自身承载的评审/QA/发布等能力、外部代理编排、Context7 MCP、gitleaks、memory 等能力。
+3. Phase 退出条件未满足前不得进入下一 Phase；任何完成/通过宣称 MUST 附 fresh 验证命令输出（见技能 `ref-08-verification-gate.md`）——验证纪律内置于本技能，任何有能力的 agent 原生遵守，不依赖外部插件。
+4. 阶段内可按需使用 spec-kit、agent 自身承载的评审/QA/发布等能力、Context7 MCP、gitleaks、memory 等能力。
 5. 意图模糊时，先判断场景：新项目/新功能/小变更/存量接入/工具升级/并行开发。
 ```
 
@@ -372,8 +368,8 @@ memory/workflow.md              ← 项目定制层（参考技能，记录本�
 
 1. 进行开发任务时，默认使用 `<your-skills-path>/ai-coding-workflow/SKILL.md`。
 2. “工作流”指统一的 AI Coding Workflow，按 `Phase 0~10/Phase 5B` 顺序推进，不把 spec-kit 或按工具拆分的评审/QA/发布视为分离流程。
-3. Phase 退出条件未满足前不得进入下一 Phase；任何完成/通过宣称 MUST 附 fresh 验证命令输出（见技能 `ref-09-verification-gate.md`）——验证纪律内置于本技能，任何有能力的 agent 原生遵守，不依赖外部插件。
-4. 阶段内可按需使用 spec-kit、agent 自身承载的评审/QA/发布等能力、外部代理编排、Context7 MCP、gitleaks、memory 等能力。
+3. Phase 退出条件未满足前不得进入下一 Phase；任何完成/通过宣称 MUST 附 fresh 验证命令输出（见技能 `ref-08-verification-gate.md`）——验证纪律内置于本技能，任何有能力的 agent 原生遵守，不依赖外部插件。
+4. 阶段内可按需使用 spec-kit、agent 自身承载的评审/QA/发布等能力、Context7 MCP、gitleaks、memory 等能力。
 5. 意图模糊时，先判断场景：新项目/新功能/小变更/存量接入/工具升级/并行开发。
 6. Codex CLI 中 spec-kit 使用 `$speckit-*`；评审/QA/发布优先用 Codex 原生等价 agent 能力，均不可用时降级为人工审查、测试命令或 CI。
 ```
@@ -388,7 +384,6 @@ memory/workflow.md              ← 项目定制层（参考技能，记录本�
 
 | Agent | 全局配置文件 |
 |-------|-------------|
-| Google Gemini CLI | `~/.gemini/GEMINI.md` |
 | Cursor | `~/.cursor/rules/ai-coding-workflow.mdc` |
 | Windsurf | 项目级 `.windsurfrules` |
 | GitHub Copilot | `.github/copilot-instructions.md` |

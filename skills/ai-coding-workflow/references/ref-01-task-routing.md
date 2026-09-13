@@ -8,10 +8,10 @@
 
 本文档是 AI 编程代理的行为规范。加载后须遵守以下约定：
 
-- **工具维护（按需执行）**：代理在进入工具维护/升级场景，或用户明确要求时，SHOULD 检查能力工具版本（详见 `ref-02-tool-stack.md § 10.6`）；默认不在加载文档后自动升级工具。
-- **验证纪律始终生效**：阶段顺序、完成必验证等规则内置于本技能（见 `ref-09-verification-gate.md`），任何有能力的 agent 原生遵守，不依赖任何外部插件是否安装。与 Agent 种类无关。
-- **阶段顺序**：Phase 按 `ref-03-full-workflow.md` 文档顺序推进；当前 Phase 退出条件未满足前 MUST NOT 进入下一 Phase。详见 `ref-09-verification-gate.md § 13.2`。
-- **验证铁律**：任何完成/通过类宣称 MUST 附本消息内 freshly run 的验证命令输出。详见 `ref-09-verification-gate.md § 13.3`。
+- **工具维护（按需执行）**：代理在进入工具维护/升级场景，或用户明确要求时，SHOULD 检查能力工具版本（详见 `ref-02-tool-stack.md § 10.5`）；默认不在加载文档后自动升级工具。
+- **验证纪律始终生效**：阶段顺序、完成必验证等规则内置于本技能（见 `ref-08-verification-gate.md`），任何有能力的 agent 原生遵守，不依赖任何外部插件是否安装。与 Agent 种类无关。
+- **阶段顺序**：Phase 按 `ref-03-full-workflow.md` 文档顺序推进；当前 Phase 退出条件未满足前 MUST NOT 进入下一 Phase。详见 `ref-08-verification-gate.md § 13.2`。
+- **验证铁律**：任何完成/通过类宣称 MUST 附本消息内 freshly run 的验证命令输出。详见 `ref-08-verification-gate.md § 13.3`。
 - 规范性关键词含义：**MUST** = 强制执行；**MUST NOT** = 严禁；**SHOULD** = 强烈推荐，有正当理由可偏离；**MAY** = 可选
 - 术语定义：
   - **小功能（small change）**：单文件且非 bug fix，或 < 50 行净变更
@@ -55,8 +55,8 @@ WHEN 收到新任务时，代理 MUST 先按下表确定起始 Phase，再执行
 | 任务拆解 | `/speckit.tasks` | spec-kit | `specs/<feature-id>/tasks.md` |
 | 转 GitHub Issues（可选） | Claude `/speckit.taskstoissues`；Codex `$speckit-taskstoissues`（tasks 后、implement 前） | spec-kit | GitHub Issues 列表 |
 | 一致性检查 | `/speckit.analyze`（在 tasks 之后） | spec-kit | — |
-| 代码实现 | Claude 用 `/speckit.implement`；Codex 用 `$speckit-implement`；外部代理编排能力按需 | spec-kit + 外部代理编排能力 | 原子提交 |
-| 代码+安全审查 | 由专注审查视角的子任务完成（安全敏感改动追加安全专项审查；按需使用外部代理编排能力并行复核 + gitleaks）；agent 能力不可用时人工审查/CI 替代 | agent 自身能力 + 外部代理编排能力 | `specs/<feature-id>/review-findings.md` |
+| 代码实现 | Claude 用 `/speckit.implement`；Codex 用 `$speckit-implement`；按需用 subagent 并行 | spec-kit | 原子提交 |
+| 代码+安全审查 | 由专注审查视角的子任务完成（安全敏感改动追加安全专项审查 + gitleaks）；agent 能力不可用时人工审查/CI 替代 | agent 自身能力 | `specs/<feature-id>/review-findings.md` |
 | QA 验证 | 由专注功能验证的子任务完成（feature branch 默认 diff-aware）；agent 能力不可用时人工或 CI 验证；UI/UX 不一致时 Phase 8 失败并返回 Phase 6，基线缺失返回 Phase 2 | agent 自身能力 | `specs/<feature-id>/qa-reports/` |
 | 发布 | 走标准 git/PR 发布流程；agent 能力不可用时宿主常规发布流程 | agent 自身能力 | PR + CHANGELOG |
 | 周复盘 | 结构化复盘产出 | agent 自身能力 | `.context/retros/` |
@@ -78,9 +78,9 @@ WHEN 收到新任务时，代理 MUST 先按下表确定起始 Phase，再执行
 | 转 GitHub Issues（可选） | Claude `/speckit.taskstoissues`；Codex `$speckit-taskstoissues` |
 | 实施前一致性分析 | Claude 用 `/speckit.analyze`；Codex 用 `$speckit-analyze` |
 | 代码实现（任务明确） | Claude 用 `/speckit.implement`；Codex 用 `$speckit-implement` |
-| 代码实现（需并行外部 agent） | 使用外部代理编排能力（例如 `/team`、`omc team N:codex "..."` 或宿主等价能力；`/omc-teams` 已在 OMC 5.0.0 移除且不留别名） |
-| 代码实现（需专业判断） | 在 `plan.md`/`arch-review.md` 中先明确判断结论；必要时使用外部代理编排能力复核 |
-| 代码审查 | 由专注审查视角的子任务完成；安全敏感改动追加安全专项审查；按需使用外部代理编排能力交叉复核；agent 能力不可用时人工审查/CI 替代 |
+| 代码实现（需并行子任务） | 主代理原生 subagent / 并行任务能力按文件或模块边界拆分 |
+| 代码实现（需专业判断） | 在 `plan.md`/`arch-review.md` 中先明确判断结论 |
+| 代码审查 | 由专注审查视角的子任务完成；安全敏感改动追加安全专项审查；agent 能力不可用时人工审查/CI 替代 |
 | 功能测试 | 由专注功能验证的子任务完成（feature branch 默认 diff-aware）；agent 能力不可用时人工或 CI 验证；UI/UX 不一致时返回 Phase 6 修复，基线缺失返回 Phase 2 |
 | 发布上线 | 按 `ref-03-full-workflow.md` 的 Phase 9 发布链路执行 |
 | 问题回滚 | `git revert HEAD` + 标准发布流程 |
@@ -131,7 +131,7 @@ WHEN 收到新任务时，代理 MUST 先按下表确定起始 Phase，再执行
 | 审查发现 | `specs/<feature-id>/review-findings.md` | 代理写入 | Phase 7 |
 | 架构决策 ADR | `memory/decisions.md` | 代理追加 | Phase 3/Phase 6 |
 | 已知问题 | `memory/issues.md` | 代理追加 | Phase 6/bug fix |
-| 项目代码模式 | `memory/patterns.md`（写入前按 `ref-10-experience-quality.md` 判定） | 代理追加 | Phase 10 |
+| 项目代码模式 | `memory/patterns.md`（写入前按 `ref-09-experience-quality.md` 判定） | 代理追加 | Phase 10 |
 | QA 报告 + 截图 | `specs/<feature-id>/qa-reports/` | QA 验证自动生成 | Phase 8 |
 | 发布日志 | `CHANGELOG.md` | 发布流程自动生成 | Phase 9 |
 | 周复盘快照 | `.context/retros/` | 复盘产出自动生成 | Phase 10 |

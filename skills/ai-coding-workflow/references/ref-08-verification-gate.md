@@ -12,7 +12,7 @@
 | 未使用 ai-coding-workflow（闲聊、查资料、其他独立技能） | 不适用 |
 | 使用哪个 Agent / IDE | **无关** |
 
-本文件定义的验证纪律（阶段顺序、Iron Law、Gate Function）内置于本技能，与是否安装某个外部插件无关，始终生效（见 `ref-02-tool-stack.md § 10.5`）。
+本文件定义的验证纪律（阶段顺序、Iron Law、Gate Function）内置于本技能，与是否安装某个外部插件无关，始终生效（见 `ref-02-tool-stack.md § 10.4`）。
 
 ---
 
