@@ -78,7 +78,7 @@ WHEN 收到新任务时，代理 MUST 先按下表确定起始 Phase，再执行
 | 转 GitHub Issues（可选） | Claude `/speckit.taskstoissues`；Codex `$speckit-taskstoissues` |
 | 实施前一致性分析 | Claude 用 `/speckit.analyze`；Codex 用 `$speckit-analyze` |
 | 代码实现（任务明确） | Claude 用 `/speckit.implement`；Codex 用 `$speckit-implement` |
-| 代码实现（需并行外部 agent） | 使用外部代理编排能力（例如 `/team`、`omc team N:codex "..."`、`/omc-teams` 兼容入口或宿主等价能力） |
+| 代码实现（需并行外部 agent） | 使用外部代理编排能力（例如 `/team`、`omc team N:codex "..."` 或宿主等价能力；`/omc-teams` 已在 OMC 5.0.0 移除且不留别名） |
 | 代码实现（需专业判断） | 在 `plan.md`/`arch-review.md` 中先明确判断结论；必要时使用外部代理编排能力复核 |
 | 代码审查 | 由专注审查视角的子任务完成；安全敏感改动追加安全专项审查；按需使用外部代理编排能力交叉复核；agent 能力不可用时人工审查/CI 替代 |
 | 功能测试 | 由专注功能验证的子任务完成（feature branch 默认 diff-aware）；agent 能力不可用时人工或 CI 验证；UI/UX 不一致时返回 Phase 6 修复，基线缺失返回 Phase 2 |

@@ -223,7 +223,7 @@ Phase 9：发布（按 Phase 9 发布链路执行）
 | specify-cli（CLI） | `uv tool install specify-cli --force --from git+https://github.com/github/spec-kit.git@vX.Y.Z && uv cache clean` |
 | spec-kit 项目文件 | `specify init --here --force --integration <agent-key>` |
 | gitleaks | `brew upgrade gitleaks` |
-| oh-my-claudecode | `omc update` 或 `npm i -g oh-my-claude-sisyphus@latest`（npm 发布包名，项目品牌名相同）；刷新 config 需另跑 `omc setup`、`/setup` 或 `/omc-setup` |
+| oh-my-claudecode | `omc update` 或 `npm i -g oh-my-claude-sisyphus@latest`（npm 发布包名，项目品牌名相同）；刷新 config 需另跑 `omc setup` 或 `/omc-setup`（`/setup` 已在 OMC 5.0.0 移除且不留别名） |
 
 进入场景 E 或用户明确要求时，代理 SHOULD 按 `§ 10.6` 检查能力工具版本。默认不在每次会话开始时自动升级工具。
 
@@ -248,8 +248,8 @@ cd ../project-feature-b && claude
 | 场景 | 方案 |
 |------|------|
 | 同一任务内多模型分工实现 | `/team`（Claude Code 会话内团队编排）或宿主等价能力 |
-| 启动 Codex/Gemini CLI worker | `omc team N:codex "..."`/`omc team N:gemini "..."`；`/omc-teams` 为兼容入口 |
-| 同一 diff 多模型交叉审查 | `/ccg` 或 `/ask codex` + `/ask gemini`（或宿主等价交叉评审能力） |
+| 启动 Codex/Gemini CLI worker | `omc team N:codex "..."`/`omc team N:gemini "..."`（`/omc-teams` 已在 OMC 5.0.0 移除且不留别名） |
+| 同一 diff 多模型交叉审查 | `/ask codex` + `/ask gemini`（或宿主等价交叉评审能力） |
 | 并行功能开发 | 多个独立代理实例（各自 worktree） |
 
 ---

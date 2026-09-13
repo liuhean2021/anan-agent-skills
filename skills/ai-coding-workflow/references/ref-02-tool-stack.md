@@ -35,7 +35,7 @@ AI Coding Workflow 以 `Phase 0~10 / 5B` 为主线推进。以下工具与角色
 
 - `oh-my-claudecode` SHOULD 作为 Claude Code 的外部代理编排层，而不是替代主代理；在其他宿主中，文档内同类命令表示“外部代理编排能力”，可用宿主等价入口替代
 - 代码实现阶段，IF 任务可拆成彼此独立的子任务，THEN MAY 用 `/team` 或 `omc team ...` 并行调用 Codex / Gemini
-- 代码审查阶段，IF 需要交叉验证架构、安全、可读性或 UX 风险，THEN SHOULD 追加 `/ccg`、`/ask <model>` 或 `omc ask <model> ...`
+- 代码审查阶段，IF 需要交叉验证架构、安全、可读性或 UX 风险，THEN SHOULD 追加 `/ask <model>` 或 `omc ask <model> ...`
 - OMC 外部 agent 输出 MUST 视为"辅助结论"，最终是否采纳 MUST 由当前 Claude Code 主代理结合测试、审查结果和人工判断统一裁决
 - 外部 agent 只应接收完成任务所需的最小上下文；敏感信息边界仍受 Section 3：AI 治理（ref-04）约束
 
@@ -161,22 +161,22 @@ npm i -g oh-my-claude-sisyphus@latest  # npm 发布包名；项目品牌名为 o
 omc update                             # 检查并安装更新
 omc update --check                     # 仅检查更新，不安装
 omc setup                              # 安装/刷新 hooks、agents、skills 等配置
-/setup 或 /omc-setup                   # Claude Code 会话内 setup 入口
+/omc-setup                             # Claude Code 会话内 setup 入口
 
 # 使用命令
 omc ask codex "review this patch for security and correctness"
 omc team 2:codex "review auth flow"
 omc team 1:codex,1:gemini "compare approaches"
 /ask codex "review this patch for security and correctness"
-/ccg "Codex 看架构与安全，Gemini 看可读性与交互"
+/ask codex "Codex 看架构与安全"
+/ask gemini "Gemini 看可读性与交互"
 /team 3:executor "implement tasks T1,T2 with clear ownership"
-/omc-teams 2:codex "analyze backend risks and propose fixes"
 ```
 
 **规则：**
 - 实现阶段优先用 `/team` 做 Claude Code 会话内团队编排；明确要启动 tmux CLI worker 时用 `omc team ...`
-- `/omc-teams` 是兼容入口，当前应理解为路由到 CLI-first `omc team ...` runtime
-- 审查阶段优先用 `ask` / `ccg` 做交叉复核
+- `/ccg`、`/omc-teams`、`/setup` 已在 OMC 5.0.0 中移除且不留别名；多模型交叉编排改用 CLI 的 `omc team ...`，setup 入口统一用 `/omc-setup`
+- 审查阶段优先用 `/ask <model>` 做交叉复核（需要多个模型时逐个调用）
 - 只有在任务可拆分、上下文边界清楚时才启用并行；否则单代理更稳
 - OMC 适合作为 Claude Code 的外部代理编排增强层，不替代 `spec-kit`，也不替代 agent 自身承载的评审/QA/发布能力
 

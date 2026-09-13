@@ -21,8 +21,8 @@
 |------|--------|
 | 任务列表明确、完整功能、自动执行 | `/speckit.implement` |
 | 需要专业判断（复杂架构、安全、性能） | `plan.md`/`arch-review.md` 明确结论；必要时用外部代理编排能力复核 |
-| 需并行调用 Codex/Gemini 分工实施 | `/team`、`omc team N:codex "..."` 或 `/omc-teams` 兼容入口 |
-| 需多模型交叉复核实现方案 | `/ccg`、`/ask <model>` 或 `omc ask <model> ...` |
+| 需并行调用 Codex/Gemini 分工实施 | `/team`、`omc team N:codex "..."`（`/omc-teams` 已在 OMC 5.0.0 移除且不留别名） |
+| 需多模型交叉复核实现方案 | `/ask <model>` 或 `omc ask <model> ...`（多模型逐个调用） |
 | 需核对陌生库、新版本 SDK、官方 API | 优先使用 Context7 MCP 自动文档查验；无 MCP 时降级为 `use context7`/library ID/官方文档 |
 
 **降级规则**：本文件中的 `/review`、`/qa`、`/ship` 对应的职责默认由 agent 自身或专注子任务原生完成（见 `ref-02 § 10.2`）；IF 当前环境确实缺乏执行这些任务的能力，THEN 分别降级为人工审查、手工测试或 CI 验证、宿主常规发布流程。
@@ -899,8 +899,7 @@ IF 功能涉及 UI 组件、服务状态、任务生命周期、CLI 执行或多
 **必做动作**：
 1. 由专注审查视角的子任务完成代码审查，审查生产级 bug（race condition、N+1、信任边界等）
 2. IF 涉及鉴权、支付、隐私、权限、密钥、数据边界等安全敏感改动，THEN 追加安全专项审查，并将结论写入同一审查文档
-3. IF 审查范围较大、风险较高、或需要多视角交叉验证，THEN SHOULD 追加外部代理编排能力做交叉复核：
-   - `/ccg "Review this diff: Codex 看架构/类型/测试缺口，Gemini 看可读性/UX/文档"`
+3. IF 审查范围较大、风险较高、或需要多视角交叉验证，THEN SHOULD 追加外部代理编排能力做交叉复核（`/ccg` 已在 OMC 5.0.0 移除且不留别名，改为逐个调用 `/ask <model>`）：
    - `/ask codex "review this patch for correctness, edge cases, and security assumptions"`
    - `/ask gemini "review this diff for readability, UX regressions, and unclear naming"`
 4. gitleaks pre-commit hook 在提交时自动触发 Secret 扫描
