@@ -3,8 +3,6 @@ name: ai-coding-workflow
 description: 当用户需要统一的 AI 编程工作流时使用，涵盖新项目、新功能、bug fix、规划、代码审查、QA、发布及存量项目接入。代理将任务路由至 spec-kit 规格链路与 agent 原生能力承载的评审/QA/发布等阶段能力，并强制 Phase 顺序与完成前验证（ref-08，验证纪律内置于本技能，不依赖任何外部插件）。
 ---
 
-> **⚠️ 初次安装必做**：将本技能加入全局强制规则 → 跳至文末「[初次配置](#初次配置全局强制生效)」章节，完成后再回来阅读。
-
 > 详细说明、命令参考、模板按场景拆分为以下文件：
 >
 > | 文件 | 内容 |
@@ -332,61 +330,6 @@ memory/workflow.md              ← 项目定制层（参考技能，记录本�
 - 客户数据、生产数据、密钥 MUST NOT 发送给任何模型
 - AI MUST NOT 在无人工批准的情况下直接执行生产发布、回滚、权限变更、数据库迁移
 - AI 生成内容一律视为待确认产物，最终责任 MUST 由人工承担
-
----
-
-## 初次配置（全局强制生效）
-
-技能部署后属于按需触发。若需在**所有项目**中自动强制遵守，按所用 AI agent 选择对应配置步骤。
-
----
-
-### Claude Code
-
-在 `~/.claude/CLAUDE.md` 末尾追加以下内容：
-
-```markdown
-## AI Coding 工作流（强制遵守）
-
-1. 进行开发任务时，默认使用 `~/.claude/skills/ai-coding-workflow/SKILL.md`。
-2. “工作流”指统一的 AI Coding Workflow，按 `Phase 0~10/Phase 5B` 顺序推进，不把 spec-kit 或按工具拆分的评审/QA/发布视为分离流程。
-3. Phase 退出条件未满足前不得进入下一 Phase；任何完成/通过宣称 MUST 附 fresh 验证命令输出（见技能 `ref-08-verification-gate.md`）——验证纪律内置于本技能，任何有能力的 agent 原生遵守，不依赖外部插件。
-4. 阶段内可按需使用 spec-kit、agent 自身承载的评审/QA/发布等能力、Context7 MCP、gitleaks、memory 等能力。
-5. 意图模糊时，先判断场景：新项目/新功能/小变更/存量接入/工具升级/并行开发。
-```
-
-**验证**：新开一个对话，说「帮我做一个功能」，确认 Claude 会主动询问任务类型，而不是直接写代码。
-
----
-
-### OpenAI Codex CLI
-
-在 `~/.codex/AGENTS.md` 末尾追加以下内容（文件不存在则新建）：
-
-```markdown
-## AI Coding 工作流（强制遵守）
-
-1. 进行开发任务时，默认使用 `<your-skills-path>/ai-coding-workflow/SKILL.md`。
-2. “工作流”指统一的 AI Coding Workflow，按 `Phase 0~10/Phase 5B` 顺序推进，不把 spec-kit 或按工具拆分的评审/QA/发布视为分离流程。
-3. Phase 退出条件未满足前不得进入下一 Phase；任何完成/通过宣称 MUST 附 fresh 验证命令输出（见技能 `ref-08-verification-gate.md`）——验证纪律内置于本技能，任何有能力的 agent 原生遵守，不依赖外部插件。
-4. 阶段内可按需使用 spec-kit、agent 自身承载的评审/QA/发布等能力、Context7 MCP、gitleaks、memory 等能力。
-5. 意图模糊时，先判断场景：新项目/新功能/小变更/存量接入/工具升级/并行开发。
-6. Codex CLI 中 spec-kit 使用 `$speckit-*`；评审/QA/发布优先用 Codex 原生等价 agent 能力，均不可用时降级为人工审查、测试命令或 CI。
-```
-
-**验证**：新开一个 Codex CLI 会话，说「帮我做一个功能」，确认会主动询问任务类型。
-
----
-
-### 其他 Agent
-
-各 Agent 全局配置文件写入内容与上方 Claude Code 版内容块一致，将技能路径替换为实际路径；若宿主存在命令映射差异，再补充一行最小必要说明。
-
-| Agent | 全局配置文件 |
-|-------|-------------|
-| Cursor | `~/.cursor/rules/ai-coding-workflow.mdc` |
-| Windsurf | 项目级 `.windsurfrules` |
-| GitHub Copilot | `.github/copilot-instructions.md` |
 
 ---
 

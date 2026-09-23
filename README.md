@@ -77,8 +77,6 @@ for skill in ~/anan-agent-skills/skills/*/; do
 done
 ```
 
-> `ai-coding-workflow` 属于全局规则型技能。安装后，还需按其 `SKILL.md` 中的「初次配置（全局强制生效）」章节，将最小必要规则写入对应 Agent 的全局规则文件（如 `~/.claude/CLAUDE.md`、`~/.codex/AGENTS.md`）。
-
 ## 配置说明
 
 - 仅少数技能需要额外配置。
