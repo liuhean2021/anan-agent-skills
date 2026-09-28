@@ -12,6 +12,7 @@
 | [commit-message](skills/commit-message/SKILL.md) | 根据 git diff 生成规范的 commit message |
 | [oss-upload-online-access](skills/oss-upload-online-access/SKILL.md) | 上传文件到阿里云 OSS / 腾讯云 COS 并返回公网链接 |
 | [pre-commit-review](skills/pre-commit-review/SKILL.md) | 提交前代码审查，输出修改总结与结构化审查结论 |
+| [browser-compatibility](skills/browser-compatibility/SKILL.md) | 前端浏览器兼容性标准、审查与修复建议（PC + H5）：制定基线、检查构建产物白屏风险、输出修复方案（修复须经用户确认）、产出兼容声明 |
 | [excel-to-pdf](skills/excel-to-pdf/SKILL.md) | macOS 用本机 Microsoft Excel 把 xlsx 转成排版正确的 PDF（自动铺满页宽、分页不切断合并单元格） |
 | [frontend-dev-workflow](skills/frontend-dev-workflow/SKILL.md) | 前端 AI Coding 工作流：接手项目、修改页面、新增页面，测试先行 + 视觉验证闭环 |
 | [design-md-author](skills/design-md-author/SKILL.md) | 从零为新前端项目生成设计系统契约 DESIGN.md（SSOT）+ tokens.css + 防漂移校验脚本 |
