@@ -22,331 +22,171 @@ def _esc(text):
     return html.escape(text or '', quote=False)
 
 
-def _safe_href(url):
-    """只允许http(s)链接作为可点击的href，其余协议（如javascript:）一律不生成超链接"""
-    if url and (url.startswith('http://') or url.startswith('https://')):
-        return html.escape(url, quote=True)
-    return None
-
-
-def _escape_and_linkify(text):
-    """整体转义后，再把其中 [标签](http(s)://...) 形式的markdown链接还原成可点击<a>标签；
-    非http(s)协议的链接保持转义后的纯文本展示，不可点击"""
+def _inline(text):
+    """行内格式：转义 + 链接 + **加粗**；非http(s)链接（如 ./日报_xxx.md 相对链接）只保留标签文字"""
     escaped = _esc(text)
 
-    def _replace(m):
-        # 注意：此时label/url已经是_esc(text)转义过一次的结果，
-        # 这里只做协议前缀判断、不能再调用_safe_href（会导致&amp;被二次转义成&amp;amp;）
+    def _link(m):
         label, url = m.group(1), m.group(2)
         if url.startswith('http://') or url.startswith('https://'):
             return f'<a href="{url}" style="color: #667eea; text-decoration: none;">{label}</a>'
-        return m.group(0)
+        return label
 
-    return re.sub(r'\[([^\]]+)\]\(([^)]+)\)', _replace, escaped)
+    out = re.sub(r'\[([^\]]+)\]\(([^)\s]+)\)', _link, escaped)
+    out = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', out)
+    return out
+
+
+# 邮件正文各类块元素的内联样式（邮件客户端普遍不支持<style>，只能逐元素内联）
+_S_H2 = 'margin: 32px 0 16px; font-size: 20px; font-weight: 600; color: #1a1a2e; padding-bottom: 8px; border-bottom: 2px solid #667eea;'
+_S_CARD = 'margin-bottom: 20px; padding: 16px; background-color: #f8f9fc; border-radius: 8px; border-left: 4px solid #667eea;'
+_S_H3 = 'margin: 0 0 10px; font-size: 16px; font-weight: 600; color: #16213e;'
+_S_P = 'margin: 0 0 10px; font-size: 14px; line-height: 1.7; color: #333;'
+_S_LIST = 'margin: 0 0 10px; padding-left: 20px; font-size: 14px; line-height: 1.7; color: #333;'
+_S_LI = 'margin-bottom: 8px;'
+_S_QUOTE = 'margin: 0 0 10px; padding: 8px 12px; font-size: 13px; line-height: 1.7; color: #5f6368; background-color: #eef0f7; border-radius: 6px;'
+
+
+def _render_table(lines):
+    """渲染一个连续的markdown表格块；第一行为表头，跳过 |---| 分隔行"""
+    def _cells(line):
+        return [c.strip() for c in line.strip().strip('|').split('|')]
+
+    header = _cells(lines[0])
+    rows = [c for c in (_cells(l) for l in lines[1:])
+            if not all(set(x) <= {'-', ':', ' '} for x in c)]
+    out = '<table style="width: 100%; border-collapse: collapse; margin: 8px 0 16px; font-size: 13px;"><thead><tr style="background-color: #667eea; color: #ffffff;">'
+    out += ''.join(f'<th style="padding: 10px; text-align: left;">{_inline(h)}</th>' for h in header)
+    out += '</tr></thead><tbody>'
+    for i, row in enumerate(rows):
+        bg = 'background-color: #f8f9fc;' if i % 2 == 0 else 'background-color: #ffffff;'
+        out += f'<tr style="{bg}">'
+        for cell in row:
+            color = '#34a853' if re.match(r'^\+\d', cell) else '#333'
+            out += f'<td style="padding: 10px; border-bottom: 1px solid #e8eaed; color: {color};">{_inline(cell)}</td>'
+        out += '</tr>'
+    return out + '</tbody></table>'
+
+
+def _render_body(lines):
+    """逐行渲染正文：## 栏目标题、### 分组卡片、列表、表格、引用、段落。
+    每个块只渲染一次，不按固定条目格式做正则抽取，因此不会出现内容丢失或同一表格重复输出。"""
+    out = []
+    in_card = False
+    i = 0
+
+    def close_card():
+        nonlocal in_card
+        if in_card:
+            out.append('</div>')
+            in_card = False
+
+    while i < len(lines):
+        line = lines[i].rstrip()
+        stripped = line.strip()
+
+        if not stripped or re.fullmatch(r'-{3,}|\*{3,}', stripped):
+            i += 1
+            continue
+
+        if stripped.startswith('## '):
+            close_card()
+            out.append(f'<h2 style="{_S_H2}">{_inline(stripped[3:].strip())}</h2>')
+            i += 1
+            continue
+
+        if stripped.startswith('### '):
+            close_card()
+            out.append(f'<div style="{_S_CARD}"><h3 style="{_S_H3}">{_inline(stripped[4:].strip())}</h3>')
+            in_card = True
+            i += 1
+            continue
+
+        if stripped.startswith('|'):
+            block = []
+            while i < len(lines) and lines[i].strip().startswith('|'):
+                block.append(lines[i].strip())
+                i += 1
+            if len(block) >= 2:
+                out.append(_render_table(block))
+            continue
+
+        list_re = re.compile(r'^\s*(?:[-*]|\d+\.)\s+')
+        if list_re.match(line):
+            ordered = bool(re.match(r'^\s*\d+\.', line))
+            items = []
+            while i < len(lines) and list_re.match(lines[i]):
+                items.append(list_re.sub('', lines[i], count=1).strip())
+                i += 1
+            tag = 'ol' if ordered else 'ul'
+            lis = ''.join(f'<li style="{_S_LI}">{_inline(t)}</li>' for t in items)
+            out.append(f'<{tag} style="{_S_LIST}">{lis}</{tag}>')
+            continue
+
+        if stripped.startswith('>'):
+            quote = []
+            while i < len(lines) and lines[i].strip().startswith('>'):
+                quote.append(lines[i].strip().lstrip('>').strip())
+                i += 1
+            out.append(f'<p style="{_S_QUOTE}">{"<br>".join(_inline(q) for q in quote)}</p>')
+            continue
+
+        para = []
+        while (i < len(lines) and lines[i].strip()
+               and not re.match(r'^\s*(#{2,3} |\||>|[-*]\s|\d+\.\s|-{3,}$)', lines[i])):
+            para.append(lines[i].strip())
+            i += 1
+        text = '<br>'.join(_inline(p) for p in para)
+        # 单独一行的 *斜体* 结尾标记行（如"本日报由XX自动生成"）按脚注样式展示
+        text = re.sub(r'^\*(.+)\*$', r'<em style="color: #5f6368;">\1</em>', text)
+        out.append(f'<p style="{_S_P}">{text}</p>')
+
+    close_card()
+    return '\n'.join(out)
 
 
 def markdown_to_html(markdown_text):
     """将Markdown日报转换为精美邮件HTML"""
-    
-    # 解析报告信息 - 支持两种标题格式
+
+    # 解析报告日期 - 支持两种标题格式
     # 格式1：# 科技AI日报 2026-05-31
     # 格式2：# 科技AI行业新闻日报\n## 2026年5月31日
-    date_match = re.search(r'# 科技AI日报 (\d{4}-\d{2}-\d{2})', markdown_text)
-    if not date_match:
-        date_match = re.search(r'## (\d{4}年\d{1,2}月\d{1,2}日)', markdown_text)
-        if date_match:
-            # 将"2026年5月31日"转换为"2026-05-31"格式
-            date_str = date_match.group(1)
-            year_match = re.search(r'(\d{4})年', date_str)
-            month_match = re.search(r'(\d{1,2})月', date_str)
-            day_match = re.search(r'(\d{1,2})日', date_str)
-            if year_match and month_match and day_match:
-                year = year_match.group(1)
-                month = month_match.group(1).zfill(2)
-                day = day_match.group(1).zfill(2)
-                report_date = f"{year}-{month}-{day}"
-            else:
-                report_date = datetime.now().strftime('%Y-%m-%d')
-        else:
-            report_date = datetime.now().strftime('%Y-%m-%d')
-    else:
+    report_date = datetime.now().strftime('%Y-%m-%d')
+    date_match = re.search(r'^# 科技AI日报 (\d{4}-\d{2}-\d{2})', markdown_text, re.MULTILINE)
+    if date_match:
         report_date = date_match.group(1)
+    else:
+        cn = re.search(r'^## (\d{4})年(\d{1,2})月(\d{1,2})日', markdown_text, re.MULTILINE)
+        if cn:
+            report_date = f"{cn.group(1)}-{cn.group(2).zfill(2)}-{cn.group(3).zfill(2)}"
 
-    # 解析生成时间 - 支持两种格式
-    # 格式1：**报告生成时间**：2026-05-31 06:03
-    # 格式2：**日报生成时间：2026年5月31日 06:03**
-    time_match = re.search(r'\*\*报告生成时间\*\*[：:]\s*([\d\-\s:]+)', markdown_text)
-    if not time_match:
-        time_match = re.search(r'\*\*日报生成时间：(.+?)\*\*', markdown_text)
-    gen_time = time_match.group(1).strip() if time_match else ''
-    
-    # 解析各栏目
-    sections = re.split(r'^---$', markdown_text, flags=re.MULTILINE)
-    
-    content_html = ''
-    keypoints_html = ''
-    total_news = 0
-    total_sources = 0
-    section_count = 0
-    
-    for section in sections:
-        section = section.strip()
-        if not section:
+    # 顶部信息区：标题之后、第一条 --- 分隔线之前的内容
+    # （清单最后更新/智能体应用/使用模型/报告生成时间/数据覆盖范围等）
+    lines = markdown_text.split('\n')
+    sep = next((n for n, l in enumerate(lines) if re.fullmatch(r'-{3,}', l.strip())), None)
+    head_lines = lines[:sep] if sep is not None else []
+    body_lines = lines[sep + 1:] if sep is not None else lines
+
+    meta_rows = ''
+    for l in head_lines:
+        l = l.strip()
+        if not l or l.startswith('# ') or re.match(r'^## \d{4}年', l):
             continue
-        
-        title_match = re.match(r'^## (.+)$', section, re.MULTILINE)
-        if not title_match:
-            continue
-        
-        section_title = title_match.group(1).strip()
-        
-        # 跳过统计部分
-        if '本日动态统计' in section_title:
-            news_match = re.search(r'\*\*总动态数\*\*[：:]\s*(\d+)', section)
-            if news_match:
-                total_news = int(news_match.group(1))
-            sources_match = re.search(r'\*\*总信源数\*\*[：:]\s*(\d+)', section)
-            if sources_match:
-                total_sources = int(sources_match.group(1))
-            continue
-        
-        if '核心要点' in section_title:
-            points = re.findall(r'\d+\.\s*\*\*([^*]+)\*\*[：:]\s*([^\n]+)', section)
-            for title, desc in points:
-                keypoints_html += f'<li style="margin-bottom: 10px;"><strong style="color: #c44536;">{_esc(title.strip())}</strong>：{_esc(desc.strip())}</li>\n'
-            continue
-        
-        section_count += 1
-        
-        # 栏目容器
-        content_html += f'''<div style="margin-bottom: 32px;">
-            <h2 style="margin: 0 0 16px; font-size: 20px; font-weight: 600; color: #1a1a2e; padding-bottom: 8px; border-bottom: 2px solid #667eea;">{_esc(section_title)}</h2>
-        '''
-        
-        # 提取条目 - 支持两种结构：
-        # 结构1：有 ### 子标题（如 Apple、Microsoft 等公司）
-        # 结构2：没有子标题，直接是 **（日期）** 条目（如前端技术动态）
-        items_with_header = re.split(r'^### ', section, flags=re.MULTILINE)[1:]
-        
-        if items_with_header:
-            # 结构1：有子标题的条目
-            for item in items_with_header:
-                lines = item.strip().split('\n')
-                if not lines:
-                    continue
-                
-                item_title = lines[0].strip()
-                
-                # 提取字段 - 支持三种格式：
-                # 格式A（引用块）：> **摘要**：xxx > **来源**：[title](url)
-                # 格式B（列表项）：- **标题**：内容
-                # 格式C（日报标准格式）：**（5月30日）** 内容...（来源：xxx http://...）
-                time_match_item = re.search(r'>\s*\*\*时间\*\*[：:]\s*([^\n]+)', item)
-                summary_match = re.search(r'>\s*\*\*摘要\*\*[：:]\s*(.+?)(?=>\s*\*\*来源|\Z)', item, re.DOTALL)
-                source_match = re.search(r'>\s*\*\*来源\*\*[：:]\s*\[([^\]]+)\]\(([^)]+)\)', item)
-                link_match = re.search(r'>\s*\*\*项目链接\*\*[：:]\s*\[([^\]]+)\]\(([^)]+)\)', item)
-                progress_match = re.search(r'>\s*\*\*最新进展\*\*[：:]\s*(.+?)(?=>\s*\*\*来源|\Z)', item, re.DOTALL)
-                
-                # 格式B：列表项 - 收集所有 - 开头的行
-                list_items = re.findall(r'^-\s+\*\*([^*]+)\*\*[：:]\s*(.+)$', item, re.MULTILINE)
-                
-                # 格式C：日报标准格式 - **（日期）** 内容...（来源：xxx url）
-                # 支持：**（5月30日）**、**（截至2026年5月31日）**、**（2026年5月31日）**
-                daily_items = re.findall(r'\*\*（[^）]*?(\d{1,2}月\d{1,2}日)）\*\*\s*(.+?)(?=（来源：|\*\*（[^）]*\d{1,2}月\d{1,2}日|\Z)', item, re.DOTALL)
-                
-                item_html = f'''<div style="margin-bottom: 20px; padding: 16px; background-color: #f8f9fc; border-radius: 8px; border-left: 4px solid #667eea;">
-                    <h3 style="margin: 0 0 10px; font-size: 16px; font-weight: 600; color: #16213e;">{_esc(item_title)}</h3>
-                '''
-
-                if time_match_item:
-                    item_html += f'<p style="margin: 0 0 8px; font-size: 13px; color: #5f6368;">📅 {_esc(time_match_item.group(1).strip())}</p>'
-
-                if link_match:
-                    link_label = _esc(link_match.group(1))
-                    link_href = _safe_href(link_match.group(2))
-                    if link_href:
-                        item_html += f'<p style="margin: 0 0 8px; font-size: 13px;"><a href="{link_href}" style="color: #667eea; text-decoration: none;">🔗 {link_label}</a></p>'
-                    else:
-                        item_html += f'<p style="margin: 0 0 8px; font-size: 13px;">🔗 {link_label}</p>'
-
-                if summary_match:
-                    summary = summary_match.group(1).strip()
-                    summary = re.sub(r'\*\*', '', summary)
-                    summary = summary.replace('  ', ' ').strip()
-                    item_html += f'<p style="margin: 0 0 10px; font-size: 14px; line-height: 1.7; color: #333;">{_escape_and_linkify(summary)}</p>'
-
-                if progress_match:
-                    progress = progress_match.group(1).strip()
-                    progress = re.sub(r'\*\*', '', progress)
-                    item_html += f'<p style="margin: 0 0 10px; font-size: 14px; line-height: 1.7; color: #333;">{_escape_and_linkify(progress)}</p>'
-
-                # 格式B：列表项渲染
-                if list_items and not summary_match:
-                    for li_title, li_content in list_items:
-                        li_content = re.sub(r'\*\*', '', li_content).strip()
-                        li_content = _escape_and_linkify(li_content)
-                        item_html += f'<p style="margin: 0 0 8px; font-size: 14px; line-height: 1.7; color: #333;"><strong>{_esc(li_title)}：</strong>{li_content}</p>'
-                
-                # 格式C：日报标准格式渲染
-                if daily_items and not summary_match and not list_items:
-                    for date, content in daily_items:
-                        content = content.strip()
-                        # 提取来源 - 格式：（来源：xxx url）
-                        source_match_daily = re.search(r'（来源：([^）]+)）', content)
-                        if source_match_daily:
-                            source_text = source_match_daily.group(1).strip()
-                            # 分离来源名称和URL
-                            url_match = re.search(r'(https?://\S+)', source_text)
-                            if url_match:
-                                source_url = url_match.group(1)
-                                source_name = source_text.replace(source_url, '').strip()
-                            else:
-                                source_name = source_text
-                                source_url = None
-                            # 移除来源部分
-                            content = content[:content.find('（来源：')].strip()
-
-                        # 清理内容中的加粗标记
-                        content = re.sub(r'\*\*', '', content)
-
-                        item_html += f'<p style="margin: 0 0 8px; font-size: 13px; color: #5f6368;">📅 {_esc(date)}</p>'
-                        item_html += f'<p style="margin: 0 0 10px; font-size: 14px; line-height: 1.7; color: #333;">{_esc(content)}</p>'
-                        if source_match_daily and source_url:
-                            href = _safe_href(source_url)
-                            if href:
-                                item_html += f'<p style="margin: 0;"><a href="{href}" style="font-size: 13px; color: #667eea; text-decoration: none;">🔗 {_esc(source_name)}</a></p>'
-                            else:
-                                item_html += f'<p style="margin: 0; font-size: 13px; color: #5f6368;">🔗 {_esc(source_name)}</p>'
-                        elif source_match_daily:
-                            item_html += f'<p style="margin: 0; font-size: 13px; color: #5f6368;">🔗 {_esc(source_name)}</p>'
-
-                if source_match:
-                    source_title = source_match.group(1)
-                    href = _safe_href(source_match.group(2))
-                    if href:
-                        item_html += f'<p style="margin: 0;"><a href="{href}" style="font-size: 13px; color: #667eea; text-decoration: none;">🔗 {_esc(source_title)}</a></p>'
-                    else:
-                        item_html += f'<p style="margin: 0; font-size: 13px; color: #5f6368;">🔗 {_esc(source_title)}</p>'
-
-                # 如果以上格式都没匹配到，尝试提取普通文本内容
-                if not summary_match and not list_items and not daily_items:
-                    # 提取来源
-                    general_source = re.search(r'（来源：([^）]+)）', item)
-                    if general_source:
-                        # 移除来源部分
-                        clean_content = item[:item.find('（来源：')].strip()
-                        # 移除标题行
-                        clean_content = '\n'.join(clean_content.split('\n')[1:]).strip()
-                    else:
-                        # 移除标题行
-                        clean_content = '\n'.join(item.split('\n')[1:]).strip()
-
-                    # 清理加粗标记
-                    clean_content = re.sub(r'\*\*', '', clean_content)
-                    # 转义后再转换换行（转义不会影响\n本身，顺序安全）
-                    clean_content = _escape_and_linkify(clean_content).replace('\n', '<br>')
-
-                    if clean_content:
-                        item_html += f'<p style="margin: 0; font-size: 14px; line-height: 1.7; color: #333;">{clean_content}</p>'
-
-                    if general_source:
-                        source_text = general_source.group(1).strip()
-                        url_match = re.search(r'(https?://\S+)', source_text)
-                        if url_match:
-                            source_url = url_match.group(1)
-                            source_name = source_text.replace(source_url, '').strip()
-                            href = _safe_href(source_url)
-                            if href:
-                                item_html += f'<p style="margin: 0;"><a href="{href}" style="font-size: 13px; color: #667eea; text-decoration: none;">🔗 {_esc(source_name)}</a></p>'
-                            else:
-                                item_html += f'<p style="margin: 0; font-size: 13px; color: #5f6368;">🔗 {_esc(source_name)}</p>'
-                        else:
-                            item_html += f'<p style="margin: 0; font-size: 13px; color: #5f6368;">🔗 {_esc(source_text)}</p>'
-                
-                item_html += '</div>'
-                content_html += item_html
+        m = re.match(r'^\*\*(.+?)[：:]?\*\*\s*[：:]?\s*(.*)$', l)
+        if m:
+            key, val = m.group(1).strip(), m.group(2).strip().rstrip('*').strip()
+            meta_rows += (f'<tr><td style="padding: 3px 12px 3px 0; color: #5f6368; font-size: 13px; white-space: nowrap; vertical-align: top;">{_esc(key)}</td>'
+                          f'<td style="padding: 3px 0; color: #333; font-size: 13px; line-height: 1.6;">{_inline(val)}</td></tr>')
         else:
-            # 结构2：没有子标题，直接是 **（日期）** 格式的条目
-            # 提取所有日报格式的条目
-            # 支持：**（5月30日）**、**（截至2026年5月31日）**、**（2026年5月31日）**
-            direct_items = re.findall(r'\*\*（[^）]*?(\d{1,2}月\d{1,2}日)）\*\*\s*(.+?)(?=（来源：|\*\*（[^）]*\d{1,2}月\d{1,2}日|\Z)', section, re.DOTALL)
-            
-            for date, content in direct_items:
-                content = content.strip()
-                # 提取来源 - 格式：（来源：xxx url）
-                source_match_daily = re.search(r'（来源：([^）]+)）', content)
-                if source_match_daily:
-                    source_text = source_match_daily.group(1).strip()
-                    # 分离来源名称和URL
-                    url_match = re.search(r'(https?://\S+)', source_text)
-                    if url_match:
-                        source_url = url_match.group(1)
-                        source_name = source_text.replace(source_url, '').strip()
-                    else:
-                        source_name = source_text
-                        source_url = None
-                    # 移除来源部分
-                    content = content[:content.find('（来源：')].strip()
-                
-                # 清理内容中的加粗标记
-                content = re.sub(r'\*\*', '', content)
-                
-                item_html = f'''<div style="margin-bottom: 20px; padding: 16px; background-color: #f8f9fc; border-radius: 8px; border-left: 4px solid #667eea;">
-                    <p style="margin: 0 0 8px; font-size: 13px; color: #5f6368;">📅 {_esc(date)}</p>
-                    <p style="margin: 0 0 10px; font-size: 14px; line-height: 1.7; color: #333;">{_esc(content)}</p>
-                '''
+            meta_rows += f'<tr><td colspan="2" style="padding: 3px 0; color: #333; font-size: 13px; line-height: 1.6;">{_inline(l)}</td></tr>'
 
-                if source_match_daily and source_url:
-                    href = _safe_href(source_url)
-                    if href:
-                        item_html += f'<p style="margin: 0;"><a href="{href}" style="font-size: 13px; color: #667eea; text-decoration: none;">🔗 {_esc(source_name)}</a></p>'
-                    else:
-                        item_html += f'<p style="margin: 0; font-size: 13px; color: #5f6368;">🔗 {_esc(source_name)}</p>'
-                elif source_match_daily:
-                    item_html += f'<p style="margin: 0; font-size: 13px; color: #5f6368;">🔗 {_esc(source_name)}</p>'
-                
-                item_html += '</div>'
-                content_html += item_html
-        
-        # 检查表格（一个栏目内可能有多张独立表格，如OpenRouter用量表+Artificial Analysis智能程度表，
-        # 必须按"连续的表格行块"分开识别，不能把多张表的行混在一起当成一张表，
-        # 否则后一张表的表头会被当成前一张表的普通数据行，样式上完全分不清）
-        table_blocks = re.findall(r'(?:^\|.*\|.*\|[ \t]*$\n?)+', section, flags=re.MULTILINE)
-        for block in table_blocks:
-            lines = [l for l in block.strip('\n').split('\n') if l.strip()]
-            if len(lines) < 2:
-                continue
+    content_html = _render_body(body_lines)
+    meta_html = (f'''<tr>
+                        <td style="padding: 16px 40px; background-color: #f8f9fc; border-bottom: 1px solid #e8eaed;">
+                            <table role="presentation" cellspacing="0" cellpadding="0" style="width: 100%;">{meta_rows}</table>
+                        </td>
+                    </tr>''' if meta_rows else '')
 
-            header_cells = [c.strip() for c in lines[0].strip().strip('|').split('|')]
-            rows = []
-            for line in lines[1:]:
-                cells = [c.strip() for c in line.strip().strip('|').split('|')]
-                if cells and all(set(c) <= {'-', ':', ' '} for c in cells):
-                    continue  # 跳过 |---|---| 分隔行
-                rows.append(cells)
-
-            if not rows:
-                continue
-
-            # margin-top加大：每张表和上方内容（含上一张表）之间留出明显间距
-            content_html += '<table style="width: 100%; border-collapse: collapse; margin-top: 24px; font-size: 13px;"><thead><tr style="background-color: #667eea; color: white;">'
-            for h in header_cells:
-                content_html += f'<th style="padding: 10px; text-align: left;">{_esc(h)}</th>'
-            content_html += '</tr></thead><tbody>'
-
-            for i, row in enumerate(rows):
-                bg = 'background-color: #f8f9fc;' if i % 2 == 0 else ''
-                content_html += f'<tr style="{bg}">'
-                for cell in row:
-                    color = '#34a853' if '+' in cell else '#333'
-                    content_html += f'<td style="padding: 10px; border-bottom: 1px solid #e8eaed; color: {color};">{_esc(cell)}</td>'
-                content_html += '</tr>'
-
-            content_html += '</tbody></table>'
-
-        content_html += '</div>'
-    
-    # 构建完整HTML
     styled_html = f'''<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -354,48 +194,35 @@ def markdown_to_html(markdown_text):
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>科技AI日报 {_esc(report_date)}</title>
 </head>
-<body style="margin: 0; padding: 0; background-color: #f4f5f7; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+<body style="margin: 0; padding: 0; background-color: #f4f5f7; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f5f7;">
         <tr>
             <td align="center" style="padding: 40px 20px;">
-                <table role="presentation" width="680" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
-                    
+                <table role="presentation" width="680" cellspacing="0" cellpadding="0" style="max-width: 680px; width: 100%; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
                     <tr>
-                        <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 40px 30px;">
+                        <td style="background-color: #667eea; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 40px 30px;">
                             <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">🚀 科技AI日报</h1>
                             <p style="margin: 10px 0 0; color: rgba(255,255,255,0.9); font-size: 16px;">{_esc(report_date)}</p>
                         </td>
                     </tr>
-
+                    {meta_html}
                     <tr>
-                        <td style="padding: 16px 40px; background-color: #f8f9fc; border-bottom: 1px solid #e8eaed;">
-                            <span style="color: #5f6368; font-size: 13px;">生成时间：{_esc(gen_time)}</span>
-                        </td>
-                    </tr>
-                    
-                    <tr>
-                        <td style="padding: 30px 40px;">
+                        <td style="padding: 0 40px 30px;">
                             {content_html}
                         </td>
                     </tr>
-                    
-                    {"<tr><td style='padding: 0 40px 30px;'><div style='background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); border-radius: 12px; padding: 24px;'><h3 style='margin: 0 0 16px; color: #c44536; font-size: 16px; font-weight: 600;'>🎯 今日要点</h3><ol style='margin: 0; padding-left: 20px; color: #333; font-size: 14px; line-height: 1.8;'>" + keypoints_html + "</ol></div></td></tr>" if keypoints_html else ""}
-                    
-                    {"<tr><td style='padding: 0 40px 30px;'><table role='presentation' width='100%' cellspacing='0' cellpadding='0' style='background-color: #f8f9fc; border-radius: 12px; overflow: hidden;'><tr><td style='padding: 20px; text-align: center; border-right: 1px solid #e8eaed;'><div style='font-size: 32px; font-weight: 700; color: #667eea;'>" + str(total_news) + "</div><div style='font-size: 13px; color: #5f6368; margin-top: 4px;'>条动态</div></td><td style='padding: 20px; text-align: center; border-right: 1px solid #e8eaed;'><div style='font-size: 32px; font-weight: 700; color: #667eea;'>" + str(total_sources) + "</div><div style='font-size: 13px; color: #5f6368; margin-top: 4px;'>个信源</div></td><td style='padding: 20px; text-align: center;'><div style='font-size: 32px; font-weight: 700; color: #667eea;'>" + str(section_count) + "</div><div style='font-size: 13px; color: #5f6368; margin-top: 4px;'>个栏目</div></td></tr></table></td></tr>" if total_news > 0 else ""}
-                    
                     <tr>
                         <td style="padding: 24px 40px; background-color: #f8f9fc; border-top: 1px solid #e8eaed; text-align: center;">
                             <p style="margin: 0; color: #5f6368; font-size: 13px;">本报告基于公开信息整理，仅陈述事实，供行业参考</p>
                         </td>
                     </tr>
-                    
                 </table>
             </td>
         </tr>
     </table>
 </body>
 </html>'''
-    
+
     return styled_html
 
 

@@ -113,9 +113,11 @@ Adapted from a Coze/扣子 skill package for Claude/Cowork. Uses `WebSearch` / `
 **样例参考**（用户提供的真实样本 `日报_2026-09-08_V1`）达到的详细程度作为目标基准：每条动态100-200字详细陈述（不是简短标题），包含具体数字/金额/百分比等硬信息，多个来源并列。内容结构：
 
 - 标题：`# 科技AI日报 YYYY-MM-DD`
-- 顶部：清单最后更新、智能体应用（写实际执行本次任务的Agent名称，如Claude Code/Codex CLI/Gemini CLI等，不要固定写死"Claude (Cowork)"）、使用模型（写实际调用的模型名）、报告生成时间、数据覆盖范围
+- 顶部：清单最后更新、智能体应用（写实际执行本次任务的Agent名称，如Claude Code/Codex CLI/Gemini CLI等，不要固定写死"Claude (Cowork)"）、使用模型（写实际调用的模型名）、报告生成时间、数据覆盖范围。每项单独一行、统一写成 `**字段名**：值`，并放在标题与第一条 `---` 分隔线之间——邮件脚本只从这个区域提取顶部信息，写在别处或格式不同，邮件顶部就不会显示
 - **🔄 较上期重要变化**（新增必含模块，见上）
 - 七个栏目，每个公司/人物/项目用`###`分组，每条带日期、详细事实描述、来源
+- **同一事件全文只写一次**：已在「🔄 较上期重要变化」里完整描述的事件，正文栏目不再重复收录，也不要写「详见"较上期变化"」这类占位条目；某个`###`分组下如果只剩这类条目，就把整个分组删掉。七日动态回顾只写一句话的要点索引，不复述正文细节
+- 排版只用标准Markdown：`##`栏目、`###`分组、`- `列表、`|`表格、`>`说明、`**加粗**`、`[文字](链接)`。表格的标题写成单独一行 `### 表X：...`，紧接着写表格，表格内部不要插入空行
 - OpenRouter排名放在开源栏目内，两个固定表格：表1周用量Top10取自 `https://openrouter.ai/rankings`；表2智能程度Top10改为取自 Artificial Analysis Intelligence Index（`https://artificialanalysis.ai/` 或 `/models`），因该页面是交互式图表，WebFetch常只能取到前3-5名的模型名/机构/分数，取不到的名次如实留空或注明"页面未直接列出"，不得编造；两表都需注明数据获取时间及Artificial Analysis当期Index版本号（如v4.3）
 - 七日回顾按日期分组，每天2-4条要点
 - 末尾：本日动态统计表 + 核心要求说明 + **📚 参考内容**（固定列出 [AIHOT](https://aihot.news/) 作为素材线索来源之一，每期必写不可省略）+ 标记行
@@ -133,7 +135,7 @@ Adapted from a Coze/扣子 skill package for Claude/Cowork. Uses `WebSearch` / `
 ### 第六步：发送邮件（默认执行，非可选）
 **只要 `config.json` 已配置好收件人等信息，生成日报md文件后必须紧接着发送邮件，不需要用户额外要求"发送一下"才去做**——除非用户明确说了"只生成不发送"，或`config.json`确实不存在（此时按下方"首次使用"引导用户配置，而不是跳过邮件这一步）。
 
-使用本技能自带的 `scripts/send_daily_email.py`（来自历史Coze版本，已修复过日期格式解析导致邮件正文为空的bug，会自动把Markdown日报转换成带样式的HTML邮件），不要临时现写smtplib代码。
+使用本技能自带的 `scripts/send_daily_email.py`，不要临时现写smtplib代码。脚本会把Markdown日报按标准Markdown逐行转成带内联样式的HTML邮件：顶部信息区（智能体应用/使用模型等）渲染在标题下方，`###`分组渲染为卡片，表格/列表/引用各自只渲染一次。因此日报必须遵守第四步的排版约定，不要自创特殊格式。
 
 用法：
 1. 首次使用时，复制 `config.example.json` 为同目录下的 `config.json`（注意是技能根目录，不是scripts/子目录，脚本按 `技能根目录/config.json` 查找配置），填入真实的 smtp_server/smtp_port/email_address（发件邮箱）/auth_code（邮箱的SMTP授权码，不是登录密码）/recipient（收件人）/sender_name。**`config.json` 只保存在用户本地工作区，不写入长期记忆，不随技能分享给他人**。
