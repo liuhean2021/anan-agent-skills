@@ -51,7 +51,7 @@ grep -rnE 'touchstart|touchmove|WeixinJSBridge|wx\.config|safe-area-inset|viewpo
    | H5：Vite + Vue 3 + Vant 4 | Chrome 51 / iOS 10（Vue 3 下限） | C（低于 Vite 原生 ESM 下限） |
    | Vue 2 / React ≤ 17（webpack / Vue CLI） | 含 IE 11（Element UI 2.x 下限 IE 10；以最高的依赖下限为准，如 TinyMCE 5 为 IE 11） | D（`browserslist` 写到下限 + `transpileDependencies`） |
 
-   两端均须：国产双核浏览器极速模式（PC）；微信 / UC / QQ 等 App 内 WebView 列为必测环境（H5）。
+   两端均须：国产双核浏览器极速模式（PC）；微信 / 企业微信 / 鸿蒙微信 / UC / QQ 等 App 内 WebView 列为必测环境（H5；识别方法见 h5.md「识别微信环境」）。
 
 3. **声明高于硬下限（存在覆盖空间）**：按项目声明审查，同时在发现中记 🟡「基线可下探至 <硬下限>，预计多覆盖 <x%>」，给出所需方案与代价，由用户决定是否下探。
 4. **配置与声明必须一致**：声明 Safari 14 但构建 target 为 `esnext` 且无 polyfill，等于没有兼容——记为 🔴 或 🟡（见 §4）。
@@ -68,7 +68,7 @@ grep -rnE 'touchstart|touchmove|WeixinJSBridge|wx\.config|safe-area-inset|viewpo
 | ①′ 覆盖空间审查 | 基线是否已压到硬下限；standard.md §8 的扩大覆盖手段（DOM API polyfill、CSS 降级、依赖转译、端专项配置）是否已启用；用 browserslist 量化可多覆盖的比例 | standard.md §3 / §4 / §8 |
 | ② 产物检查 | 构建到临时目录，运行 `scripts/check-browser-compat.mjs` | SKILL.md「产物检查」 |
 | ③ 源码审查 | 对变更或全量源码逐项排查高发问题（下表） | standard.md §5；pc.md §3；h5.md §5 |
-| ④ 运行验证 | preview / 测试环境 / 真机 / App 内实测；无法执行时标注「未运行验证」 | pc.md §6；h5.md §8 |
+| ④ 运行验证 | preview / 测试环境 / 真机 / App 内实测；无法执行时标注「未运行验证」；微信内实测用 UA 含 `micromessenger` 确认环境并记录完整 UA（h5.md「识别微信环境」） | pc.md §6；h5.md §8 |
 | ⑤ 影响评估 | **每个发现**都要评估受影响浏览器区间、用户占比、实际表现，得出紧急度，供用户排修复优先级 | 本文 §4.1 |
 
 源码审查的快速检索（在 `src/` 下执行，命中后逐条人工判断，**不得仅凭命中下结论**）：
@@ -79,7 +79,7 @@ grep -rnE 'touchstart|touchmove|WeixinJSBridge|wx\.config|safe-area-inset|viewpo
 | `/\(\?<[=!]` （正则字面量） | Safari / iOS < 16.4 白屏 |
 | `\.at\(\|structuredClone\|replaceAll\|Object\.hasOwn\|findLast` | 基线低于 standard.md §5.2 时需 polyfill |
 | `gap:\|:is\(\|:has\(\|aspect-ratio\|inset:\|@container\|color-mix` | CSS 退化（standard.md §5.3） |
-| `100vh` | H5 底部被遮挡 |
+| `100vh` | H5 底部被遮挡；同时核对与 `100dvh` 的书写顺序（`vh` 在前、`dvh` 在后才有回退效果） |
 | `:hover` 且无触屏入口 | H5 无法触发 |
 | `window\.open\|download=\|autoplay` | App 内 WebView 受限（h5.md §4） |
 | `navigator\.userAgent` | UA 判断失效（iPadOS 伪装 Mac） |

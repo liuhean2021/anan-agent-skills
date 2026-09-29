@@ -39,7 +39,7 @@
 | Vant 4（Vue 3） | H5 | 与 Vue 3 一致：Chrome ≥ 51、iOS ≥ 10 | ❌ | 以 Vant 官方文档为准 |
 | Vant 2（Vue 2） | H5 | Android 4.0+、iOS 8+ | — | 已停止维护 |
 | Vite 原生 ESM | 通用 | Chrome 64 / Edge 79 / Firefox 67 / Safari 11.1（iOS 11.3） | ❌ | 需原生 ESM + 动态 `import()` + `import.meta`；更低需 §4 方案 C |
-| Vite 7+ 默认 `build.target` | 通用 | `baseline-widely-available`（约 Chrome 107 / Edge 107 / Firefox 104 / Safari 16） | — | **高于多数政企 PC 与国内 H5 场景期望**，未显式配置时老浏览器会白屏 |
+| Vite 7+ 默认 `build.target` | 通用 | `baseline-widely-available`（Vite 7 约 Chrome 107 / Safari 16；**Vite 8.3 实测 `chrome111 / edge111 / firefox114 / safari16.4 / ios16.4`**，用 `resolveConfig({root},'build','production')` 读 `build.target` 核实） | — | **高于多数政企 PC 与国内 H5 场景期望**，未显式配置时老浏览器会白屏。注意：目标值 ≠ 产物语法下限，产物实际语法可能更低（如只到 ES2021），下限须用产物检查脚本逐档 `--ecma` 实测 |
 
 > 其他库（ECharts、Ant Design、富文本编辑器、地图 SDK 等）查其官方 Browser Support 章节，并写入项目兼容声明。
 
@@ -82,6 +82,13 @@ legacy({
 - `modernPolyfills: true` 必须配合 `modernTargets`，否则 core-js 过量注入。
 - 自动 polyfill **只覆盖 ES 语言特性**；DOM API（`ResizeObserver`、`IntersectionObserver`、`structuredClone` 等）需自行确认或用 `additionalModernPolyfills` 补充。
 - 依赖：`@vitejs/plugin-legacy`（版本与 Vite 主版本对应）+ `terser`（peer 依赖）。
+
+### 4.1.1 方案 C 在 Vite 8（rolldown）下的实测要点
+
+- 配置：`legacy({ targets: [硬下限], modernTargets: [支持 ESM 的最低版本], modernPolyfills: true })`，即默认模式（不设 `renderLegacyChunks: false`）；`modernTargets` 决定现代包的转译目标，未落入的浏览器走 `nomodule` 的 legacy 包。
+- 产物检查要**分开验证两类文件**：legacy 包（文件名含 `legacy`）按硬下限对应的 ES 版本（Chrome 51 / iOS 10 → `--ecma 2015`）；现代包按 `modernTargets` 的 ES 版本（Chrome 64 / iOS 11.3 → `--ecma 2018`）。用同一个 `--ecma` 扫整个目录会误报（legacy 包的输出是 **ES2015 而非 ES5**：`@vitejs/plugin-legacy` 8.x 用 oxc 压缩 legacy 产物且固定 `compress.target = 'es2015'`，见其 `dist/index.js` 的 `resolveLegacyOutputMinify(..., "es2015")`，所以产物里会出现模板字面量；ESM 探测代码 `__vite_legacy_guard` 含顶层 `import.meta`/`import()`，按 script 解析会报错，均属预期）。
+- 脚本须在项目目录（含 `node_modules`）运行；在别处运行只会打印「未找到 acorn」，用管道过滤输出时会被吞掉，务必先看原始输出。
+- 代价（实测，Vite 8.3 + 7 个页面的小项目）：产物约 +70%，构建时间由 < 1s 增至约 5–6s；**CSS 不会被降级**，flex `gap`、`inset` 等在老终端上仍会退化，须在已知限制中写明。
 
 ### 4.2 pnpm 10 项目的 CI 注意事项
 
