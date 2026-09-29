@@ -3,6 +3,36 @@
 > 本技能负责**实际的兼容审查**并给出修复建议；pre-commit-review §3.13 只做兼容性声明，需要检查时转交本技能。
 > **修复铁律：审查阶段只读（唯一例外：写入审查报告文档，见 §7），任何代码、配置、依赖的修改 MUST 先获得用户明确确认。**
 
+## 0. 判定端：PC / 移动 H5（先做，MUST）
+
+**开始前先分析项目面向哪一端，再针对性审查**；不得默认按 PC 或 H5 审查，也不要两端都泛泛过一遍。
+
+| 信号 | 倾向 PC | 倾向移动 H5 |
+|------|---------|------------|
+| UI 组件库（`package.json`） | element-ui / element-plus / ant-design(-vue) / arco / naive-ui / vxe-table | vant / vant-weapp / mint-ui / nutui / cube-ui / vux / uview / antd-mobile |
+| 适配方案 | 固定宽度、`min-width`、无 rem | `postcss-px2rem` / `postcss-pxtorem` / `amfe-flexible` / `lib-flexible` / `vw` 适配 |
+| 交互与事件 | 悬停、右键、拖拽、表格 / 表单密集 | `touchstart` / `touchmove`、下拉刷新、底部 tabbar |
+| `index.html` head | 无移动端专属配置 | `viewport` 含 `user-scalable` / `viewport-fit=cover`、`apple-mobile-web-app-*` |
+| 路由 / 页面 | 后台、评审、管理、列表 + 弹窗 | 商品、表单填报、分享落地页 |
+| 运行环境线索 | 登录跳转 SSO / 内网门户 | 微信 / 企业微信 / 钉钉 JSSDK、`WeixinJSBridge`、UA 判断 |
+| 项目文档 | README / 需求写明「PC 端」 | 写明「H5」「小程序 web-view」 |
+
+```bash
+# 组件库 / 适配方案
+grep -nE '"(element-ui|element-plus|ant-design-vue|antd|vant|mint-ui|nutui|vux|postcss-px2rem|postcss-pxtorem|amfe-flexible|lib-flexible)"' package.json
+# 移动端痕迹
+grep -rnE 'touchstart|touchmove|WeixinJSBridge|wx\.config|safe-area-inset|viewport-fit' src public/index.html | head
+```
+
+- 信号互相矛盾（如 PC 组件库 + `<meta viewport>`：`viewport` 是 Vue CLI / Vite 模板默认，**不能单独作为 H5 依据**）时，**先向用户确认**。
+- 结论写入报告「范围 → 端」，并按下表决定后续：
+
+| 判定 | 后续 |
+|------|------|
+| PC | 只按 pc.md 审查；§2 视口用 PC 矩阵；**跳过** H5 专项（安全区、软键盘、`100vh`、WebView、触屏），并在报告中写明「移动端不在范围内」 |
+| 移动 H5 | 只按 h5.md 审查；视口用 H5 矩阵；跳过 PC 双核 meta |
+| 两者 | 分端各审一遍、分节输出、分端声明基线 |
+
 ## 1. 审查范围
 
 | 模式 | 触发 | 范围 |
@@ -19,14 +49,14 @@
    |--------|------------------|-----------|
    | PC：Vite + Vue 3 + Element Plus | Chrome 64 / Edge 79 / Firefox 78 / Safari 12 | B |
    | H5：Vite + Vue 3 + Vant 4 | Chrome 51 / iOS 10（Vue 3 下限） | C（低于 Vite 原生 ESM 下限） |
-   | Vue 2 / React ≤ 17 | 含 IE 11 | C 或 D |
+   | Vue 2 / React ≤ 17（webpack / Vue CLI） | 含 IE 11（Element UI 2.x 下限 IE 10；以最高的依赖下限为准，如 TinyMCE 5 为 IE 11） | D（`browserslist` 写到下限 + `transpileDependencies`） |
 
    两端均须：国产双核浏览器极速模式（PC）；微信 / UC / QQ 等 App 内 WebView 列为必测环境（H5）。
 
 3. **声明高于硬下限（存在覆盖空间）**：按项目声明审查，同时在发现中记 🟡「基线可下探至 <硬下限>，预计多覆盖 <x%>」，给出所需方案与代价，由用户决定是否下探。
 4. **配置与声明必须一致**：声明 Safari 14 但构建 target 为 `esnext` 且无 polyfill，等于没有兼容——记为 🔴 或 🟡（见 §4）。
 
-视口与显示范围（用于人工 / 运行验证）：
+视口与显示范围（用于人工 / 运行验证；**只取 §0 判定的那一端**）：
 - PC：1280 / 1366 / 1440 / 1920 / 2560 宽；缩放 100% / 125% / 150%；Windows 与 macOS。
 - H5：320 / 360 / 375 / 390 / 414 / 430 宽；平板 768 / 820 / 1024；横竖屏；DPR 2 / 3；刘海屏与底部安全区；系统字体放大；厂商强制暗色。
 

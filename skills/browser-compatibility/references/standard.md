@@ -59,6 +59,13 @@
 3. 技术栈允许 IE 11（Vue 2、React ≤ 17）且需求未排除 IE → 方案 C / D 覆盖 IE 11。
 4. 方案 A 只在业务明确不需要老版本时使用，并在审查报告中记录被放弃的覆盖率。
 
+### 4.0 方案 D 配置要点（webpack / Vue CLI 4）
+
+- 未声明 browserslist 时实际使用 browserslist 的 `defaults`（`> 0.5%, last 2 versions, Firefox ESR, not dead`），**不是** `> 1%, last 2 versions, not dead`；显式声明时先用 `npx browserslist` 对比声明前后的输出确认是否为预期变化。
+- 基线要写到硬下限，如含 IE 11：`["ie >= 11", "edge >= 12", "chrome >= 49", "firefox >= 52", "safari >= 10"]`（PC 项目不写 `ios_saf` / `and_chr`）。
+- Vue CLI 默认**不转译 node_modules**：以 ES6+ 源码发布的依赖（如 `element-ui/src`、Vue 组件封装库）必须加入 `vue.config.js` 的 `transpileDependencies`，否则低版本浏览器整包解析失败。做法：先构建，用产物检查脚本（`--ecma 5`）定位报错的 chunk，再反查其来源依赖。
+- `public/` 下原样拷贝的 vendor（tinymce、pdfjs 等）不经 Babel，用 `--exclude` 跳过并单独核对其官方浏览器支持范围与自定义插件语法。
+
 ### 4.1 方案 B 配置要点（Vite）
 
 ```ts

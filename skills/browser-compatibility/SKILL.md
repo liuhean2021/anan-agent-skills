@@ -28,6 +28,19 @@ metadata:
 | **API 缺失**（`Array.prototype.flat`、`structuredClone` 等） | 运行到才报错 | core-js polyfill |
 | **CSS 不支持**（flex `gap`、`:is()`、`:has()` 等） | **样式退化**，功能可用 | 无法 polyfill，只能降级或规避 |
 
+## 第 0 步：先判定端（PC / 移动 H5），再针对性审查（MUST）
+
+任何审查、定基线之前，先分析项目是 **PC、移动 H5 还是两者**，判定方法与信号见 [references/review.md](references/review.md) §0。判定后**只加载并审查对应端**：
+
+| 判定 | 读取 | 审查重点 | 跳过 |
+|------|------|---------|------|
+| **PC** | pc.md | 双核浏览器 meta、老内核 / IE 系、Windows 缩放与滚动条、桌面视口矩阵 | h5.md 全部（视口 / 安全区 / 软键盘 / App WebView / `100vh`）；`--min` 不写 ios / android |
+| **移动 H5** | h5.md | 移动端 head、App 内 WebView（微信 / 企业微信 / 钉钉 / UC / QQ）、安全区、`100vh`、触屏交互 | pc.md 的双核 meta 与桌面视口 |
+| **两者** | 两份分别审查 | 按端分节输出，基线分端声明 | — |
+| **无法判定** | — | **先向用户确认**，不得默认按某一端审查 | — |
+
+用户已明确端（如「本项目是 PC 端，不用兼容移动端」）时以用户为准，并写入兼容声明与审查报告的范围。
+
 ## 使用场景与读取顺序
 
 | 场景 | 读取 |
@@ -39,7 +52,7 @@ metadata:
 
 ## 标准工作流（制定基线时）
 
-1. **确认端与用户群**：PC / H5 / 两者？国内 / 海外？政企内网（老终端、国产双核浏览器）？H5 主要在哪些 App 内打开？
+1. **确认端与用户群**（已由第 0 步判定）：PC / H5 / 两者？国内 / 海外？政企内网（老终端、国产双核浏览器）？H5 主要在哪些 App 内打开？
 2. **查依赖硬下限**：取框架、组件库、关键三方库官方下限的最高者（standard.md §3）。
 3. **定基线**：默认取**技术栈硬下限**（最大覆盖）；业务明确要求更高时才上调，并在审查报告中记录理由与被放弃的覆盖率（browserslist 口径见 pc.md §4 / h5.md §6）。
 4. **选实现方案**：选能**达到硬下限**的方案（standard.md §4；硬下限低于构建工具原生 ESM 下限时必须用方案 C），再用 standard.md §8 的手段扩大覆盖；PC 加双核浏览器 meta（pc.md §2），H5 加移动端 head 配置（h5.md §3）。
@@ -58,7 +71,8 @@ node <本技能目录>/scripts/check-browser-compat.mjs --dir <产物目录> --e
 |------|------|
 | `--dir` | 构建产物目录（如 `dist`，或 Vite 的临时 `--outDir`） |
 | `--ecma` | 基线最低浏览器能完整支持的 ES 版本（standard.md §5.1），如 Chrome 64 / Safari 12 → `2018` |
-| `--min` | PC：`chrome=64,safari=12,firefox=78`；H5：`ios=12,android=64`。别名：`edge/android/webview/and_chr`→Chromium，`ios/ios_saf`→WebKit |
+| `--min` | PC：`chrome=64,safari=12,firefox=78`；H5：`ios=12,android=64`；含 IE 11 的老栈：`ie=11,chrome=49,safari=10,firefox=52`（`ie` 视为不支持全部 CSS 风险特性）。别名：`edge/android/webview/and_chr`→Chromium，`ios/ios_saf`→WebKit |
+| `--exclude` | 跳过原样拷贝、不经转译的 vendor 目录，如 `--exclude tinymce,pdfjs`（路径含 `/<名>/` 即跳过）；被跳过的目录须单独记录其自身兼容范围 |
 
 | 输出 | 含义 | 定级（review.md §4） |
 |------|------|------|

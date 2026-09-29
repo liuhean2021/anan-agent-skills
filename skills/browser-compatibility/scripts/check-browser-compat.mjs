@@ -13,11 +13,14 @@
  *   node scripts/check-browser-compat.mjs --dir <产物目录> --ecma <年份> [--min <浏览器=版本,...>]
  *   PC 例:--ecma 2018 --min chrome=64,safari=12,firefox=78
  *   H5 例:--ecma 2018 --min ios=12,android=64
+ *   含 IE 11 的老栈(Vue 2 / React ≤ 17 + webpack):--ecma 5 --min ie=11,chrome=49,safari=10,firefox=52
+ *   --exclude <目录名,...>  跳过产物中不经转译的原样拷贝目录(如 public/ 下的 tinymce、pdfjs),路径含该名即跳过
  *
  * --min 可用的浏览器名(别名按内核归并,版本号即该内核版本):
  *   chrome / edge / android / webview / and_chr → 按 Chromium 判断(Android WebView、微信 XWeb 等填其 Chromium 版本)
  *   safari / ios / ios_saf                      → 按 WebKit 判断(iOS 上所有浏览器与 App 内 WebView 均为 WebKit,版本 = iOS 系统版本)
  *   firefox                                     → 按 Gecko 判断
+ *   ie                                          → 视为不支持全部 CSS 风险特性与后行断言(IE 停止演进,以 IE 11 为上限)
  *
  * 退出码:0 = 通过(CSS 风险只告警不失败);1 = JS 语法超标或命中不支持的正则后行断言;2 = 参数/环境错误
  * 依赖:acorn。从当前目录解析,找不到时经 ESLint 的 espree 间接获取(装了 ESLint 即可,无需额外安装);
@@ -72,7 +75,8 @@ const ENGINE_ALIASES = {
   safari: 'safari',
   ios: 'safari',
   ios_saf: 'safari',
-  firefox: 'firefox'
+  firefox: 'firefox',
+  ie: 'ie'
 }
 
 /** --min 的浏览器名 → browserslist 浏览器名(用于生成影响评估查询) */
@@ -85,8 +89,12 @@ const BROWSERSLIST_NAMES = {
   safari: 'safari',
   ios: 'ios_saf',
   ios_saf: 'ios_saf',
-  firefox: 'firefox'
+  firefox: 'firefox',
+  ie: 'ie'
 }
+
+/** 内核键 → 特性最低版本;ie 不在特性表中 = 永不支持(Infinity) */
+const minOf = (min, engine) => (engine === 'ie' ? min.ie ?? Infinity : min[engine])
 
 /**
  * 影响评估:受影响区间 [基线, 特性最低版本) 与对应 browserslist 查询。
@@ -94,21 +102,23 @@ const BROWSERSLIST_NAMES = {
  */
 function affectedRanges(min, targets) {
   return targets
-    .filter(([, engine, v]) => min[engine] !== undefined && v < min[engine])
-    .map(([label, engine, v]) => ({
-      text: `${label} ${v}~<${min[engine]}`,
-      query: `${BROWSERSLIST_NAMES[label]} >= ${v}, not ${BROWSERSLIST_NAMES[label]} >= ${min[engine]}`
-    }))
+    .filter(([, engine, v]) => minOf(min, engine) !== undefined && v < minOf(min, engine))
+    .map(([label, engine, v]) => {
+      const m = minOf(min, engine)
+      return m === Infinity
+        ? { text: `${label} ${v}+(全部)`, query: `${BROWSERSLIST_NAMES[label]} >= ${v}` }
+        : { text: `${label} ${v}~<${m}`, query: `${BROWSERSLIST_NAMES[label]} >= ${v}, not ${BROWSERSLIST_NAMES[label]} >= ${m}` }
+    })
 }
 
 /** 返回目标中不满足 min 的项:[显示名, 版本] */
 function unsupportedBy(min, targets) {
-  return targets.filter(([, engine, v]) => min[engine] !== undefined && v < min[engine]).map(([label, , v]) => [label, v])
+  return targets.filter(([, engine, v]) => minOf(min, engine) !== undefined && v < minOf(min, engine)).map(([label, , v]) => [label, v])
 }
 
 const args = parseArgs(process.argv.slice(2))
 if (!args.dir || !args.ecma) {
-  console.error('用法: node check-browser-compat.mjs --dir <产物目录> --ecma <年份,如 2018> [--min chrome=64,safari=12,firefox=78 | ios=12,android=64]')
+  console.error('用法: node check-browser-compat.mjs --dir <产物目录> --ecma <年份,如 2018> [--min chrome=64,safari=12,firefox=78 | ios=12,android=64 | ie=11,chrome=49,...] [--exclude tinymce,pdfjs]')
   process.exit(2)
 }
 const ecma = Number(args.ecma)
@@ -151,7 +161,9 @@ if (!acorn) {
   process.exit(2)
 }
 
-const files = walk(args.dir)
+const excludes = String(args.exclude || '').split(',').map((x) => x.trim()).filter(Boolean)
+const files = walk(args.dir).filter((f) => !excludes.some((x) => f.includes(`/${x}/`)))
+if (excludes.length) console.log(`已排除目录:${excludes.join(', ')}`)
 const jsFiles = files.filter((f) => /\.(m?js)$/.test(f))
 const cssFiles = files.filter((f) => f.endsWith('.css'))
 let failed = false
@@ -176,6 +188,9 @@ if (!failed) console.log(`  ✓ 全部可按 ES${ecma} 解析`)
  *   includeBoundaries 默认不启用),只提示人工确认
  */
 function scanLookbehind(src) {
+  // 快速路径:文本里根本没有 (?<= / (?<! 时无需词法分析(对数十 MB 产物可省下大半耗时)
+  const total = (src.match(LOOKBEHIND.re) || []).length
+  if (!total) return { literals: 0, inStrings: 0 }
   let literals = 0
   try {
     for (const tok of acorn.tokenizer(src, { ecmaVersion: 'latest', sourceType: 'module' })) {
@@ -185,7 +200,6 @@ function scanLookbehind(src) {
   } catch {
     // 词法分析失败时该文件已在第 1 项报错
   }
-  const total = (src.match(LOOKBEHIND.re) || []).length
   return { literals, inStrings: Math.max(0, total - literals) }
 }
 
