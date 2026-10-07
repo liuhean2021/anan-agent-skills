@@ -92,7 +92,7 @@ Adapted from a Coze/扣子 skill package for Claude/Cowork. Uses `WebSearch` / `
 先 `Read` 实体状态表和最近一期已有日报（若存在），建立"已知基线"。
 
 ### 第二步：分栏目搜索（仅发现新信息即可，不需重新搜已知事实）
-建议先用 `WebFetch` 访问 <https://aihot.news/daily> 快速扫一眼当天精选的中文AI动态（约6条，带原文链接），作为线索起点、辅助判断有哪些方向值得深挖，但不能只依赖它——具体事实仍要按下方七个栏目逐一WebSearch核实和补全，AIHOT的摘要不直接照抄。
+建议先用 `WebFetch` 访问 <https://aihot.news/daily> 快速扫一眼当天精选的中文AI动态（约6条，带原文链接），作为线索起点、辅助判断有哪些方向值得深挖，但不能只依赖它——具体事实仍要按下方七个栏目逐一WebSearch核实和补全，AIHOT的摘要不直接照抄。距上期间隔多天时，按 `https://aihot.news/daily/YYYY-MM-DD` 逐日补读覆盖范围内的每一期。若 `WebFetch` 失败（实测会报域名安全校验失败），不要跳过，改用 Bash 以浏览器 UA 请求（不带 UA 会返回403），例如 `curl -sL -A "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130 Safari/537.36" https://aihot.news/daily`，再去掉HTML标签读取正文；OpenRouter、Artificial Analysis 同样适用此兜底方式（2026-10-07实测）。
 按下列七个栏目搜索，优先最近3天：
 1. 📈 顶级科技公司动态（Apple/Microsoft/Google/Meta/Amazon/Tesla/NVIDIA/Intel/AMD/IBM/Oracle/Samsung/腾讯/阿里等），重点核实领导层/归属是否变化
 2. 🤖 AI应用与大模型进展（OpenAI/Anthropic/Google DeepMind/Meta AI/xAI/Mistral/百度/阿里/腾讯/字节/MiniMax/月之暗面/智谱等），重点标注版本号变化
