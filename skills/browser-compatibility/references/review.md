@@ -29,7 +29,7 @@ grep -rnE 'touchstart|touchmove|WeixinJSBridge|wx\.config|safe-area-inset|viewpo
 
 | 判定 | 后续 |
 |------|------|
-| PC | 只按 pc.md 审查；§2 视口用 PC 矩阵；**跳过** H5 专项（安全区、软键盘、`100vh`、WebView、触屏），并在报告中写明「移动端不在范围内」 |
+| PC | 只按 pc.md 审查；§2 视口用 PC 矩阵；**跳过** H5 专项（安全区、软键盘、`100vh`、WebView、触屏、横屏策略），并在报告中写明「移动端不在范围内」 |
 | 移动 H5 | 只按 h5.md 审查；视口用 H5 矩阵；跳过 PC 双核 meta |
 | 两者 | 分端各审一遍、分节输出、分端声明基线 |
 
@@ -58,7 +58,7 @@ grep -rnE 'touchstart|touchmove|WeixinJSBridge|wx\.config|safe-area-inset|viewpo
 
 视口与显示范围（用于人工 / 运行验证；**只取 §0 判定的那一端**）：
 - PC：1280 / 1366 / 1440 / 1920 / 2560 宽；缩放 100% / 125% / 150%；Windows 与 macOS。
-- H5：320 / 360 / 375 / 390 / 414 / 430 宽；平板 768 / 820 / 1024；横竖屏；DPR 2 / 3；刘海屏与底部安全区；系统字体放大；厂商强制暗色。
+- H5：320 / 360 / 375 / 390 / 414 / 430 宽；平板 768 / 820 / 1024；**默认竖屏，横屏策略为默认检查项（手机横屏 852×393、568×320，h5.md §5.1）**；DPR 2 / 3；刘海屏与底部安全区；系统字体放大；厂商强制暗色。
 
 ## 3. 审查步骤
 
@@ -70,6 +70,7 @@ grep -rnE 'touchstart|touchmove|WeixinJSBridge|wx\.config|safe-area-inset|viewpo
 | ③ 源码审查 | 对变更或全量源码逐项排查高发问题（下表） | standard.md §5；pc.md §3；h5.md §5 |
 | ④ 运行验证 | preview / 测试环境 / 真机 / App 内实测；无法执行时标注「未运行验证」；微信内实测用 UA 含 `micromessenger` 确认环境并记录完整 UA（h5.md「识别微信环境」） | pc.md §6；h5.md §8 |
 | ⑤ 影响评估 | **每个发现**都要评估受影响浏览器区间、用户占比、实际表现，得出紧急度，供用户排修复优先级 | 本文 §4.1 |
+| ⑥ 体验层检查（H5 默认） | 逐项过 h5.md §5.3（兼容数据与错误上报、异步状态、**存储访问兜底**、防重复提交、微信缓存与 bfcache、标题、输入、性能、边缘手势等 11 项）；命中的写入同一张发现表；脚手架 / mock 阶段未接入的标「待接入时落实」 | h5.md §5.3 |
 
 源码审查的快速检索（在 `src/` 下执行，命中后逐条人工判断，**不得仅凭命中下结论**）：
 
@@ -81,6 +82,8 @@ grep -rnE 'touchstart|touchmove|WeixinJSBridge|wx\.config|safe-area-inset|viewpo
 | `gap:\|:is\(\|:has\(\|aspect-ratio\|inset:\|@container\|color-mix` | CSS 退化（standard.md §5.3） |
 | `100vh` | H5 底部被遮挡；同时核对与 `100dvh` 的书写顺序（`vh` 在前、`dvh` 在后才有回退效果） |
 | `:hover` 且无触屏入口 | H5 无法触发 |
+| `localStorage\|sessionStorage`（入口路径上无 `try/catch`） | **H5 白屏风险**：存储被禁用 / WebView 未开 DOM storage 时访问抛错，入口未保护默认 🟡，目标环境含这些情形（如基线 iOS ≤ 10、国产内嵌 WebView）升 🔴，见 h5.md §5.3 #3 |
+| `orientation:\s*landscape\|screen\.orientation\|rotate-tip` | **H5 默认竖屏**：无命中即为「未处理横屏」，按 h5.md §5.1 定级（项目声明支持横屏的除外）；有命中仍要运行验证遮罩的显示条件 |
 | `window\.open\|download=\|autoplay` | App 内 WebView 受限（h5.md §4） |
 | `navigator\.userAgent` | UA 判断失效（iPadOS 伪装 Mac） |
 
@@ -91,6 +94,8 @@ grep -rnE 'touchstart|touchmove|WeixinJSBridge|wx\.config|safe-area-inset|viewpo
 | 目标范围内**白屏**（语法超标、正则后行断言字面量、入口处缺 API）、脚本报错、核心路径无法完成（无法提交、无法支付、按钮被遮挡且点不到） | 🔴 |
 | 目标范围内明显布局错乱、功能降级无提示；构建配置与声明不一致但暂未造成白屏；高风险项未经运行验证；**基线高于硬下限或扩大覆盖手段未启用（存在覆盖空间）** | 🟡 |
 | 视觉细节差异、非核心页面降级体验、未写兼容声明 / 未声明 browserslist | 🟢 |
+
+H5 **未处理横屏**（无遮罩提示，且项目未声明支持横屏）记 🟡 P2，详见 h5.md §5.1；项目声明支持横屏则改查横屏布局，用户明确不限制则记 🟢 并写入已知限制。
 
 检查脚本输出与等级的对应：`✗` → 🔴；`⚠` 字符串后行断言 → 追溯后可达则 🔴、不可达则记录即可；`⚠` CSS → 按影响页面与布局判断 🟡 / 🟢。
 
@@ -143,6 +148,7 @@ npx browserslist@latest "--coverage=CN" "$AFFECTED"; npx browserslist@latest "--
 ### 范围
 - 模式：变更审查 / 全量审查
 - 端：PC / H5 / 两者
+- 横屏策略（仅 H5）：有遮罩提示 / 项目声明支持横屏 / **未处理** / 用户明确不限制（依据 h5.md §5.1）
 - 基线：<来源(项目声明 / 硬下限)> — <浏览器与版本>；技术栈硬下限：<浏览器与版本>；覆盖空间：<无 / 可下探至 … 多覆盖 x%>
 - 产物检查：`check-browser-compat.mjs --ecma <> --min <>` → 退出码 <>
 
@@ -168,6 +174,7 @@ npx browserslist@latest "--coverage=CN" "$AFFECTED"; npx browserslist@latest "--
 请确认要执行的修复编号（如「1、2」「全部」「都不改」）。
 ```
 
+- H5 默认竖屏：「修复方案」末尾附**竖屏兼容建议**（h5.md §5.2，按项目实际取舍），与横屏遮罩方案一起交用户确认。
 - 每条修复建议 MUST 写清：改哪些文件、改成什么、是否新增依赖或修改构建配置、对包体积 / 构建时间的影响、如何验证。
 - 同一问题有多种解法时（如「调低转译目标」vs「替换依赖」），列出选项与取舍，不替用户做决定。
 

@@ -8,12 +8,16 @@
  *   2. 正则后行断言 (?<= / (?<!:语法属 ES2018,但 Safari < 16.4 不支持,--ecma 检查不出来,单独检测
  *   3. CSS 风险特性:统计产物中各特性出现次数;给出 --min 时,标出目标浏览器不支持的特性与受影响区间
  *   4. 影响评估查询:为每个问题生成 browserslist 查询(受影响区间 / 支持范围),用于估算受影响用户占比
+ *   5. 横屏处理(仅 H5,即 --min 含 ios / android 等移动内核,或显式给 --h5):H5 默认按竖屏使用,检查产物中的横屏处理,
+ *      区分「遮罩型」(`orientation: landscape` 媒体查询内含 position:fixed)与「仅布局型」(有横屏样式但没有遮罩),
+ *      并识别 `screen.orientation.lock`;只告警不失败,详见 references/h5.md §5.1
  *
  * 用法:
  *   node scripts/check-browser-compat.mjs --dir <产物目录> --ecma <年份> [--min <浏览器=版本,...>]
  *   PC 例:--ecma 2018 --min chrome=64,safari=12,firefox=78
  *   H5 例:--ecma 2018 --min ios=12,android=64
  *   含 IE 11 的老栈(Vue 2 / React ≤ 17 + webpack):--ecma 5 --min ie=11,chrome=49,safari=10,firefox=52
+ *   --h5                    显式声明这是 H5 项目:--min 只写 chrome=51 之类、不含 ios / android 时,也执行第 5 项横屏处理检查
  *   --exclude <目录名,...>  跳过产物中不经转译的原样拷贝目录(如 public/ 下的 tinymce、pdfjs),路径含该名即跳过
  *
  * --min 可用的浏览器名(别名按内核归并,版本号即该内核版本):
@@ -53,7 +57,10 @@ function parseArgs(argv) {
   const args = {}
   for (let i = 0; i < argv.length; i++) {
     const key = argv[i]
-    if (key.startsWith('--')) args[key.slice(2)] = argv[i + 1]?.startsWith('--') ? true : argv[++i]
+    if (!key.startsWith('--')) continue
+    // 开关参数（如 --h5）后面没有值或紧跟另一个 --参数时记为 true
+    const next = argv[i + 1]
+    args[key.slice(2)] = next === undefined || next.startsWith('--') ? true : argv[++i]
   }
   return args
 }
@@ -257,6 +264,35 @@ if (impactQueries.length) {
     console.log(`  ${name}: npx browserslist@latest --coverage "${ranges.map((r) => r.query).join(', ')}"`)
   }
   console.log('  中国区把 --coverage 换成 "--coverage=CN"(zsh 下须加引号)')
+}
+
+// ---- 5. 横屏处理(H5 默认竖屏):--min 含移动内核或显式 --h5 时检查 ----
+const MOBILE_LABELS = ['ios', 'ios_saf', 'android', 'webview', 'and_chr']
+if (args.h5 || targets.some(([label]) => MOBILE_LABELS.includes(label))) {
+  console.log('\n== 5. 横屏处理(H5 默认竖屏,见 references/h5.md §5.1)')
+  // 取出每个含 orientation: landscape 的 @media 块(按花括号配平,兼容压缩后的单行 CSS)
+  const landscapeBlocks = []
+  const mediaRe = /@media[^{]*orientation\s*:\s*landscape[^{]*\{/gi
+  for (let m = mediaRe.exec(css); m; m = mediaRe.exec(css)) {
+    let depth = 1
+    let i = m.index + m[0].length
+    for (; i < css.length && depth > 0; i++) depth += css[i] === '{' ? 1 : css[i] === '}' ? -1 : 0
+    landscapeBlocks.push(css.slice(m.index + m[0].length, i - 1))
+  }
+  // 遮罩型:横屏块内有 position:fixed(全屏提示层的特征);否则只是横屏下的布局调整
+  const overlay = landscapeBlocks.some((b) => /position\s*:\s*fixed/i.test(b))
+  const lockApi = jsFiles.some((f) => /screen\.orientation\.lock/.test(readFileSync(f, 'utf8')))
+  if (overlay) {
+    console.log(`  ✓ 产物中发现横屏遮罩(@media orientation: landscape 内含 position:fixed,共 ${landscapeBlocks.length} 个横屏媒体查询)`)
+    console.log('    仍需人工确认:横屏下遮罩是否真的显示且可关闭(「继续横屏使用」)、竖屏 / 平板横屏不显示(852×393、568×320、1024×768 实测)')
+  } else if (landscapeBlocks.length) {
+    console.log(`  ⚠ 发现 ${landscapeBlocks.length} 个 orientation: landscape 媒体查询,但其中没有 position:fixed,看起来只是横屏布局调整而非遮罩提示`)
+    console.log('    → 若项目声明支持横屏,请验证横屏布局;若默认竖屏,仍建议加可关闭的半透明横屏遮罩(h5.md §5.1)')
+  } else {
+    console.log('  ⚠ 产物中未发现横屏处理(无 orientation: landscape 媒体查询)')
+    console.log('    → 手机横屏时页面将按横屏直接渲染;项目若默认竖屏,建议加可关闭的半透明横屏遮罩提示(h5.md §5.1);若声明支持横屏,请改为验证横屏布局')
+  }
+  if (lockApi) console.log('  ⚠ JS 中含 screen.orientation.lock:它仅在全屏 / PWA 下可用,在 iOS Safari 与微信内基本无效,不能作为横屏策略')
 }
 
 console.log(`\n结果:${failed ? '✗ 未通过(存在会导致白屏的 JS 问题)' : '✓ JS 通过'}${targets.length ? ';CSS ⚠ 项为样式退化风险,不影响退出码' : ''}\n`)

@@ -34,8 +34,8 @@ metadata:
 
 | 判定 | 读取 | 审查重点 | 跳过 |
 |------|------|---------|------|
-| **PC** | pc.md | 双核浏览器 meta、老内核 / IE 系、Windows 缩放与滚动条、桌面视口矩阵 | h5.md 全部（视口 / 安全区 / 软键盘 / App WebView / `100vh`）；`--min` 不写 ios / android |
-| **移动 H5** | h5.md | 移动端 head、App 内 WebView（微信 / 企业微信 / 钉钉 / UC / QQ）、安全区、`100vh`、触屏交互 | pc.md 的双核 meta 与桌面视口 |
+| **PC** | pc.md | 双核浏览器 meta、老内核 / IE 系、Windows 缩放与滚动条、桌面视口矩阵 | h5.md 全部（视口 / 安全区 / 软键盘 / App WebView / `100vh` / 横屏策略）；`--min` 不写 ios / android |
+| **移动 H5** | h5.md | 移动端 head、App 内 WebView（微信 / 企业微信 / 钉钉 / UC / QQ）、安全区、`100vh`、触屏交互、**横屏策略（默认竖屏：检查是否禁止 / 处理横屏，h5.md §5.1；并附竖屏兼容建议，§5.2）、体验层检查项（存储兜底 / 异步状态 / 防重复提交 / 微信缓存与 bfcache 等 11 项，§5.3）** | pc.md 的双核 meta 与桌面视口 |
 | **两者** | 两份分别审查 | 按端分节输出，基线分端声明 | — |
 | **无法判定** | — | **先向用户确认**，不得默认按某一端审查 | — |
 
@@ -72,6 +72,7 @@ node <本技能目录>/scripts/check-browser-compat.mjs --dir <产物目录> --e
 | `--dir` | 构建产物目录（如 `dist`，或 Vite 的临时 `--outDir`） |
 | `--ecma` | 基线最低浏览器能完整支持的 ES 版本（standard.md §5.1），如 Chrome 64 / Safari 12 → `2018` |
 | `--min` | PC：`chrome=64,safari=12,firefox=78`；H5：`ios=12,android=64`；含 IE 11 的老栈：`ie=11,chrome=49,safari=10,firefox=52`（`ie` 视为不支持全部 CSS 风险特性）。别名：`edge/android/webview/and_chr`→Chromium，`ios/ios_saf`→WebKit |
+| `--h5` | 显式声明这是 H5 项目：`--min` 只写 `chrome=51` 之类、不含 ios / android 时，也执行第 5 项横屏处理检查 |
 | `--exclude` | 跳过原样拷贝、不经转译的 vendor 目录，如 `--exclude tinymce,pdfjs`（路径含 `/<名>/` 即跳过）；被跳过的目录须单独记录其自身兼容范围 |
 
 | 输出 | 含义 | 定级（review.md §4） |
@@ -79,6 +80,7 @@ node <本技能目录>/scripts/check-browser-compat.mjs --dir <产物目录> --e
 | `✗` JS 语法超标 / 正则后行断言**字面量**不被支持 | 白屏级 | 🔴 |
 | `⚠` 后行断言位于**字符串**（运行时 `new RegExp`） | 执行到才报错 | 追溯来源：可达 🔴，不可达记录即可 |
 | `⚠` CSS 风险特性 | 样式退化 | 按影响页面判断 🟡 / 🟢 |
+| `== 5. 横屏处理`（`--min` 含 ios / android，或显式 `--h5`） | `✓` 遮罩型（横屏媒体查询内含 `position: fixed`）；`⚠` 仅布局型（有横屏样式但无遮罩）/ 未发现横屏处理 / 用了 `screen.orientation.lock`（H5 默认竖屏，未声明支持横屏时按 h5.md §5.1 记 🟡 P2）；只告警不影响退出码，遮罩显示条件仍须运行验证 | 🟡 P2 / 通过 |
 | 退出码 `0` / `1` / `2` | 通过 / 有白屏级问题 / 参数或环境错误 | 可接入 CI |
 | `== 4. 影响评估查询` | 每个问题的受影响区间与可直接运行的 browserslist 查询 | 用于 review.md §4.1 计算用户占比 |
 
