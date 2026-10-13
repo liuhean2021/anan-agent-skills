@@ -16,7 +16,7 @@
 | [excel-to-pdf](skills/excel-to-pdf/SKILL.md) | macOS 用本机 Microsoft Excel 把 xlsx 转成排版正确的 PDF（自动铺满页宽、分页不切断合并单元格） |
 | [frontend-dev-workflow](skills/frontend-dev-workflow/SKILL.md) | 前端 AI Coding 工作流：接手项目、修改页面、新增页面，测试先行 + 视觉验证闭环 |
 | [design-md-author](skills/design-md-author/SKILL.md) | 从零为新前端项目生成设计系统契约 DESIGN.md（SSOT）+ tokens.css + 防漂移校验脚本 |
-| [ai-coding-workflow](skills/ai-coding-workflow/SKILL.md) | 统一 AI Coding 工作流：Phase 0~10 / 5B 为主线，集成 spec-kit、Context7 MCP、gitleaks 等，评审/QA/发布等能力由 agent 原生完成；强制阶段顺序与完成前验证 |
+| [ai-coding-workflow](skills/ai-coding-workflow/SKILL.md) | 统一 AI Coding 工作流：Phase 0~10 / 5B 为主线，集成 spec-kit、gitleaks 等，评审/QA/发布等能力由 agent 原生完成；强制阶段顺序与完成前验证；支持工具与依赖升级（始终升级最新版，并核对官方工作流变化） |
 
 > `ai-coding-workflow` 与 `frontend-dev-workflow` 均为独立技能，可单独安装和使用；二者不互相依赖。若同一项目同时使用，只通过通用产物（如 `spec.md`、`interaction-design.md`、`plan.md`、`tasks.md`）协作。
 

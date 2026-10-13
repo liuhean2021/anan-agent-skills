@@ -36,7 +36,7 @@ WHEN 收到新任务时，代理 MUST 先按下表确定起始 Phase，再执行
 | 需求清晰的新功能（multi-file 或新模块） | Phase 2 → Phase 9 |
 | 小变更 C1：小功能（单文件且非 bug fix，或 < 50 行净变更） | Phase 2 → Phase 9 |
 | 小变更 C2：bug fix（以修复缺陷为目的，不论单文件或多文件） | Phase 5B：Bug Fix 简化流 |
-| 使用新版本库、AI 给出错误 API | 优先使用 Context7 MCP 自动文档查验；无 MCP 时降级为 `use context7`/library ID/官方文档 |
+| 使用新版本库、AI 给出错误 API | 查官方文档核对 |
 | 多个功能并行开发 | 参见 Section 9：并行开发（ref-06） |
 
 ### 1.2 各阶段命令速查
@@ -45,17 +45,17 @@ WHEN 收到新任务时，代理 MUST 先按下表确定起始 Phase，再执行
 |------|------|------|---------|
 | 项目初始化（一次性，在项目根目录执行） | `specify init . --integration <agent-key>` | spec-kit | `.specify/` 目录 |
 | 产品方向 | 结构化访谈式规划（问题仍模糊时）→ 结构化产品方向评审 | agent 自身能力 | `specs/<feature-id>/ceo-review.md` |
-| 需求规格 | `/speckit.specify` | spec-kit | `specs/<feature-id>/spec.md` |
-| 澄清需求 | `/speckit.clarify` | spec-kit | `specs/<feature-id>/spec.md`（追加） |
-| 规格质量清单 | `/speckit.checklist` | spec-kit | `specs/<feature-id>/checklists/` |
+| 需求规格 | `/speckit-specify` | spec-kit | `specs/<feature-id>/spec.md` |
+| 澄清需求 | `/speckit-clarify` | spec-kit | `specs/<feature-id>/spec.md`（追加） |
 | 前端交互设计归档（如适用） | 与规格链路同步完成 | 手动/设计工具/agent 辅助评审 | `specs/<feature-id>/interaction-design.md`（按 L1/L2/L3 分级填写；设计基线记录于「设计引用」章节；`design-system-context.md` MAY 降级为其中章节）；如需本地查看，临时拉取到 `specs/<feature-id>/design-assets/`（不提交 Git） |
-| 技术方案 | `/speckit.plan` | spec-kit | `specs/<feature-id>/plan.md` `specs/<feature-id>/research.md` `specs/<feature-id>/contracts/` |
+| 技术方案 | `/speckit-plan` | spec-kit | `specs/<feature-id>/plan.md` `specs/<feature-id>/research.md` `specs/<feature-id>/contracts/` |
+| 规格质量清单（plan 之后、tasks 之前） | `/speckit-checklist` | spec-kit | `specs/<feature-id>/checklists/` |
 | 架构评审 | 结构化架构评审 | agent 自身能力 | `specs/<feature-id>/arch-review.md` |
 | 原型验证（可选） | 手动指导 AI 搭建原型，快速验证方向和盲区 | 手动/AI | 原型代码（不提交主仓库）、`plan.md`（追加原型验证记录） |
-| 任务拆解 | `/speckit.tasks` | spec-kit | `specs/<feature-id>/tasks.md` |
-| 转 GitHub Issues（可选） | Claude `/speckit.taskstoissues`；Codex `$speckit-taskstoissues`（tasks 后、implement 前） | spec-kit | GitHub Issues 列表 |
-| 一致性检查 | `/speckit.analyze`（在 tasks 之后） | spec-kit | — |
-| 代码实现 | Claude 用 `/speckit.implement`；Codex 用 `$speckit-implement`；按需用 subagent 并行 | spec-kit | 原子提交 |
+| 任务拆解 | `/speckit-tasks` | spec-kit | `specs/<feature-id>/tasks.md` |
+| 转 GitHub Issues（可选） | Claude `/speckit-github-taskstoissues`；Codex `$speckit-github-taskstoissues`（需 github 扩展；tasks 后、implement 前） | spec-kit | GitHub Issues 列表 |
+| 一致性检查 | `/speckit-analyze`（在 tasks 之后） | spec-kit | — |
+| 代码实现 | Claude 用 `/speckit-implement`；Codex 用 `$speckit-implement`；按需用 subagent 并行 | spec-kit | 原子提交 |
 | 代码+安全审查 | 由专注审查视角的子任务完成（安全敏感改动追加安全专项审查 + gitleaks）；agent 能力不可用时人工审查/CI 替代 | agent 自身能力 | `specs/<feature-id>/review-findings.md` |
 | QA 验证 | 由专注功能验证的子任务完成（feature branch 默认 diff-aware）；agent 能力不可用时人工或 CI 验证；UI/UX 不一致时 Phase 8 失败并返回 Phase 6，基线缺失返回 Phase 2 | agent 自身能力 | `specs/<feature-id>/qa-reports/` |
 | 发布 | 走标准 git/PR 发布流程；agent 能力不可用时宿主常规发布流程 | agent 自身能力 | PR + CHANGELOG |
@@ -68,16 +68,16 @@ WHEN 收到新任务时，代理 MUST 先按下表确定起始 Phase，再执行
 | 目标场景 | 使用命令 |
 |---------|--------|
 | 方向判断/MVP 收敛 | 结构化访谈式规划（需求仍模糊时）→ 结构化产品方向评审 |
-| 需求落规格 | Claude 用 `/speckit.specify` → `/speckit.clarify` → `/speckit.checklist`；Codex 用 `$speckit-specify` → `$speckit-clarify` → `$speckit-checklist` |
+| 需求落规格 | Claude 用 `/speckit-specify` → `/speckit-clarify`；Codex 用 `$speckit-specify` → `$speckit-clarify`（需求质量 checklist 在 plan 之后） |
 | 前端交互需求落规格 | spec-kit 规格链路 + 按 L1/L2/L3 分级补齐 `interaction-design.md`（设计基线记录于「设计引用」章节）+ `design-system-context.md`（MAY 降级为 `interaction-design.md` 章节）；复杂交互建议追加一次结构化设计评审 |
 | 新项目或新功能：方向未定时先做方向判断，再落规格 | 结构化访谈式规划 → 结构化产品方向评审 → spec-kit 规格链路 |
 | 新项目或新功能：方向已定时快速落规格 | 结构化产品方向评审（简版，可选）→ spec-kit 规格链路 |
-| 生成技术方案 | Claude 用 `/speckit.plan`；Codex 用 `$speckit-plan` → 结构化架构评审 |
-| 规格质量检查 | `/speckit.checklist` |
-| 拆解任务 | Claude 用 `/speckit.tasks`；Codex 用 `$speckit-tasks` |
-| 转 GitHub Issues（可选） | Claude `/speckit.taskstoissues`；Codex `$speckit-taskstoissues` |
-| 实施前一致性分析 | Claude 用 `/speckit.analyze`；Codex 用 `$speckit-analyze` |
-| 代码实现（任务明确） | Claude 用 `/speckit.implement`；Codex 用 `$speckit-implement` |
+| 生成技术方案 | Claude 用 `/speckit-plan`；Codex 用 `$speckit-plan` → 结构化架构评审 |
+| 规格质量检查（plan 之后、tasks 之前） | `/speckit-checklist` |
+| 拆解任务 | Claude 用 `/speckit-tasks`；Codex 用 `$speckit-tasks` |
+| 转 GitHub Issues（可选） | Claude `/speckit-github-taskstoissues`；Codex `$speckit-github-taskstoissues`（需 github 扩展） |
+| 实施前一致性分析 | Claude 用 `/speckit-analyze`；Codex 用 `$speckit-analyze` |
+| 代码实现（任务明确） | Claude 用 `/speckit-implement`；Codex 用 `$speckit-implement` |
 | 代码实现（需并行子任务） | 主代理原生 subagent / 并行任务能力按文件或模块边界拆分 |
 | 代码实现（需专业判断） | 在 `plan.md`/`arch-review.md` 中先明确判断结论 |
 | 代码审查 | 由专注审查视角的子任务完成；安全敏感改动追加安全专项审查；agent 能力不可用时人工审查/CI 替代 |
@@ -104,7 +104,7 @@ WHEN 收到新任务时，代理 MUST 先按下表确定起始 Phase，再执行
 |------------|--------------------------|---------|-----------|
 | AI 角色定义 | `AGENTS.md` 或 `CLAUDE.md` | 手动维护 | Phase 0 |
 | spec-kit 初始化参数 | `.specify/init-options.json` | specify init 自动生成 | Phase 0 |
-| 项目原则 | `.specify/memory/constitution.md` | `/speckit.constitution` | Phase 0 |
+| 项目原则 | `.specify/memory/constitution.md` | `/speckit-constitution` | Phase 0 |
 | 自动化脚本（macOS/Linux） | `.specify/scripts/bash/*.sh` | specify init 自动生成 | Phase 0 |
 | 自动化脚本（Windows） | `.specify/scripts/powershell/*.ps1` | specify init 自动生成 | Phase 0 |
 | 核心模板 | `.specify/templates/*.md` | specify init 自动生成 | Phase 0 |
@@ -114,19 +114,19 @@ WHEN 收到新任务时，代理 MUST 先按下表确定起始 Phase，再执行
 | 已安装预设 | `.specify/presets/<preset-id>/` | `specify preset add` | 按需 |
 | 预设目录配置 | `.specify/preset-catalogs.yml` | 手动维护 | 按需 |
 | 产品方向结论 | `specs/<feature-id>/ceo-review.md` | 代理写入 | Phase 1 |
-| 需求规格 | `specs/<feature-id>/spec.md` | `/speckit.specify` | Phase 2 |
-| 验收 checklist | `specs/<feature-id>/checklists/` | `/speckit.checklist` | Phase 2 |
+| 需求规格 | `specs/<feature-id>/spec.md` | `/speckit-specify` | Phase 2 |
+| 验收 checklist | `specs/<feature-id>/checklists/` | `/speckit-checklist` | Phase 3 |
 | 项目级设计系统规范 | `DESIGN.md` | 代理写入/首次自动生成（遵循 Google Stitch DESIGN.md 基础格式；本工作流追加以下章节要求：`Responsive Behavior`/`Iteration Guide`；参考 https://github.com/VoltAgent/awesome-design-md，完成后 SHOULD 运行 `npx @google/design.md lint` 验证） | Phase 2 |
 | 功能级设计系统上下文 | `specs/<feature-id>/design-system-context.md` | 代理写入（MAY 降级为 `interaction-design.md` 中的 Design System Context 章节；若仅引用 ≤5 个 token，SHOULD 直接列出 token 引用表） | Phase 2 |
 | 前端交互设计说明 | `specs/<feature-id>/interaction-design.md` | 代理写入 | Phase 2 |
 | 前端设计资料目录（本地临时缓存，不提交 Git） | `specs/<feature-id>/design-assets/` | 需求阶段临时拉取 | Phase 2 |
 | 前端设计来源索引（可选，次选） | `specs/<feature-id>/source-links.md` | 设计基线 MUST 写入 `interaction-design.md`「设计引用」章节（唯一主入口）；`source-links.md` 仅为多链接索引的 MAY 级备份 | Phase 2 |
-| 技术实现方案 | `specs/<feature-id>/plan.md` | `/speckit.plan` | Phase 3 |
-| 技术调研（决策追溯） | `specs/<feature-id>/research.md` | `/speckit.plan`（计划后同步完善） | Phase 3 |
-| 数据模型 | `specs/<feature-id>/data-model.md` | `/speckit.plan` | Phase 3 |
-| API 契约 | `specs/<feature-id>/contracts/` | `/speckit.plan` | Phase 3 |
+| 技术实现方案 | `specs/<feature-id>/plan.md` | `/speckit-plan` | Phase 3 |
+| 技术调研（决策追溯） | `specs/<feature-id>/research.md` | `/speckit-plan`（计划后同步完善） | Phase 3 |
+| 数据模型 | `specs/<feature-id>/data-model.md` | `/speckit-plan` | Phase 3 |
+| API 契约 | `specs/<feature-id>/contracts/` | `/speckit-plan` | Phase 3 |
 | 架构评审 | `specs/<feature-id>/arch-review.md` | 代理写入 | Phase 3 |
-| 原子任务列表 | `specs/<feature-id>/tasks.md` | `/speckit.tasks` | Phase 4 |
+| 原子任务列表 | `specs/<feature-id>/tasks.md` | `/speckit-tasks` | Phase 4 |
 | 状态覆盖矩阵（IF 多状态/生命周期对象适用） | `specs/<feature-id>/checklists/state-coverage.md` | 代理写入（Phase 8 QA 辅助） | Phase 8 |
 | 审查发现 | `specs/<feature-id>/review-findings.md` | 代理写入 | Phase 7 |
 | 架构决策 ADR | `memory/decisions.md` | 代理追加 | Phase 3/Phase 6 |
@@ -138,4 +138,4 @@ WHEN 收到新任务时，代理 MUST 先按下表确定起始 Phase，再执行
 
 > 所有前端设计文档和设计基线只允许在 Phase 2/spec 阶段创建、补齐和锁定。Phase 3 之后只消费这些文档；若发现缺失、失效或错误，MUST 返回 Phase 2 修正，MUST NOT 在技术方案、任务拆解、实施、审查或 QA 阶段临场补写设计文档。`design-system-context.md` MAY 降级为 `interaction-design.md` 中的 Design System Context 章节。设计基线按 L1/L2/L3 分级 gate 判定，L3 级允许以文字需求锁定 spec.md；进入 Phase 6 前若仍缺少 L2 级以上基线，MUST 返回 Phase 2 补齐并重新锁定规格。
 
-> `<feature-id>` 格式为 `NNN-feature-name`，例如 `001-user-auth`。spec-kit 根据当前 Git 分支名自动检测 feature-id；分布式团队可加 `--branch-numbering timestamp` 使用时间戳编号避免分支编号冲突；非 Git 环境可设置环境变量 `SPECIFY_FEATURE=001-feature-name` 手动指定。
+> `<feature-id>` 格式为 `NNN-feature-name`，例如 `001-user-auth`。spec-kit 不再从 Git 分支名推断 feature：`/speckit-specify` 会把当前 feature 目录写入 `.specify/feature.json`，后续命令据此定位，也可用环境变量 `SPECIFY_FEATURE=001-feature-name` 显式指定；分布式团队用时间戳编号避免冲突，需同时设 `.specify/init-options.json` 的 `feature_numbering: "timestamp"`（规格目录）和 git 扩展 `git-config.yml` 的 `branch_numbering: timestamp`（分支，先 `specify extension add git`）。

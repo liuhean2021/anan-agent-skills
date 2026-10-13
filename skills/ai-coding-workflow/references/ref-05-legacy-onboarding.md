@@ -20,7 +20,7 @@
 
 - [ ] 补写 `AGENTS.md`（MUST 包含：项目背景、技术栈、禁止事项、验证命令）
 - [ ] 建 `memory/` 目录，开始记录踩坑（`issues.md`）和决策（`decisions.md`）
-- [ ] 启用 Context7 MCP；WHEN 新代码涉及外部库时，优先使用 Context7 MCP 自动文档查验；无 MCP 时降级为 `use context7` / library ID / 官方文档
+- [ ] WHEN 新代码涉及外部库时，先查官方文档核对 API
 - [ ] 新功能开发从 Phase 1 开始走完整流程
 
 ### 7.3 档位 B：标准接入

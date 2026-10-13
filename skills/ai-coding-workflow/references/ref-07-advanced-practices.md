@@ -95,7 +95,7 @@ govulncheck ./...
 }
 ```
 
-更彻底的方案：用 `/speckit.constitution` 中定义"每阶段结束自动写入对应文件"的 AI 行为规则。
+更彻底的方案：用 `/speckit-constitution` 中定义"每阶段结束自动写入对应文件"的 AI 行为规则。
 
 配置方式：`/update-config`
 

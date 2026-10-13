@@ -8,20 +8,20 @@
 
 ### 5.1 阶段主线与工具介入原则
 
-- AI Coding Workflow 以 `Phase 0~10/5B` 为唯一主线；`spec-kit`、agent 自身承载的评审/QA/发布能力、Context7 MCP、`gitleaks`、`memory` 等都按阶段介入
+- AI Coding Workflow 以 `Phase 0~10/5B` 为唯一主线；`spec-kit`、agent 自身承载的评审/QA/发布能力、`gitleaks`、`memory` 等都按阶段介入
 - `spec-kit` 主要提供规格、方案、任务、分析、实施骨架
 - 方向评审、架构评审、审查、QA、发布、复盘、并行实施与多模型交叉复核均由 agent 自身或专门子任务承载，不依赖特定外部工具
-- Context7 优先通过 MCP 自动核对官方文档；无 MCP 时降级为 `use context7`/library ID/官方文档，避免在方案或实施阶段产生 API 幻觉
+- 涉及陌生库、新版本 SDK 时先查官方文档，避免在方案或实施阶段产生 API 幻觉
 - `gitleaks`、测试、CI、`memory/*` 等属于验证与沉淀能力，同样是工作流组成部分
 
 **阶段内能力选择**：
 
 | 情况 | 介入能力 |
 |------|--------|
-| 任务列表明确、完整功能、自动执行 | `/speckit.implement` |
+| 任务列表明确、完整功能、自动执行 | `/speckit-implement` |
 | 需要专业判断（复杂架构、安全、性能） | `plan.md`/`arch-review.md` 明确结论 |
 | 需并行分工实施 | 主代理原生 subagent / 并行任务能力，按文件或模块边界拆分 |
-| 需核对陌生库、新版本 SDK、官方 API | 优先使用 Context7 MCP 自动文档查验；无 MCP 时降级为 `use context7`/library ID/官方文档 |
+| 需核对陌生库、新版本 SDK、官方 API | 查官方文档核对 |
 
 **降级规则**：本文件中的 `/review`、`/qa`、`/ship` 对应的职责默认由 agent 自身或专注子任务原生完成（见 `ref-02 § 10.2`）；IF 当前环境确实缺乏执行这些任务的能力，THEN 分别降级为人工审查、手工测试或 CI 验证、宿主常规发布流程。
 
@@ -169,9 +169,9 @@ IF 组件存在多状态流转（如加载→空→数据→错误→重试）�
 **进入条件**：WHEN 项目为全新项目，且尚未执行过 `specify init`。
 
 **必做动作**：
-1. 执行 `specify init . --integration <agent-key>`（分布式团队可加 `--branch-numbering timestamp` 避免分支编号冲突；Codex CLI 常用 `--integration codex --integration-options="--skills"`），初始化 `.specify/` 目录
-2. 执行 `/speckit.constitution`，生成 `constitution.md`
-3. 补充 `AGENTS.md`/`CLAUDE.md`，写入项目规范（SHOULD 包含项目验证命令，供 `ref-08` Gate Function 使用）
+1. 执行 `specify init . --integration <agent-key>`（分布式团队避免编号冲突，需同时设 `.specify/init-options.json` 的 `feature_numbering: "timestamp"`（规格目录）与 git 扩展 `.specify/extensions/git/git-config.yml` 的 `branch_numbering: timestamp`（分支，先 `specify extension add git`）；`init` 已无 `--branch-numbering` 选项；Codex CLI 常用 `--integration codex --integration-options="--skills"`），初始化 `.specify/` 目录
+2. 执行 `/speckit-constitution`，生成 `constitution.md`（已安装 `git` 扩展时，`before_constitution` hook 会先初始化仓库）
+3. 补充 `AGENTS.md`/`CLAUDE.md`，写入项目规范（SHOULD 包含项目验证命令，供 `ref-08` Gate Function 使用）；可选安装 `agent-context` 扩展，在 specify/plan 之后按 hook 提示刷新该文件中的 SPECKIT 托管区块
 4. 验证纪律内置生效，无需单独安装或检查外部插件（详见 `ref-02-tool-stack.md § 10.4`）
 
 **产出物**：`.specify/memory/constitution.md`、`AGENTS.md`（或 `CLAUDE.md`）
@@ -229,7 +229,7 @@ IF 组件存在多状态流转（如加载→空→数据→错误→重试）�
 **Version**: 0.1.0 | **Ratified**: <日期> | **Last Amended**: <日期>
 ```
 
-> 原则条数建议 3~5 条，过多则失去约束力。第一条原则优先回答"项目用什么语言/术语撰写"的共识问题。`/speckit.constitution` 生成的初稿会覆盖此模板，项目可按需手工调整。
+> 原则条数建议 3~5 条，过多则失去约束力。第一条原则优先回答"项目用什么语言/术语撰写"的共识问题。`/speckit-constitution` 生成的初稿会覆盖此模板，项目可按需手工调整。
 >
 > 常用原则话题参考：
 >
@@ -270,6 +270,8 @@ IF 满足以下条件，THEN MAY 以简版执行本 Phase：
 - 增量功能方向清晰，仅需确认边界和不做事项
 
 IF 任务为小功能或 bug fix，THEN 可跳过本 Phase。
+
+> 可选载体：已安装 `assess` 扩展时，可用 `/speckit-assess-intake` → `-research` → `-define` → `-shape` → `-decide` 完成问题定义与 go/kill 判定；assess 产物可作为 `ceo-review.md` 的输入引用；Phase 2 仍按本技能要求以 `ceo-review.md` 结论为输入。
 
 **必做动作**：
 1. IF 问题定义仍模糊、需要重构需求表述，THEN 先做结构化访谈式规划，梳理问题空间
@@ -358,12 +360,13 @@ IF 本次决策涉及技术选型、依赖版本、运行环境等基线锁定�
 IF 方向尚未确认、MVP 边界仍在摇摆、存在"先做哪个版本"争议，THEN 代理 MUST 返回 Phase 1，而不是直接写 `spec.md`。
 
 **必做动作**：
-1. 以 `ceo-review.md` 结论为输入执行 `/speckit.specify "<功能描述>"`，生成 `spec.md` 初稿
-2. 执行 `/speckit.clarify`，澄清模糊点，结果**追加**写入 `spec.md`（不覆盖已有内容）
-3. IF 仍有模糊点，THEN **重复执行** `/speckit.clarify`，直到规格无歧义为止
-4. 推荐在 `plan` 前执行 `/speckit.checklist`，生成需求质量 checklist，并根据 checklist 补齐规格中的完整性、清晰度、一致性问题；高风险或高歧义需求 MUST 执行
-5. IF 已执行 checklist 且仍暴露缺口，THEN MUST 回到 `spec.md` 补齐后再次执行 `/speckit.checklist`，直到问题闭环
-6. MUST NOT 通过重复执行 `/speckit.specify` 来补充规格——该命令会**覆盖**整个 `spec.md`，仅在初稿方向完全跑偏需要推倒重来时才使用
+1. 以 `ceo-review.md` 结论为输入执行 `/speckit-specify "<功能描述>"`，生成 `spec.md` 初稿
+2. 执行 `/speckit-clarify`，澄清模糊点，结果**追加**写入 `spec.md`（不覆盖已有内容）
+3. IF 仍有模糊点，THEN **重复执行** `/speckit-clarify`，直到规格无歧义为止
+4. 本 Phase 只用 clarify 闭环歧义；需求质量 checklist 按官方顺序在 Phase 3 的 plan 之后执行（官方：checklist after plan），不在锁定规格前执行
+5. IF 后续 Phase 3 的 checklist 暴露 `spec.md` 缺口，THEN MUST 回到本 Phase 补齐并重新锁定，再重走 plan，MUST NOT 在 Phase 3+ 直接改写规格
+5a. `/speckit-specify` 会同时生成并校验 `checklists/requirements.md`（内置规格质量清单），与 `/speckit-checklist` 生成的自定义需求清单分开维护；`/speckit-implement` 会读取 `checklists/` 全部清单，存在未勾选项时询问是否继续，故 Phase 6 前 SHOULD 让清单闭环
+6. MUST NOT 通过重复执行 `/speckit-specify` 来补充规格——该命令会**覆盖**整个 `spec.md`，仅在初稿方向完全跑偏需要推倒重来时才使用
 7. 将用户故事、功能边界、验收标准、约束条件写全
 7a. IF 涉及前端交互需求，THEN MUST 检查项目级 `DESIGN.md` 是否存在；IF 不存在，THEN 生成 `DESIGN.md`，遵循 Google Stitch DESIGN.md 基础格式；本工作流追加以下章节要求：`Responsive Behavior`/`Iteration Guide`；完成后 SHOULD 运行 `npx @google/design.md lint DESIGN.md` 验证。IF 存在，THEN 直接引用。为当前 feature 生成 `specs/<feature-id>/design-system-context.md`（MAY 降级为 `interaction-design.md` 中的 Design System Context 章节）。
 8. IF 涉及前端交互需求，THEN 按「前端交互需求附加规则」与「设计基线分级 gate」判定设计级别（L1/L2/L3），MUST 产出 `interaction-design.md`，并按对应级别填写模板章节
@@ -372,7 +375,7 @@ IF 方向尚未确认、MVP 边界仍在摇摆、存在"先做哪个版本"争�
 
 **产出物**：`specs/<feature-id>/spec.md`、`specs/<feature-id>/checklists/`、`specs/<feature-id>/interaction-design.md`（如适用）、`specs/<feature-id>/design-system-context.md`（如适用）
 
-**退出条件**：规格无歧义，checklist 已生成并闭环，规格已锁定；`spec.md` 已包含边界情况章节（IF 存在边界场景）与关键实体章节（IF 涉及多业务概念）；若涉及前端交互需求，则 Phase 2 对应的 design-level（L1/L2/L3）已判定，`interaction-design.md` 已按对应级别填写，`design-system-context.md`（或降级后的 Design System Context 章节）与设计基线已就位。
+**退出条件**：规格无歧义，规格已锁定；`spec.md` 已包含边界情况章节（IF 存在边界场景）与关键实体章节（IF 涉及多业务概念）；若涉及前端交互需求，则 Phase 2 对应的 design-level（L1/L2/L3）已判定，`interaction-design.md` 已按对应级别填写，`design-system-context.md`（或降级后的 Design System Context 章节）与设计基线已就位。
 
 > IF 后续阶段发现规格有误，THEN 代理 MUST 返回本 Phase 正式修改，MUST NOT 在实施阶段绕过规格直接改代码。
 >
@@ -498,8 +501,8 @@ IF 功能涉及多个业务概念、组件或数据对象，THEN 列出关键实
 **进入条件**：WHEN Phase 2 已完成，规格已锁定。适用范围：小功能及以上。
 
 **必做动作**：
-1. IF 涉及陌生库、新版本 SDK、或近期变化的 API，THEN 优先使用 Context7 MCP 自动文档查验；无 MCP 时降级为 `use context7`/library ID/官方文档，防 API 幻觉，再确定方案
-2. 执行 `/speckit.plan "<技术栈>"`，生成 `plan.md`、`research.md`、`data-model.md`、`contracts/`
+1. IF 涉及陌生库、新版本 SDK、或近期变化的 API，THEN 先查官方文档，防 API 幻觉，再确定方案
+2. 执行 `/speckit-plan "<技术栈>"`，生成 `plan.md`、`research.md`、`data-model.md`、`contracts/`
 3. IF 涉及前端交互需求，THEN `plan.md` MUST 引用 Phase 2 已锁定的 `interaction-design.md` 和 `design-system-context.md`（或 `interaction-design.md` 中的 Design System Context 章节）作为前端实现输入，并按触发条件决定是否追加结构化设计评审；若任一设计文档或设计基线缺失，MUST 返回 Phase 2，MUST NOT 在本阶段补写
 4. 做结构化架构评审，深度审查图表、边界条件、失败模式
 5. 将架构评审结论写入 `specs/<feature-id>/arch-review.md`
@@ -512,7 +515,9 @@ IF 功能涉及多个业务概念、组件或数据对象，THEN 列出关键实
 8. **[P0-4 API 契约]** IF 本次改动新增、修改或删除对外 API（REST/GraphQL/gRPC/消息契约），THEN MUST 先更新 `specs/<feature-id>/contracts/`，再写实现代码；MUST NOT 先改实现再补契约；breaking change MUST 在 `arch-review.md` 中标注并经过 ≥1 人架构确认
 8a. **参照物推荐**：IF 存在可参照的架构设计、数据流、接口契约或完整实现代码（本项目的、其他项目的、甚至不同语言的），THEN 建议直接提供给 AI 作为方案参照。参照物的实际结构比自然语言描述更精确——AI 能从代码中理解接口粒度、数据结构、错误处理模式等纯文字难说清的细节。将参照物来源记录到 `plan.md` 的「引用文档」章节或 `research.md` 中。
 
-**产出物**：`specs/<feature-id>/plan.md`、`specs/<feature-id>/research.md`、`specs/<feature-id>/data-model.md`、`specs/<feature-id>/contracts/`、`specs/<feature-id>/arch-review.md`、`memory/decisions.md`（追加）
+9. 执行 `/speckit-checklist`（Codex：`$speckit-checklist`），生成需求质量 checklist（官方顺序：plan 之后、tasks 之前）：复杂需求、高风险或高歧义需求 MUST 执行；根据结果补齐 `plan.md`，若暴露 `spec.md` 缺口则回 Phase 2 修改并重走 plan；MUST 闭环后才进入 Phase 4
+
+**产出物**：`specs/<feature-id>/plan.md`、`specs/<feature-id>/checklists/`（需求质量清单）、`specs/<feature-id>/research.md`、`specs/<feature-id>/data-model.md`、`specs/<feature-id>/contracts/`、`specs/<feature-id>/arch-review.md`、`memory/decisions.md`（追加）
 
 **最小模板**：
 
@@ -661,7 +666,7 @@ IF 涉及多个实体，THEN 绘制实体关系图（ASCII 或文字）：
 - **日期**：
 ```
 
-**checklists/ (Phase 2 产出) 推荐模板**：
+**checklists/ (Phase 3 产出) 推荐模板**：
 
 ```md
 # <checklist 名称，如"需求质量清单">：<feature-name>
@@ -698,7 +703,7 @@ IF 涉及多个实体，THEN 绘制实体关系图（ASCII 或文字）：
 <说明>
 ```
 
-> checklist 建议按维度分组（内容质量/需求完整性/功能就绪度等），覆盖内容质量、完整性、一致性、边界场景。IF 已生成 `/speckit.checklist` 则以其产出为准。
+> checklist 建议按维度分组（内容质量/需求完整性/功能就绪度等），覆盖内容质量、完整性、一致性、边界场景。IF 已生成 `/speckit-checklist` 则以其产出为准。
 
 **功能完成度追踪表（Phase 8 QA 辅助）推荐模板**：
 
@@ -723,7 +728,7 @@ IF 功能需求较多或需要逐条追踪完成状态，THEN MAY 生成以下�
 - 实施阶段 MUST 以 `contracts/` 中的具体类型定义为准
 - IF API 变更，THEN MUST 先更新 `contracts/` 再写实现；MUST NOT 先改实现再补契约（参见本 Section **[P0-4 API 契约]**）
 
-**退出条件**：技术方案已通过架构评审，产出物已写入；若涉及前端交互需求，则 `plan.md` 已引用 `interaction-design.md` 和 `design-system-context.md`（或 `interaction-design.md` 中的 Design System Context 章节）并说明页面模块、交互状态、接口依赖、组件复用边界与设计系统规则适用范围；若涉及 DB 迁移则迁移方案已包含在 `plan.md`；若涉及 API 变更则 `contracts/` 已先于实现更新。
+**退出条件**：技术方案已通过架构评审，产出物已写入，需求质量 checklist 已生成并闭环（IF 适用）；若涉及前端交互需求，则 `plan.md` 已引用 `interaction-design.md` 和 `design-system-context.md`（或 `interaction-design.md` 中的 Design System Context 章节）并说明页面模块、交互状态、接口依赖、组件复用边界与设计系统规则适用范围；若涉及 DB 迁移则迁移方案已包含在 `plan.md`；若涉及 API 变更则 `contracts/` 已先于实现更新。
 
 ---
 
@@ -757,7 +762,7 @@ IF 需求足够简单且方案成熟（纯后端逻辑、单一接口改造、�
 **进入条件**：WHEN 任务类型为小功能及以上，Phase 3 已完成。
 
 **必做动作**：
-1. 执行 `/speckit.tasks`，生成 `tasks.md`，含 `[P]` 并行标记与 TDD 标记
+1. 执行 `/speckit-tasks`，生成 `tasks.md`，含 `[P]` 并行标记与 `[USn]` 用户故事标签（默认**不含测试任务**，Phase 5 要先写失败测试时，须在参数或 `spec.md` 中明确要求 TDD/生成测试任务）
 2. IF 涉及前端交互需求，THEN 按「前端交互需求附加规则」拆解前端任务；若设计文档或设计基线缺失，MUST 返回 Phase 2 补齐，MUST NOT 在本阶段补写
 3. **[P0-1 组件复用扫描]** IF 任务涉及前端 UI 实现且项目存在组件库、设计系统或可复用 UI 层，THEN 在生成 `tasks.md` 前 MUST 扫描项目现有组件目录（如 `src/components/`、`src/ui/`、设计系统包），在每条前端任务中标注：
    - `[复用]` — 使用现有组件，注明组件路径
@@ -824,7 +829,7 @@ IF 功能涉及 UI 组件、服务状态、任务生命周期、CLI 执行或多
 
 **退出条件**：原子任务列表已生成，并行任务已标记；若涉及前端交互需求，则前端任务已基于 `interaction-design.md` 拆解，且包含设计还原验证任务；IF 项目存在组件库或设计系统，THEN 已扫描现有组件并标注复用/扩展/新增。
 
-> **可选**：执行 `/speckit.taskstoissues` 将 `tasks.md` 中的任务转为 GitHub Issues，便于在 GitHub 上跟踪实施进度。此步骤在 Phase 4 之后、Phase 6 实施之前执行；若团队使用其他任务跟踪工具，可跳过。
+> **可选**：先执行 `specify extension add github` 安装 github 扩展（核心 `/speckit-taskstoissues` 自 spec-kit v1.1.0 起弃用），再执行 `/speckit-github-taskstoissues`（Codex：`$speckit-github-taskstoissues`）将 `tasks.md` 中的任务转为 GitHub Issues，便于在 GitHub 上跟踪实施进度。此步骤在 Phase 4 之后、Phase 6 实施之前执行；若团队使用其他任务跟踪工具，可跳过。
 
 ---
 
@@ -833,7 +838,7 @@ IF 功能涉及 UI 组件、服务状态、任务生命周期、CLI 执行或多
 **进入条件**：WHEN Phase 4 已完成，且小功能/新功能类改动开始实施前。bug fix 默认走 Phase 5B 简化流。
 
 **必做动作**：
-1. Claude 执行 `/speckit.analyze`，Codex 执行 `$speckit-analyze`，对 `spec.md`、`plan.md`、`tasks.md` 做只读一致性分析；涉及前端交互需求时按附加规则纳入 `interaction-design.md` 和 `design-system-context.md`（或 `interaction-design.md` 中的 Design System Context 章节）
+1. Claude 执行 `/speckit-analyze`，Codex 执行 `$speckit-analyze`，对 `spec.md`、`plan.md`、`tasks.md` 做只读一致性分析；涉及前端交互需求时按附加规则纳入 `interaction-design.md` 和 `design-system-context.md`（或 `interaction-design.md` 中的 Design System Context 章节）
 2. 按验收标准先写失败测试
 3. IF 后续实现预计需要并行分工，THEN 先在 `tasks.md` 标注可并行项与上下文边界，避免多个 agent 重复改同一文件
 4. 执行 `/commit-message` 生成提交信息，等待确认后再执行提交；提交格式以该技能定义为准，如需标识 `<feature-id>`，可写入摘要或说明列表
@@ -850,7 +855,7 @@ IF 功能涉及 UI 组件、服务状态、任务生命周期、CLI 执行或多
 
 **必做动作**：
 1. 先写复现测试，固化问题与回归边界
-2. 定位并修复
+2. 定位并修复（可选载体：已安装 `bug` 扩展时，用 `/speckit-bug-assess` 评估并产出 `.specify/bugs/<slug>/assessment.md`，`/speckit-bug-fix` 实施并记录 `fix.md`，`/speckit-bug-test` 验证并记录 `test.md`；使用该扩展时，`/speckit-bug-assess` 之后 MUST 先经人工评审评估结论，再执行 `/speckit-bug-fix`（对应官方 bugfix 工作流的 review-assessment 关卡），复现测试仍先于 fix 落地；其“本地检查/验证报告”不替代第 5 步的 Gate Function）
 3. 由专注审查视角的子任务完成代码审查（仅审改动范围）
 4. IF 涉及鉴权、支付、隐私、权限、密钥、数据边界等安全敏感改动，THEN 追加安全专项审查，并将结论写入 `specs/<feature-id>/review-findings.md`，修复后重审
 5. 确认测试通过（MUST 按 `ref-08-verification-gate.md` Gate Function 执行，附 fresh 测试命令输出）
@@ -871,8 +876,9 @@ IF 功能涉及 UI 组件、服务状态、任务生命周期、CLI 执行或多
 **进入条件**：WHEN Phase 5 已完成，失败测试已就位。
 
 **必做动作**：
-1. IF 任务列表明确且为完整功能，THEN Claude 执行 `/speckit.implement`，Codex 执行 `$speckit-implement`
+1. IF 任务列表明确且为完整功能，THEN Claude 执行 `/speckit-implement`，Codex 执行 `$speckit-implement`
 2. IF 需要专业判断（复杂架构、安全、性能），THEN 先在 `plan.md`/`arch-review.md` 中明确判断结论
+2a. `/speckit-implement` 全部任务完成后，SHOULD 执行 `/speckit-converge`（Codex：`$speckit-converge`）：它对照 `spec.md`/`plan.md`/`tasks.md` 评估现有代码，只把未完成项以 `Convergence` 阶段追加到 `tasks.md`，不改代码与规格；IF 有新增任务，THEN 再次 `/speckit-implement`，直到 converge 报告无剩余项（此时 `tasks.md` 保持不变）
 3. IF 存在 `[P]` 并行任务，THEN MAY 用主代理原生 subagent 能力分工实施
 4. 并行分工时，MUST 先明确每个 agent 的文件所有权、输入上下文和验收条件；MUST NOT 让多个 agent 同时改同一文件
 5. 每完成一个原子任务，MUST 立即执行 `/commit-message` 生成提交信息，等待确认后再提交；MUST NOT 直接调用 `git commit` 绕过该步骤；提交信息格式以 `/commit-message` 技能定义为准，默认使用中文，除非用户明确要求英文

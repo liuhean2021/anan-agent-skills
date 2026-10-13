@@ -42,21 +42,19 @@
 ### 6.1 项目启动（一次性）
 
 - [ ] `specify init . --integration <agent-key>` 初始化 spec-kit（Codex CLI 常用 `--integration codex --integration-options="--skills"`）
-- [ ] `/speckit.constitution` 建立项目原则
+- [ ] `/speckit-constitution` 建立项目原则
 - [ ] 补充 `AGENTS.md`/`CLAUDE.md`
-- [ ] 确认 Context7 MCP 已启用；无 MCP 时明确降级路径为 `use context7`/library ID/官方文档
 
 ### 6.2 每个功能开始前
 
 - [ ] 按 Section 1.1 判断任务规模，确定起始 Phase；**禁止无产出物跳阶段**（`ref-08 § 13.2`）
 - [ ] IF 方向未定、MVP 边界未定、或影响重大：先做结构化访谈式规划，再做结构化产品方向评审，将结论写入 `specs/<feature-id>/ceo-review.md`
-- [ ] IF 涉及陌生库、新版本 SDK、或近期变化的工具行为：优先使用 Context7 MCP 自动文档查验；无 MCP 时降级为 `use context7`/library ID/官方文档，再进入规格/方案动作
-- [ ] IF 方向已定且需求明确：执行 `/speckit.specify` + `/speckit.clarify`，锁定规格（变更须回 Phase 2 正式修改）
+- [ ] IF 涉及陌生库、新版本 SDK、或近期变化的工具行为：先查官方文档，再进入规格/方案动作
+- [ ] IF 方向已定且需求明确：执行 `/speckit-specify` + `/speckit-clarify`，锁定规格（变更须回 Phase 2 正式修改）
 - [ ] `spec.md`、`plan.md` 等文档满足"中文为主、英文为辅"原则：大量英文名词已追加中文标注，未标注的 MUST 返回补充
 - [ ] `spec.md` 中已包含边界情况章节，或明确标注不适用
 - [ ] `spec.md` 中已包含关键实体（Key Entities）章节（IF 涉及多个业务概念）
 - [ ] IF 验收标准数量较多（≥ 8 条）：建议为每条分配编号（如 AC-001），方便逐项勾选追踪
-- [ ] 推荐在 `/speckit.plan` 前执行 `/speckit.checklist`；复杂需求、高风险或高歧义需求 MUST 执行，并补齐需求完整性/清晰度/一致性问题
 - [ ] IF 涉及前端交互需求：在锁定规格前补齐 `specs/<feature-id>/interaction-design.md`
 - [ ] IF 涉及前端 UI/UX，THEN 规格锁定前 MUST 判定 design-level（L1/L2/L3），确认 `interaction-design.md` 已按对应级别填写模板章节（L1 完整填写：页面结构 + 交互流转 + 状态矩阵 + 响应式适配 + 可访问性；L2 填写页面结构、交互流转与状态矩阵；L3 填写页面结构与状态矩阵）
 - [ ] IF 已有设计文件、原型、分享链接或截图：MUST 将设计基线记录到 `interaction-design.md` 的「设计引用」章节（主入口）——在线平台提供链接则记链接，仅有离线文件（PDF/截图）则记文件路径；仅维护多索引时可同步备份至 `specs/<feature-id>/source-links.md`；如需本地查看，可临时拉取到 `specs/<feature-id>/design-assets/`（须加入 `.gitignore`）
@@ -65,15 +63,16 @@
 - [ ] IF 生成或修改 `DESIGN.md`，THEN SHOULD 运行 `npx @google/design.md lint DESIGN.md` 验证格式
 - [ ] IF 涉及前端 UI/UX，THEN `design-system-context.md` MAY 降级为 `interaction-design.md` 中的 Design System Context 章节；若仅引用 ≤5 个 token，SHOULD 直接列出 token 引用表
 - [ ] IF 涉及前端交互需求：按设计基线分级 gate（L1/L2/L3）判断是否可锁定 spec.md 与进入后续阶段；L3 级进入 Phase 6 前若仍缺少 L2 级以上基线，MUST 返回 Phase 2 补齐并重新锁定规格
-- [ ] 执行 `/speckit.plan` + 结构化架构评审，将结论写入 `specs/<feature-id>/arch-review.md`
+- [ ] 执行 `/speckit-plan` + 结构化架构评审，将结论写入 `specs/<feature-id>/arch-review.md`
+- [ ] plan 之后、tasks 之前执行 `/speckit-checklist`；复杂需求、高风险或高歧义需求 MUST 执行，并补齐需求完整性/清晰度/一致性问题；暴露 `spec.md` 缺口时回 Phase 2 修改并重走 plan
 - [ ] IF 涉及前端交互需求：确认 `plan.md` 已引用 `interaction-design.md` 和 `design-system-context.md`（或 `interaction-design.md` 中的 Design System Context 章节）作为后续实现输入
 - [ ] **[P0-3]** IF 涉及 DB schema 变更：确认 `plan.md` 已包含迁移方案（兼容性分类、上线顺序、回滚脚本、staging dry-run 要求）
 - [ ] **[P0-4]** IF 涉及 API 变更：确认已先更新 `contracts/` 再写实现；breaking change 已在 `arch-review.md` 标注并获得架构确认
-- [ ] `/speckit.tasks` 生成任务列表
+- [ ] `/speckit-tasks` 生成任务列表
 - [ ] IF 涉及前端交互需求：确认 `tasks.md` 已按设计产物拆出页面结构实现、交互实现、状态处理、视觉验证、回归验证
 - [ ] IF 涉及前端 UI/UX，THEN `tasks.md` 中 MUST 包含设计还原验证任务
 - [ ] **[P0-1]** IF 涉及前端 UI 实现且项目存在组件库、设计系统或可复用 UI 层：确认 `tasks.md` 中每条前端任务已标注 `[复用]`/`[扩展]`/`[新增]`，且新增组件任务已说明理由
-- [ ] `/speckit.analyze` 在 `tasks.md` 生成后执行并通过
+- [ ] `/speckit-analyze` 在 `tasks.md` 生成后执行并通过
 - [ ] IF 并行开发：使用 `git worktree`，MUST NOT 切分支代替
 
 ### 6.3 实施过程中
@@ -95,7 +94,7 @@
 - [ ] QA 验证通过，截图已存档（feature branch 默认 diff-aware）
 - [ ] IF 涉及前端交互需求：QA 已对照 `interaction-design.md`、`design-system-context.md`（或 `interaction-design.md` 中的 Design System Context 章节）及「设计引用」章节中的设计基线（在线链接或离线文件）验证关键页面结构、交互流转、状态矩阵、响应式规则；QA 报告已记录设计引用、关键页面截图、差异结论，并将差异标注为 `blocking`/`non-blocking`/`accepted`；若在线链接失效，则以最近一次导出的带时间戳截图/PDF 作为临时比对输入，并返回 Phase 2/spec 阶段补注退化基线
 - [ ] IF QA 发现实现效果与设计基线不一致，THEN MUST 返回 Phase 6 修复；若设计基线缺失或错误，返回 Phase 2
-- [ ] IF 本次前面生成了 `/speckit.checklist`：其中阻断项已闭环
+- [ ] IF 本次前面生成了 `/speckit-checklist`：其中阻断项已闭环
 - [ ] 走标准 git/PR 发布流程 → CI 全绿 + ≥ 1 人 Review Approve 后合并
 - [ ] CD 自动部署 staging；若团队已将 agent runtime 接入 CI，则可自动触发快速 QA 验证，否则由人工或本地 agent 完成 staging 快速验证
 - [ ] 人工批准生产部署，上线后观察 5 分钟；IF 有问题 THEN 立即执行 `git revert HEAD` 并走标准发布流程

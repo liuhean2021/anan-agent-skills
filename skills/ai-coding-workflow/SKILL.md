@@ -1,6 +1,6 @@
 ---
 name: ai-coding-workflow
-description: 当用户需要统一的 AI 编程工作流时使用，涵盖新项目、新功能、bug fix、规划、代码审查、QA、发布及存量项目接入。代理将任务路由至 spec-kit 规格链路与 agent 原生能力承载的评审/QA/发布等阶段能力，并强制 Phase 顺序与完成前验证（ref-08，验证纪律内置于本技能，不依赖任何外部插件）。
+description: 当用户需要统一的 AI 编程工作流时使用，涵盖新项目、新功能、bug fix、规划、代码审查、QA、发布、存量项目接入，以及工具与依赖升级（检查并升级 spec-kit、gitleaks 等，升级后核对官方工作流变化并同步本技能）。代理将任务路由至 spec-kit 规格链路与 agent 原生能力承载的评审/QA/发布等阶段能力，并强制 Phase 顺序与完成前验证（ref-08，验证纪律内置于本技能，不依赖任何外部插件）。
 ---
 
 > 详细说明、命令参考、模板按场景拆分为以下文件：
@@ -27,7 +27,7 @@ description: 当用户需要统一的 AI 编程工作流时使用，涵盖新项
 
 **不适用**：纯闲聊、单次信息查询、纯文案改写、纯翻译、仅做简短说明而不进入研发流程的场景。
 
-本技能中的“工作流”默认指**统一的 AI Coding Workflow**。`Phase 0~10` 与 `Phase 5B` 是唯一主线阶段定义；验证纪律（阶段顺序、Iron Law、Gate Function，详见 `ref-08`）作为本技能自带的横切规则始终生效，任何有能力的 agent 原生遵守，与是否安装某个外部插件无关；`spec-kit`、评审/QA/发布等阶段能力（由 agent 自身或专门子任务完成，不依赖特定外部工具）、Context7 MCP、`gitleaks`、`git worktree`、`AGENTS.md/CLAUDE.md/memory` 等都属于按阶段介入的工作流能力，MUST NOT 理解为彼此分离的并行流程。
+本技能中的“工作流”默认指**统一的 AI Coding Workflow**。`Phase 0~10` 与 `Phase 5B` 是唯一主线阶段定义；验证纪律（阶段顺序、Iron Law、Gate Function，详见 `ref-08`）作为本技能自带的横切规则始终生效，任何有能力的 agent 原生遵守，与是否安装某个外部插件无关；`spec-kit`、评审/QA/发布等阶段能力（由 agent 自身或专门子任务完成，不依赖特定外部工具）、`gitleaks`、`git worktree`、`AGENTS.md/CLAUDE.md/memory` 等都属于按阶段介入的工作流能力，MUST NOT 理解为彼此分离的并行流程。
 
 详细阶段、工具映射与治理规则见下方章节和 `references/`。
 
@@ -48,22 +48,34 @@ description: 当用户需要统一的 AI 编程工作流时使用，涵盖新项
 
 ## 命令映射
 
-正文优先描述“动作”，不重复绑定宿主命令；具体命令按下表选择：
+正文优先描述“动作”，不重复绑定宿主命令；具体命令按下表选择。
 
-| 动作 | Claude Code | Codex CLI | agent 能力不可用时 |
+> **命令名分隔符**：本技能正文统一以连字符写法 `/speckit-plan` 为主（skills 模式，spec-kit v1.1.x 的 Claude Code 新项目默认，命令装在 `.claude/skills/speckit-*/`）。以项目 `.specify/integration.json` 中 `integration_settings.<集成>.invoke_separator` 为准：`-` 用 `/speckit-plan`；`.` 的旧项目（命令模式，`.claude/commands/`）用点号写法 `/speckit.plan`，把正文中的 `-` 换回 `.` 即可（扩展命令同理，如 `/speckit-bug-assess` → `/speckit.bug.assess`）。
+
+| 动作 | Claude Code（连字符 / 点号） | Codex CLI | agent 能力不可用时 |
 |------|-------------|-----------|----------------|
-| constitution | `/speckit.constitution` | `$speckit-constitution` | 手动维护项目原则 |
-| specify | `/speckit.specify` | `$speckit-specify` | 需安装 spec-kit |
-| clarify | `/speckit.clarify` | `$speckit-clarify` | 需安装 spec-kit |
-| checklist | `/speckit.checklist` | `$speckit-checklist` | 手动 checklist |
-| plan | `/speckit.plan` | `$speckit-plan` | 需安装 spec-kit |
-| tasks | `/speckit.tasks` | `$speckit-tasks` | 手动任务拆解 |
-| taskstoissues | `/speckit.taskstoissues` | `$speckit-taskstoissues` | 手动在 GitHub 创建 Issues |
-| analyze | `/speckit.analyze` | `$speckit-analyze` | 手动一致性核对 |
-| implement | `/speckit.implement` | `$speckit-implement` | 手工实施 |
+| constitution | `/speckit-constitution` / `/speckit.constitution` | `$speckit-constitution` | 手动维护项目原则 |
+| specify | `/speckit-specify` / `/speckit.specify` | `$speckit-specify` | 需安装 spec-kit |
+| clarify | `/speckit-clarify` / `/speckit.clarify` | `$speckit-clarify` | 需安装 spec-kit |
+| checklist | `/speckit-checklist` / `/speckit.checklist` | `$speckit-checklist` | 手动 checklist |
+| plan | `/speckit-plan` / `/speckit.plan` | `$speckit-plan` | 需安装 spec-kit |
+| tasks | `/speckit-tasks` / `/speckit.tasks` | `$speckit-tasks` | 手动任务拆解 |
+| taskstoissues（需 `specify extension add github`） | `/speckit-github-taskstoissues` / `/speckit.github.taskstoissues` | `$speckit-github-taskstoissues` | 手动在 GitHub 创建 Issues |
+| analyze | `/speckit-analyze` / `/speckit.analyze` | `$speckit-analyze` | 手动一致性核对 |
+| implement | `/speckit-implement` / `/speckit.implement` | `$speckit-implement` | 手工实施 |
+| converge（implement 之后） | `/speckit-converge` / `/speckit.converge` | `$speckit-converge` | 手动对照 spec/plan/tasks 核查未完成项并补入 tasks.md |
 | review | 专注代码/安全审查的子任务 | 专注代码/安全审查的子任务 | 人工审查/CI |
 | qa | 专注功能验证的子任务 | 专注功能验证的子任务 | 手工测试/CI |
 | ship | 标准 git/PR 发布流程 | 标准 git/PR 发布流程 | 宿主常规发布流程 |
+
+| 内置扩展 | Claude Code（连字符为主） | 对应阶段 | 安装 |
+|------|-------------|---------|------|
+| git | `/speckit-git-feature`、`-validate`、`-commit`、`-initialize`、`-remote`（点号：`/speckit.git.feature` 等） | Phase 0 / 2（创建与校验 feature 分支）；`-commit` 自动提交默认关闭，提交仍走 `/commit-message` | `specify extension add git` |
+| assess | `/speckit-assess-intake` → `-research` → `-define` → `-shape` → `-decide`（点号：`/speckit.assess.intake` 等） | Phase 1 可选载体（产出 `.specify/assessments/<slug>/`，go 后进入 `specify`） | `specify extension add assess` |
+| bug | `/speckit-bug-assess` → `-fix` → `-test`（点号：`/speckit.bug.assess` 等） | Phase 5B 可选载体（产出 `.specify/bugs/<slug>/`） | `specify extension add bug` |
+| agent-context | `/speckit-agent-context-update`（点号：`/speckit.agent-context.update`） | Phase 0 / 3（`after_specify`/`after_plan` 可选 hook 提示刷新 `CLAUDE.md`/`AGENTS.md` 中的 SPECKIT 托管区块，指向最新 `plan.md`） | `specify extension add agent-context` |
+
+> 扩展命令 Codex 写法为 `$speckit-<扩展>-<命令>`（如 `$speckit-bug-assess`）；`init` 默认不安装任何扩展，按需安装。
 
 ---
 
@@ -87,7 +99,7 @@ Phase 9  发布
 Phase 10 复盘
 ```
 
-每个阶段可按需接入不同能力：阶段顺序、验证铁律由本技能自带的横切纪律层保障（见 `ref-08`），`spec-kit` 负责规格/方案/任务/实现骨架，方向评审、架构评审、审查、QA、发布、复盘与多模型并行/交叉复核均由 agent 自身或专门子任务承载（不依赖特定外部工具），Context7 MCP 负责核对上游官方文档，`gitleaks` 负责 Secret 扫描，`memory` 负责沉淀决策与踩坑记录。
+每个阶段可按需接入不同能力：阶段顺序、验证铁律由本技能自带的横切纪律层保障（见 `ref-08`），`spec-kit` 负责规格/方案/任务/实现骨架，方向评审、架构评审、审查、QA、发布、复盘与多模型并行/交叉复核均由 agent 自身或专门子任务承载（不依赖特定外部工具），`gitleaks` 负责 Secret 扫描，`memory` 负责沉淀决策与踩坑记录。
 
 ---
 
@@ -121,7 +133,7 @@ Phase 10 复盘
 默认先做结构化访谈式规划梳理问题空间，再做结构化产品方向评审，确认 MVP 边界。若新项目方向已被合同、上级决策、既有 PRD、客户需求等外部约束锁定，则可走 **Phase 1 简版**：跳过访谈式规划，直接做结构化产品方向评审，并在 `ceo-review.md` 中写明“方向已锁定的依据”与“本次不再讨论的范围”。将结论写入 `specs/<feature-id>/ceo-review.md`。
 
 **A2 需求规格**
-执行 spec-kit 规格链路：specify → clarify → checklist。先生成初稿 → **重复澄清** 直到规格无歧义 → 推荐在 `plan` 前执行 checklist 并闭环问题；高风险或高歧义需求 MUST 执行 → 锁定 `spec.md`。
+执行 spec-kit 规格链路：specify → clarify。先生成初稿 → **重复澄清** 直到规格无歧义 → 锁定 `spec.md`（需求质量 checklist 按官方顺序放在 plan 之后，见 A3）。
 IF 任何 UI 可见变更（非纯逻辑/API 变更），THEN 视为涉及前端交互需求。
 IF 涉及前端 UI/UX 且项目级 `DESIGN.md` 不存在，THEN 生成 `DESIGN.md`，遵循 Google Stitch DESIGN.md 基础格式；本工作流追加以下章节要求：`Responsive Behavior`/`Iteration Guide`。完成后 SHOULD 运行 `npx @google/design.md lint DESIGN.md` 验证格式。IF 存在，THEN 直接引用。为当前 feature 生成 `specs/<feature-id>/design-system-context.md`（MAY 降级为 `interaction-design.md` 中的 Design System Context 章节；若仅引用 ≤5 个 token，SHOULD 直接在 `interaction-design.md` 中列出 token 引用表）。
 涉及前端交互需求时，本阶段 MUST 产出 `interaction-design.md`，按设计基线分级 gate（L1/L2/L3）填写对应章节。若存在可视化设计稿，按以下标准操作流处理：
@@ -137,6 +149,7 @@ IF 涉及前端 UI/UX 且项目级 `DESIGN.md` 不存在，THEN 生成 `DESIGN.m
 
 **A3 技术方案**
 执行 spec-kit plan → 做结构化架构评审，生成 `plan.md`、`research.md`、`data-model.md`、`contracts/`、`arch-review.md`。若已产出前端交互设计，则 `plan.md` MUST 同时引用 `interaction-design.md` 和 `design-system-context.md`（或 `interaction-design.md` 中的 Design System Context 章节），说明后续前端实现如何消费设计产物与设计系统规则。
+plan 与架构评审完成后，按官方顺序执行 checklist（需求质量清单，plan 之后、tasks 之前）：复杂需求、高风险或高歧义需求 MUST 执行，闭环后再进入任务拆解；若暴露 `spec.md` 缺口，MUST 返回 Phase 2 正式修改并重走 plan。
 若进入本阶段后发现任一前端设计文档或设计基线缺失，MUST 返回 Phase 2 补齐并重新锁定规格，MUST NOT 在 Phase 3+ 直接补写设计文档。
 
 **A4 任务拆解**
@@ -158,8 +171,8 @@ IF 涉及前端 UI/UX 且项目级 `DESIGN.md` 不存在，THEN 生成 `DESIGN.m
 > 详细流程 → `references/ref-03-full-workflow.md § Phase 2-9`
 
 ```
-Phase 2：需求规格（执行 spec-kit 规格链路：specify → clarify → checklist。生成初稿 → 重复澄清至无歧义 → 推荐在 plan 前执行 checklist，高风险或高歧义需求强制执行 → 锁定 spec.md；IF 任何 UI 可见变更（非纯逻辑/API 变更），THEN 视为涉及前端交互需求，按设计基线 L1/L2/L3 分级 gate 执行，MUST 产出 `interaction-design.md`；`design-system-context.md` MAY 作为独立文件产出，也 MAY 降级为 `interaction-design.md` 章节，设计基线记录到「设计引用」章节）
-Phase 3：技术方案（spec-kit plan → 结构化架构评审 → arch-review.md；若涉及前端交互，`plan.md` MUST 同时引用 `interaction-design.md` 和 `design-system-context.md`（或 `interaction-design.md` 中的 Design System Context 章节）作为实现输入）
+Phase 2：需求规格（执行 spec-kit 规格链路：specify → clarify。生成初稿 → 重复澄清至无歧义 → 锁定 spec.md；IF 任何 UI 可见变更（非纯逻辑/API 变更），THEN 视为涉及前端交互需求，按设计基线 L1/L2/L3 分级 gate 执行，MUST 产出 `interaction-design.md`；`design-system-context.md` MAY 作为独立文件产出，也 MAY 降级为 `interaction-design.md` 章节，设计基线记录到「设计引用」章节）
+Phase 3：技术方案（spec-kit plan → 结构化架构评审 → arch-review.md → checklist（plan 之后、tasks 之前，复杂/高风险/高歧义需求强制执行，暴露的规格缺口回 Phase 2）；若涉及前端交互，`plan.md` MUST 同时引用 `interaction-design.md` 和 `design-system-context.md`（或 `interaction-design.md` 中的 Design System Context 章节）作为实现输入）
 Phase 4：任务拆解（spec-kit tasks → tasks.md；若涉及前端交互，前端任务 MUST 基于设计产物拆解；前端任务 MUST 包含设计还原验证任务）
 Phase 5：一致性分析 + TDD（spec-kit analyze → 对 `spec.md`/`interaction-design.md`/`design-system-context.md`（或 `interaction-design.md` 中的 Design System Context 章节）/`plan.md`/`tasks.md` 做一致性分析 → 先写失败测试 → 提交测试基线）
 Phase 6：实施（spec-kit implement；必要时用 subagent 并行 → 绿灯 → 原子提交）
@@ -207,21 +220,23 @@ Phase 9：发布（按 Phase 9 发布链路执行）
 | B 标准接入 | 准备规范化，有改造时间 | 1~3 天 |
 | C 全面接入 | 有专项技术改造计划 | 按模块排期 |
 
-**档位 A 最小动作**：补写 `AGENTS.md` → 建 `memory/` → 启用 Context7 MCP（无 MCP 时降级为 `use context7`/library ID/官方文档）→ 新功能走完整流程
+**档位 A 最小动作**：补写 `AGENTS.md` → 建 `memory/` → 新功能走完整流程
 
 ---
 
 ## 场景 E：工具配置与升级
 
-> 各工具安装/升级命令 → `references/ref-02-tool-stack.md`
+> 各工具安装/升级命令 → `references/ref-02-tool-stack.md`；spec-kit 升级以官方 `docs/upgrade.md` 为准
 
 | 工具 | 升级命令 |
 |------|---------|
-| specify-cli（CLI） | `uv tool install specify-cli --force --from git+https://github.com/github/spec-kit.git@vX.Y.Z && uv cache clean` |
-| spec-kit 项目文件 | `specify init --here --force --integration <agent-key>` |
+| specify-cli（CLI） | `specify self upgrade --tag "$(gh api repos/github/spec-kit/releases/latest --jq .tag_name)"`（始终升级到最新稳定版，可先加 `--dry-run` 预览；获取失败（`gh` 未登录、网络或限流）时，代理 MUST 提示用户到 <https://github.com/github/spec-kit/releases/latest> 查看最新版本并主动输入版本号，再用该版本号执行，不得自行猜测版本） |
+| spec-kit 项目文件 | `specify integration upgrade <agent-key>` → `specify extension update` |
 | gitleaks | `brew upgrade gitleaks` |
 
 进入场景 E 或用户明确要求时，代理 SHOULD 按 `§ 10.5` 检查能力工具版本。默认不在每次会话开始时自动升级工具。
+
+**每次升级依赖后 MUST 核对官方工作流变化并紧跟**：按 `ref-02 § 10.6` 对照新版本的命令、选项、调用写法与官方流程顺序；本技能与官方不一致时以官方为准，在同一变更中更新本技能，技能自有扩展须明确标注为扩展。
 
 ---
 
@@ -282,7 +297,7 @@ memory/workflow.md              ← 项目定制层（参考技能，记录本�
 
 | 内容 | 说明 | 示例 |
 |------|------|------|
-| 命令映射 | 本项目能用的具体宿主命令 | `/speckit.specify` vs `specify`，评审/QA/发布 agent 能力不可用时的降级路径 |
+| 命令映射 | 本项目能用的具体宿主命令 | `/speckit-specify` vs `specify`，评审/QA/发布 agent 能力不可用时的降级路径 |
 | 文档路径 | 本项目实际文件布局 | `specs/<id>/spec.md`、`memory/decisions.md` |
 | 工具可用性 | 各工具是否安装、降级策略 | 评审/QA/发布 agent 能力不可用 → 人工审查 / CI |
 
@@ -313,7 +328,6 @@ memory/workflow.md              ← 项目定制层（参考技能，记录本�
 | 工具 | 状态 | 降级策略 |
 |------|------|---------|
 | 评审/QA/发布能力 | agent 无法执行对应子任务 | 人工审查 / CI |
-| Context7 MCP | 已配置 | 按技能规则 |
 ```
 
 **收益**：
