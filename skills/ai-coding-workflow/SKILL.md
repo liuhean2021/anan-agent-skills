@@ -50,7 +50,7 @@ description: 当用户需要统一的 AI 编程工作流时使用，涵盖新项
 
 正文优先描述“动作”，不重复绑定宿主命令；具体命令按下表选择。
 
-> **命令名分隔符**：本技能正文统一以连字符写法 `/speckit-plan` 为主（skills 模式，spec-kit v1.1.x 的 Claude Code 新项目默认，命令装在 `.claude/skills/speckit-*/`）。以项目 `.specify/integration.json` 中 `integration_settings.<集成>.invoke_separator` 为准：`-` 用 `/speckit-plan`；`.` 的旧项目（命令模式，`.claude/commands/`）用点号写法 `/speckit.plan`，把正文中的 `-` 换回 `.` 即可（扩展命令同理，如 `/speckit-bug-assess` → `/speckit.bug.assess`）。
+> **命令名分隔符**：本技能正文统一以连字符写法 `/speckit-plan` 为主（skills 模式，spec-kit v1.1.x / v1.2.x 的 Claude Code 新项目默认，命令装在 `.claude/skills/speckit-*/`）。以项目 `.specify/integration.json` 中 `integration_settings.<集成>.invoke_separator` 为准：`-` 用 `/speckit-plan`；`.` 的旧项目（命令模式，`.claude/commands/`）用点号写法 `/speckit.plan`，把正文中的 `-` 换回 `.` 即可（扩展命令同理，如 `/speckit-bug-assess` → `/speckit.bug.assess`）。
 
 | 动作 | Claude Code（连字符 / 点号） | Codex CLI | agent 能力不可用时 |
 |------|-------------|-----------|----------------|

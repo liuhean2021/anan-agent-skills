@@ -146,6 +146,12 @@ specify preset catalog remove <name> # 移除预设目录
 > 上表中的职责名称不绑定任何特定产品或插件；具体由 agent 自身能力、子任务，还是当前宿主已安装的某个斜杠命令承载，视环境而定。都不可用时按 `SKILL.md`「评审/QA/发布能力承载策略」降级为人工审查、测试命令或 CI 流程。
 
 > spec-kit 升级分两层（以官方 `docs/upgrade.md` 为准）：先用 `specify self upgrade --tag <最新版本>` 升级 CLI（最新版本用 `gh api repos/github/spec-kit/releases/latest --jq .tag_name` 获取）；再在项目内执行 `specify integration upgrade <agent-key>` 刷新集成文件（按安装清单检测本地改动，有改动会停下，`--force` 才覆盖；不改 `.specify/memory/constitution.md`），然后 `specify extension update` 更新已装扩展。Codex skills 模式加 `--integration-options="--skills"`。CLI 始终升级到最新稳定版。
+>
+> 实测补充（v1.2.0）：`specify integration status` 可查看已装集成与被改动或缺失的受管文件；`specify extension update` 没有 `--yes` 选项，检测到更新后会交互询问 `[y/N]`，代理在非交互环境须用 `echo y | specify extension update` 或让用户确认；该命令要从 `raw.githubusercontent.com` 取扩展目录，代理或网络不通时会报 `Failed to fetch any extension catalog`，换网络或节点重试即可（不影响 CLI 与集成升级）。
+>
+> 核对记录（§10.6）：2026-10-15 核对 v1.1.3 → v1.2.0，官方命令清单与推荐顺序（constitution → specify → plan → tasks → implement → converge；clarify、analyze、checklist 为可选增强）、`invoke_separator` 为 `-`、`init` 默认不安装扩展、`/speckit-taskstoissues` 仍为已弃用的核心命令，均与本技能一致，无需改动流程；`init-options.json` 新增 `allow_symlinks` 字段。
+>
+> 核对记录（§10.6）：2026-10-23 核对 v1.2.0 → v1.2.3（读 v1.2.1~v1.2.3 release 说明，并在临时目录实测 `init --integration claude --non-interactive`、`self upgrade --tag --dry-run`、`extension add git`），官方命令清单与推荐顺序、`invoke_separator` 为 `-`、命令装在 `.claude/skills/`、`init` 默认不装扩展均无变化，已核对，无流程变化；新增 `init --integration none`（仅共享脚手架）、`.presetignore`、`specify mcp`/`artifact`/`event` 子命令，本技能暂不使用。
 
 ### 10.3 其他工具
 
