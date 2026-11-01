@@ -78,7 +78,9 @@ specify check                                       # 验证工具是否就绪
 specify version                                     # 显示版本与系统信息
 specify version --features                          # 显示本地 CLI 功能标记
 specify version --features --json                   # 以 JSON 格式输出功能标记（CI/脚本用）
-specify self upgrade --tag "$TAG"                    # 升级 CLI 到最新稳定版（TAG 获取方式见上；不带 --tag 的 self check / self upgrade 需额外配置 ~/.specify/auth.json，本技能不采用）
+specify self check                                  # 只读：对比官方最新 release（v1.2.4 起无需 ~/.specify/auth.json；网络不通时会报 offline）
+specify self upgrade --dry-run --tag "$TAG"         # 预览升级动作（显示安装方式、目标版本、将执行的命令）
+specify self upgrade --tag "$TAG"                    # 升级 CLI 到最新稳定版（TAG 获取方式见上；显式 --tag 不受 GitHub 限流影响，本技能首选）
 
 # 核心命令（使用顺序）。下列以连字符写法为主（invoke_separator 为 "-"，v1.1.x Claude Code 新项目默认）；旧项目为点号时把 - 换回 .，如 /speckit.plan，详见 SKILL.md「命令名分隔符」
 /speckit-constitution            # 项目原则（一次性）
@@ -125,9 +127,35 @@ specify preset resolve <template>    # 查看某个模板在解析栈中的来�
 specify preset catalog list          # 列出已配置的预设目录
 specify preset catalog add <url>     # 添加预设目录（--name、--priority、--install-allowed）
 specify preset catalog remove <name> # 移除预设目录
+specify preset update [name]         # 更新已装预设（内部走 remove+add 流程）
+
+# Bundles：把 command/template/script/hook/extension/preset 打包为一组一次装好（v1.2.x）
+specify bundle search [query]        # 在各目录中搜索 bundle
+specify bundle info <name>           # 查看元数据与完整展开的组件集
+specify bundle list                  # 列出本项目已安装 bundle 及版本
+specify bundle install <name>        # 安装 bundle 的全部组件（别名 add）
+specify bundle update <name>         # 重新解析并刷新组件（走各原语的 update 路径）
+specify bundle remove <name>         # 仅卸载该 bundle 贡献的组件，不做连带删除
+specify bundle validate <manifest>   # 校验 manifest 格式与引用是否可解析
+specify bundle build <manifest>      # 产出单个带版本的可分发产物（.zip）
+# v1.2.4 起 bundle 可引用其他 bundle
+
+# Artifact：内省 Spec Kit 实际暴露的命令/模板/脚本/hook 及其叠加来源（调试 preset/override 用）
+specify artifact list|info <name>|lookup <lookupId>
+
+# Workflow：官方编排引擎（YAML 工作流，含人工关卡）
+specify workflow run <id|path>       # 按已安装 ID 或本地 YAML 运行
+specify workflow resume|status       # 恢复暂停/失败的运行、查看状态
+specify workflow list|add|remove|update|enable|disable|search|info|resolve
+specify workflow catalog|step|overlay  # 分别管理目录、步骤类型、覆盖层
+
+# Event：事件驱动命令（hooks/CI 触发）
+specify event run <script>           # 从 stdin 读取 payload 并执行
 ```
 
 > **Extensions vs Presets**：Extensions 增加新命令（集成外部工具），Presets 覆盖现有模板格式（定制输出风格）。两者可叠加，优先级：project overrides > presets > extensions > core。扩展和预设均支持通过目录（catalog）发现和安装，目录配置分别存储在 `.specify/extension-catalogs.yml` 和 `.specify/preset-catalogs.yml`。
+
+> **`/constitution` 行为变化（官方 #3790）**：自 v1.2.x 起 `/constitution` **只更新** `.specify/memory/constitution.md` 并写 Sync Impact Report，**不再改写** `plan-template.md` / `spec-template.md` / `tasks-template.md` 或已装命令文件。原因是官方改为**运行时解析**：`plan`/`tasks`/`analyze` 每次运行都实时读 constitution，模板里只留指针 `[Gates determined based on constitution file]`。因此「让 /constitution 去同步模板」是旧写法，MUST NOT 再依赖；模板定制请走 preset/override 栈。
 
 ### 10.2 评审 / QA / 发布能力
 
@@ -152,6 +180,8 @@ specify preset catalog remove <name> # 移除预设目录
 > 核对记录（§10.6）：2026-10-15 核对 v1.1.3 → v1.2.0，官方命令清单与推荐顺序（constitution → specify → plan → tasks → implement → converge；clarify、analyze、checklist 为可选增强）、`invoke_separator` 为 `-`、`init` 默认不安装扩展、`/speckit-taskstoissues` 仍为已弃用的核心命令，均与本技能一致，无需改动流程；`init-options.json` 新增 `allow_symlinks` 字段。
 >
 > 核对记录（§10.6）：2026-10-23 核对 v1.2.0 → v1.2.3（读 v1.2.1~v1.2.3 release 说明，并在临时目录实测 `init --integration claude --non-interactive`、`self upgrade --tag --dry-run`、`extension add git`），官方命令清单与推荐顺序、`invoke_separator` 为 `-`、命令装在 `.claude/skills/`、`init` 默认不装扩展均无变化，已核对，无流程变化；新增 `init --integration none`（仅共享脚手架）、`.presetignore`、`specify mcp`/`artifact`/`event` 子命令，本技能暂不使用。
+>
+> 核对记录（§10.6）：2026-11-01 核对 v1.2.3 → v1.2.5（读 v1.2.4/v1.2.5 release 说明；CLI 实升 1.2.3→1.2.5；临时目录 `init --integration claude --non-interactive` 核对结构；并在一个 0.3.0 老项目上实测 `integration install claude`）。官方命令清单与推荐顺序、`invoke_separator` 为 `-`、命令装在 `.claude/skills/` 均无变化。新发现：① `/constitution` 自 #3790 起不再改写模板，改为运行时解析（见 §10.1 说明）；② `self check` 不再依赖 `~/.specify/auth.json`（#4960 支持 gh 凭据）；③ `bundle` 子命令族（v1.2.x，v1.2.4 起支持 bundle 嵌套引用）、`preset update`、`workflow` 完整子命令集已补入 §10.1；④ `speckit-taskstoissues` 在 1.2.5 中标记为 Deprecated。老项目升级路径（install 而非 init --force、脚本必须同步、`feature.json` 必需、manifest 哈希同步）已写入 §10.6 第 6 条。
 
 ### 10.3 其他工具
 
@@ -206,21 +236,22 @@ gitleaks git --pre-commit --staged --no-banner
 ```bash
 # specify-cli
 uv tool list 2>/dev/null | grep specify-cli
-specify version 2>/dev/null
+specify version 2>/dev/null                    # CLI Version
+specify self check 2>/dev/null                 # 可直接对比官方最新（v1.2.4+ 无需 auth.json；网络不通时报 offline）
 gh api repos/github/spec-kit/releases/latest --jq .tag_name   # 最新稳定版，与上面的 CLI Version 对比；失败时请用户到 releases/latest 查看
 
 # gitleaks
 brew outdated gitleaks 2>/dev/null
 ```
 
-> specify 自带的 `self check` 与不带 `--tag` 的 `self upgrade` 查询最新版本只认 `~/.specify/auth.json`，不读 `gh` 登录态，未配置时会被限流；本技能统一用 `gh` 取最新版本号再 `--tag` 升级，无需配置 auth.json。
+> **版本检查方式（已修正）**：早期版本中，不带 `--tag` 的 `self check` / `self upgrade` 依赖 `~/.specify/auth.json` 且不读 `gh` 登录态。**v1.2.4 起官方支持 GitHub CLI 凭据（#4960）**，实测在无 `~/.specify/auth.json` 的机器上 `specify self check` 可正常返回最新版本（`Update available: X → Y` / `Up to date: Y`）；网络不通时退化为 `Could not check latest release: offline or timeout`，此时仍用 `gh` 兜底。本技能统一用 `gh` 取版本号再 `--tag` 升级：版本号显式可控、不受限流影响，且 `gh` 不可用时能按规则提示用户手输版本号。
 
 **升级命令（检测到更新时）：**
 
 | 工具 | 升级命令 |
 |------|---------|
 | specify-cli（CLI） | `specify self upgrade --tag "$(gh api repos/github/spec-kit/releases/latest --jq .tag_name)"`（始终升级到最新稳定版；获取失败（`gh` 未登录、网络或限流）时，代理 MUST 提示用户到 <https://github.com/github/spec-kit/releases/latest> 查看最新版本并主动输入版本号，再用该版本号执行，不得自行猜测版本） |
-| spec-kit 项目文件 | `specify integration upgrade <agent-key>` → `specify extension update` |
+| spec-kit 项目文件 | `specify integration upgrade <agent-key>` → `specify extension update`（缺 `.specify/integration.json` 的老项目先 `specify integration install <key>`，勿直接 `init --force`，见 §10.6 第 6 条） |
 | gitleaks | `brew upgrade gitleaks` |
 
 ### 10.6 升级后必做：官方工作流变化核对
@@ -241,6 +272,18 @@ brew outdated gitleaks 2>/dev/null
 3. **对照官方命令模板与内置工作流**：新版本 tag 下的 `templates/commands/*.md`（核心命令及其 handoffs、前后置要求）、`extensions/*/commands/`（内置扩展）、`workflows/*/workflow.yml`（官方流程与人工关卡）
 4. **回写本技能**：逐项比对 `SKILL.md` 命令映射与阶段摘要、`ref-01` 路由、`ref-02` 命令块、`ref-03` 各 Phase 步骤与退出条件、`ref-04` 清单；顺序或行为与官方不一致时以官方为准，技能自有扩展（见 § 2.3）须明确标注
 5. **留痕**：在提交说明或审查文档中写明核对的版本区间与发现的变化；无变化也要写明“已核对，无变化”
+6. **老项目（缺 `.specify/integration.json`）优先 `integration install`，不要直接 `init --force`**：0.3.x 等早期版本创建的项目没有 manifest，`specify integration status` 会报 `integration-state-missing`。`init --here --force` 虽是官方文档点名的 escape hatch，但它**不做 manifest 检查就覆盖共享文件**，会冲掉本地定制（例如被翻译成中文的 `.specify/templates/*.md`）。实测更安全的顺序：
+   ```bash
+   # 0) 先备份——注意 .claude/ 常被写进 .gitignore，没有 git 兜底
+   mkdir -p ~/backup && cp -R .claude/commands .specify ~/backup/
+   # 1) 只补 manifest 与 agent 侧文件；已存在的共享文件会被跳过并告警
+   specify integration install <key>
+   # 2) 单独刷新脚本（见下，必须做）
+   # 3) 确认 .specify/feature.json 存在且 feature_directory 指向真实 feature 目录
+   ```
+   **脚本必须同步刷新**：新 skills 会调用 `check-prerequisites.sh --require-spec`、`--template NAME`，并调用新增的 `setup-tasks.sh` / `resolve-template.sh`；老脚本不认识这些参数会直接报 `Unknown option`。只装 skills 不刷 `.specify/scripts/bash/` = 命令全废。刷新脚本不影响 templates 定制。
+   **`feature.json` 是必需的**：新版 `common.sh` 优先读 `SPECIFY_FEATURE_DIRECTORY` 环境变量，其次 `.specify/feature.json` 的 `feature_directory` 键（相对 repo root），两者都没有就报 `Feature directory not found`。该文件已在 `.specify/.gitignore` 中被忽略（机器本地状态），切换 feature 时会被重写。
+   **刷新脚本后 manifest 会报 `managed-files-modified`**：若替换的是官方同版本脚本，说明是 manifest 哈希未同步，可重算 sha256 写回 `.specify/integrations/speckit.manifest.json` 的 `files` 字段恢复 `status: OK`；若是本地定制，则保留告警，以后升级加 `--force`。
 
 ---
 

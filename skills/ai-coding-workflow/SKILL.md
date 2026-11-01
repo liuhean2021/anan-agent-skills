@@ -231,7 +231,7 @@ Phase 9：发布（按 Phase 9 发布链路执行）
 | 工具 | 升级命令 |
 |------|---------|
 | specify-cli（CLI） | `specify self upgrade --tag "$(gh api repos/github/spec-kit/releases/latest --jq .tag_name)"`（始终升级到最新稳定版，可先加 `--dry-run` 预览；获取失败（`gh` 未登录、网络或限流）时，代理 MUST 提示用户到 <https://github.com/github/spec-kit/releases/latest> 查看最新版本并主动输入版本号，再用该版本号执行，不得自行猜测版本） |
-| spec-kit 项目文件 | `specify integration upgrade <agent-key>` → `specify extension update` |
+| spec-kit 项目文件 | `specify integration upgrade <agent-key>` → `specify extension update`（缺 `.specify/integration.json` 的老项目先 `specify integration install <key>`，勿直接 `init --force`，详见 ref-02 §10.6） |
 | gitleaks | `brew upgrade gitleaks` |
 
 进入场景 E 或用户明确要求时，代理 SHOULD 按 `§ 10.5` 检查能力工具版本。默认不在每次会话开始时自动升级工具。
