@@ -9,3 +9,5 @@ docs/review/
 .omx/
 claude-code-params.txt
 .playwright-mcp/
+
+skills/stock-quote-with-index/history.json
