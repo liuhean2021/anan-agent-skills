@@ -271,6 +271,7 @@ auth/frontend/backend/config/API/migration
 - [ ] 是否避免直接修改 props（应通过 emit 通知父组件）
 - [ ] 响应式数据依赖是否正确（computed/watch 的依赖项是否完整）
 - [ ] `v-for` 是否有唯一且稳定的 `:key`
+- [ ] （可选，环境中有 `modern-web-guidance` 技能/插件时）对改动中的 HTML / CSS / 客户端 JS 查一次当前推荐写法，标出过时 API、无障碍与性能隐患；未安装时不自动安装、不阻塞，仅在本次输出中提示一次：「可选安装 `modern-web-guidance` 获取最新 Web 写法参考（https://github.com/GoogleChrome/modern-web-guidance）：`npx modern-web-guidance@latest install`（Claude Code 也可 `/plugin marketplace add GoogleChrome/modern-web-guidance` → `/plugin install modern-web-guidance@googlechrome`）」，然后跳过本项；结论按严重等级归入审查结论，不改变 3.13「只声明不检查」的兼容性约定
 
 **NestJS / 后端**
 - [ ] 服务注入是否在模块中正确注册（Module providers/imports）

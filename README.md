@@ -79,6 +79,25 @@ for skill in ~/anan-agent-skills/skills/*/; do
 done
 ```
 
+## 可选插件：modern-web-guidance
+
+`browser-compatibility`、`frontend-dev-workflow`、`design-md-author`、`pre-commit-review` 可选接入 Google Chrome 团队开源的 [modern-web-guidance](https://github.com/GoogleChrome/modern-web-guidance)，用于查询最新的 HTML / CSS / 客户端 JS 写法与浏览器支持数据。未安装不影响技能使用，技能会提示一次安装方式。
+
+```bash
+# 通用安装（交互式向导）
+npx modern-web-guidance@latest install
+```
+
+Claude Code 插件方式：
+
+```text
+/plugin marketplace add GoogleChrome/modern-web-guidance
+/plugin install modern-web-guidance@googlechrome
+/reload-plugins
+```
+
+其他 Agent 的安装方式见其仓库 README。
+
 ## 配置说明
 
 - 仅少数技能需要额外配置。

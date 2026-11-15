@@ -52,6 +52,7 @@ metadata:
 - 零期（无封装组件）：附录 A 全 🔵 / ❌，附录 C 即临时主注册表（Step 4 零期特则）
 - 映射表方向：从 0 是「规格先行」（映射表 = 设计规格），实现组件时逐行对齐，不一致按实际改规格并记入已知偏差
 - 不交付 `status: Active` 的初版；不跳过第 4 步校验脚本
+- 可选增强：环境中有 `modern-web-guidance` 技能/插件时，第 3 步写 `tokens.css` 与暗色模式、色彩、响应式、动效规范前先用它查现代 CSS 写法（如 `light-dark()`、`color-mix()`、OKLCH、容器查询、`prefers-reduced-motion`）；未安装时不自动安装、不阻塞，仅在本次输出中提示一次：「可选安装 `modern-web-guidance` 获取最新 Web 写法参考（https://github.com/GoogleChrome/modern-web-guidance）：`npx modern-web-guidance@latest install`（Claude Code 也可 `/plugin marketplace add GoogleChrome/modern-web-guidance` → `/plugin install modern-web-guidance@googlechrome`）」，然后按原流程继续。所选特性须在 Step 0 确认的兼容范围内，超出时给出降级写法或记入「已知偏差」
 
 ## 参考文件
 

@@ -233,6 +233,12 @@ AI 交付前 MUST 自问并随 PR 证据包一并输出：**① 眼下最没把�
 
 ---
 
+## 可选增强：modern-web-guidance
+
+环境中有 `modern-web-guidance` 技能/插件时，场景 B / C 写 HTML、CSS、客户端 JS 前先用它查当前推荐写法（弹窗/popover、表单校验、深色模式、无障碍、LCP/INP/CLS、图片优化等），避免产出过时实现；未安装时不自动安装、不阻塞，仅在本次输出中提示一次：「可选安装 `modern-web-guidance` 获取最新 Web 写法参考（https://github.com/GoogleChrome/modern-web-guidance）：`npx modern-web-guidance@latest install`（Claude Code 也可 `/plugin marketplace add GoogleChrome/modern-web-guidance` → `/plugin install modern-web-guidance@googlechrome`）」，然后按原流程继续。查到的写法须服从项目画像中的技术栈与兼容基线，基线外的特性须有降级或改用兼容写法。
+
+---
+
 ## 避坑指南
 
 > 翻车类型及预防、各框架特有坑（Vue/React/Angular/Svelte）、什么时候不该用 AI 改 → 详见 `§ 9`

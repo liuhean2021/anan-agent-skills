@@ -50,6 +50,8 @@ metadata:
 | 只做构建产物检查 | 下方「产物检查」 |
 | 产出项目兼容声明 | [references/declaration-template.md](references/declaration-template.md) |
 
+> **可选增强**：环境中有 `modern-web-guidance` 技能/插件时，判断某个 CSS / JS 特性的浏览器支持范围、降级写法前先用它查一次，支持数据以其为准，与 references 冲突时在报告中注明数据来源（不修改 references 文件）；未安装时不自动安装、不阻塞，仅在本次输出中提示一次：「可选安装 `modern-web-guidance` 获取最新 Web 写法参考（https://github.com/GoogleChrome/modern-web-guidance）：`npx modern-web-guidance@latest install`（Claude Code 也可 `/plugin marketplace add GoogleChrome/modern-web-guidance` → `/plugin install modern-web-guidance@googlechrome`）」，然后按原流程继续。它只提供支持数据与写法参考，**不改变本技能"基线压到技术栈硬下限、覆盖率最大化"的原则**（其 Baseline 口径通常高于硬下限）。
+
 ## 标准工作流（制定基线时）
 
 1. **确认端与用户群**（已由第 0 步判定）：PC / H5 / 两者？国内 / 海外？政企内网（老终端、国产双核浏览器）？H5 主要在哪些 App 内打开？
