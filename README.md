@@ -29,17 +29,22 @@
 
 ```bash
 # 安装全部技能到当前项目
-npx skills add liuhean2021/Anan-Agent-Skills
+npx skills add liuhean2021/Anan-Agent-Skills -y
 
 # 全局安装（所有项目可用）
-npx skills add liuhean2021/Anan-Agent-Skills -g
+npx skills add liuhean2021/Anan-Agent-Skills -g -y
 
 # 全局安装指定 Agent（如仅安装到 Claude Code）
-npx skills add liuhean2021/Anan-Agent-Skills -a claude -g
+npx skills add liuhean2021/Anan-Agent-Skills -a claude -g -y
 
 # 全局安装单个技能
-npx skills add liuhean2021/Anan-Agent-Skills -s ai-coding-workflow -g
+npx skills add liuhean2021/Anan-Agent-Skills -s ai-coding-workflow -g -y
+
+# 全局安装多个指定技能
+npx skills add liuhean2021/Anan-Agent-Skills -s browser-compatibility frontend-dev-workflow design-md-author pre-commit-review -g -y
 ```
+
+> 以上命令默认带 `-y`，跳过全部交互式确认：未用 `-a` 指定 Agent 时，自动链接到本机检测到的所有 Agent。只想装到部分 Agent 时去掉 `-y` 按提示选择，或配合 `-a` 指定。
 
 安装完成后 Agent 自动识别技能；含依赖的技能在首次使用时由 Agent 自行安装。
 
