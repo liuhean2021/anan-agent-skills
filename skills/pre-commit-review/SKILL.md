@@ -70,6 +70,8 @@ metadata:
 - **并发上限**：任一时刻最多并行 2 个子 agent（主审单独执行；交叉复核 A / B 两个并行）。
 - **不得复用**：每次审查、每次复审都新建子 agent；不得使用继承当前对话的方式（如 Claude Code 的 `fork`），应使用全新子 agent（如 `general-purpose`）。
 - **降级**：宿主不支持子 agent 时，由当前 agent 按本文步骤直接审查，并在前置分析报告中注明「⚠️ 未隔离上下文审查」；不阻塞审查。
+- **降级时的诚实约束**：未隔离上下文时，审查者往往就是改代码的人，易顺着作者思路「确认」。此时**不得**写「逐行核对」「行为不变」这类强结论，除非确实逐行看过完整 diff；只能写已验证的事实（如「解析通过」「规则 X 0 报错」）。
+- **diff 不得被过滤**：审查时不得用 `grep -v` 等方式把「看起来机械/重复」的改动行从 diff 中剔除后再下结论；机械改动恰是批量事故的高发区（见 §3.14）。
 - 下文「执行步骤」为子 agent 的执行规范；主 agent 无需重复执行。
 
 ## 执行步骤
@@ -158,7 +160,7 @@ Delivered（实际改动）: <1 行总结 diff 实际在做什么>
 ```bash
 # 检测改动类型（由 AI 基于 diff 判断）
 # 输出：SCOPE_AUTH=true/false  SCOPE_FRONTEND=true/false  SCOPE_BACKEND=true/false
-#       SCOPE_CONFIG=true/false  SCOPE_API=true/false  SCOPE_MIGRATIONS=true/false
+#       SCOPE_CONFIG=true/false  SCOPE_API=true/false  SCOPE_MIGRATIONS=true/false  SCOPE_BULK=true/false
 ```
 
 **检测结果驱动专项清单：**
@@ -169,9 +171,10 @@ Delivered（实际改动）: <1 行总结 diff 实际在做什么>
 - `SCOPE_API=true` → 必跑 §3.8 文档同步
 - `SCOPE_CONFIG=true` → 必跑 §3.8 文档同步
 - 命中**跨模块规则**（≥ 3 模块或服务） → 必跑 §3.11 架构与归属审查
+- `SCOPE_BULK=true`（同构改动 ≥ 5 处，或由脚本/正则/codemod/sed/perl 批量生成的改动） → 必跑 §3.14 批量机械改动专项
 - §1.5 负载告警任一项触发（高负载 / 安全敏感改动超阈值 / 跨模块） → 标记「建议交叉复核」，由主 agent 提示用户确认是否执行 §3.12（默认不执行）
 
-在审查报告中展示检测结果：`Diff Scope（改动范围）: auth/frontend/backend/config/API/migration`
+在审查报告中展示检测结果：`Diff Scope（改动范围）: auth/frontend/backend/config/API/migration/bulk`
 
 ### 第 2.7 步：审查前置分析报告（统一产出）
 
@@ -194,7 +197,7 @@ Intent（意图）: ...
 Delivered（实际改动）: ...
 
 ### 📐 Diff Scope（改动范围）
-auth/frontend/backend/config/API/migration
+auth/frontend/backend/config/API/migration/bulk
 
 ### 🔐 Secret 扫描
 - 命令：`gitleaks git --pre-commit [--staged] --redact`（或「未执行工具扫描，已人工检索」）
@@ -292,6 +295,7 @@ auth/frontend/backend/config/API/migration
 - [ ] 是否避免直接修改 props（应通过 emit 通知父组件）
 - [ ] 响应式数据依赖是否正确（computed/watch 的依赖项是否完整）
 - [ ] `v-for` 是否有唯一且稳定的 `:key`
+- [ ] **无分号风格（ASI）**：项目若多数语句不写分号，改动中是否出现以 `(`、`[`、`` ` ``、`+`、`-`、`/` 开头的新行；这类行会与上一行拼成调用/下标/模板标签（如 `})` 后接 `(x || []).forEach(` 报 `... is not a function`）。应改写为不以这些字符开头（如 `x && x.forEach(`）或显式加分号
 - [ ] （可选，环境中有 `modern-web-guidance` 技能/插件时）对改动中的 HTML / CSS / 客户端 JS 查一次当前推荐写法，标出过时 API、无障碍与性能隐患；未安装时不自动安装、不阻塞，仅在本次输出中提示一次：「可选安装 `modern-web-guidance` 获取最新 Web 写法参考（https://github.com/GoogleChrome/modern-web-guidance）：`npx modern-web-guidance@latest install`（Claude Code 也可 `/plugin marketplace add GoogleChrome/modern-web-guidance` → `/plugin install modern-web-guidance@googlechrome`）」，然后跳过本项；结论按严重等级归入审查结论，不改变 3.13「只声明不检查」的兼容性约定
 
 **NestJS / 后端**
@@ -413,6 +417,22 @@ auth/frontend/backend/config/API/migration
 - 任一「涉及」且**未**执行专门的兼容性审查 → 记 🟡 [重要]〔兼容性〕「涉及兼容风险面，需执行浏览器兼容性审查」，列出涉及点；当前环境没有可用的兼容性审查技能或工具时注明「未执行兼容审查」。
 - 已执行专门的兼容性审查 → 引用其结论（其阻塞级问题同步计入本次审查的 🔴），不重复审查。
 
+#### 3.14 批量机械改动专项（脚本/正则/codemod 生成的改动）
+
+> `SCOPE_BULK=true`（同构改动 ≥ 5 处，或由 sed/perl/正则/codemod 批量生成）时 **MUST** 执行。
+>
+> **来源教训**：一次「给 `res.data.xxList.forEach(` 加空值兜底」的批量替换，被 perl 改成行首 `(res.data.xx || []).forEach(`。项目不写分号，5 处因上一行是 `})` 被解析为函数调用，线上报 `... is not a function`；而当时 lint 通过、「复审」通过。根因不是某一行写错，而是**对同构批量改动缺少针对性验证，并把「lint 通过」当成「语法语义无误」**。
+
+- [ ] **看替换后的结果而非只看替换前的匹配**：对每一类替换，输出「替换后行 + 前 1 行 + 后 1 行」做上下文检查，统计各种「上一行结尾」分布（`;` `{` `})` 注释等），重点看 `)` `}` 结尾后接新行首字符的情形
+- [ ] **全量而非抽样**：同构改动用脚本全量校验（如按上一行结尾分类计数），不凭「看了几处没问题」下结论
+- [ ] **语法解析**：对所有改动文件做真实解析（`.vue` 用 `vue-template-compiler` 取 script 后交给 `@babel/parser`；`.ts/.js` 直接解析），0 失败才算过；注意文件列表在 zsh 下需用 `xargs`/数组传参，字符串变量不会自动拆分，**命令静默无输出不等于通过**，须看到「解析 N 个文件，失败 0」之类的明确计数
+- [ ] **启用针对性 lint 规则**：不要只依赖项目默认规则。至少带上 `--rule 'no-unexpected-multiline: error'` 跑一遍；并**验证规则对已知坏样本有效**（对修改前的旧文件应能报出问题），避免「规则没开/没生效却显示 0 报错」的假阴性
+- [ ] **项目 lint 配置缺口**：若项目 `.eslintrc` 未启用与本次改动风险相关的规则（如无分号项目的 `no-unexpected-multiline`），记 🟢/🟡 建议补规则，让下次由 lint 自动拦截
+- [ ] **至少一次运行时验证**：对受影响页面/入口实际运行一次（浏览器打开、单测或构建），或在结论里明确写「未运行验证」并降低结论置信度，**不得写「行为不变」**
+- [ ] **反射式问法**：这个替换在「上一行没有分号」「值为 null/undefined」「字符串含特殊字符」「已被其他分支覆盖」时分别会怎样？
+
+**结论规则**：未完成「语法解析 + 针对性 lint 且验证规则有效」，不得出具「通过」；仅完成部分时，在结论中列出未覆盖项并标 🟡。
+
 ### 第四步：审查结论
 
 **纯审查，不改代码**：本技能仅提供审查结论、问题定位与修改建议，**绝不直接修改代码**。所有代码修改应由开发者本人完成。
@@ -467,7 +487,7 @@ auth/frontend/backend/config/API/migration
 
 **不通过**：存在 🔴 阻塞问题。必须逐条列出原因，不允许只写「审查不通过」。
 
-**通过**：无 🔴 阻塞问题。通过前先自查：若改动 > 100 行但结论无任何 🔴/🟡 问题，应反思是否漏审——百行以上改动无严重问题极为罕见。同时完成 §4.1「审查反思（收尾两问）」：如实标注最没把握与可能遗漏之处。确认无漏审、反思两问已作答后，**必须检查是否满足 Self-Test 触发条件**（见下方），根据检查结果决定下一步：
+**通过**：无 🔴 阻塞问题。通过前先自查：若改动 > 100 行但结论无任何 🔴/🟡 问题，应反思是否漏审——百行以上改动无严重问题极为罕见。同时完成 §4.1「审查反思（收尾两问）」：如实标注最没把握与可能遗漏之处。同时自查三点：①是否为「批量机械改动」并已完成 §3.14；②结论中是否有未经验证的强断言（「行为不变」「逐行核对」）——有则改为已验证事实；③「lint/测试通过」是否真的覆盖了本次风险（规则是否启用并验证有效）。确认无漏审、反思两问已作答后，**必须检查是否满足 Self-Test 触发条件**（见下方），根据检查结果决定下一步：
 
 | 检查结果 | 下一步 |
 |----------|--------|
