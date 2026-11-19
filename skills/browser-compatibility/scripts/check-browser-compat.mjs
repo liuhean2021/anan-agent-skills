@@ -5,6 +5,12 @@
  *
  * 检查项:
  *   1. JS 语法级别:所有 .js/.mjs 必须能按 --ecma 指定的 ECMAScript 版本解析(否则老浏览器整包解析失败 → 白屏)
+ *   1′ ESM 动态导入:目标浏览器都支持原生 ESM 动态导入时,`import()` / `import.meta` 不按 --ecma 判失败(它们属 ES2020,
+ *      但凡支持 ESM 的浏览器都原生支持),单独计数;目标含不支持的浏览器(如 ie、Chrome < 64)时仍按语法超标处理
+ *   1″ Worker / WASM:**只有被其他 JS 里 new Worker() / new SharedWorker() 引用到的文件**才视为 Worker,解析失败只告警不影响
+ *      退出码(只影响用到它的功能,不会让整页白屏);按文件名猜 Worker 会把 worker-list-xx.js 这类主线程 chunk 误降级,
+ *      所以文件名只用于提示。主包里 `new Worker(..., { type: 'module' })` 与 .wasm 文件按目标版本提示功能级可用范围。
+ *      原样拷贝、不经 new Worker 引用的 vendor Worker(如 pdf.js 通过 workerSrc 字符串加载)请用 --exclude 跳过并单独记录
  *   2. 正则后行断言 (?<= / (?<!:语法属 ES2018,但 Safari < 16.4 不支持,--ecma 检查不出来,单独检测
  *   3. CSS 风险特性:统计产物中各特性出现次数;给出 --min 时,标出目标浏览器不支持的特性与受影响区间
  *   4. 影响评估查询:为每个问题生成 browserslist 查询(受影响区间 / 支持范围),用于估算受影响用户占比
@@ -50,6 +56,13 @@ const CSS_FEATURES = [
   { name: 'CSS 嵌套 &', re: /\{[^{}]*&[\s.:#\[>+~]/g, min: { chrome: 112, safari: 16.5, firefox: 117 }, fallback: '嵌套规则失效' },
   { name: 'dvh/svh/lvh', re: /\d(dvh|svh|lvh)\b/g, min: { chrome: 108, safari: 15.4, firefox: 101 }, fallback: '尺寸声明失效(需保留 vh 回退)' }
 ]
+/** 以下三项 ESM_DYNAMIC / MODULE_WORKER / WASM 数据核对于 2026-11,上面的 CSS_FEATURES 为 2026-09 */
+/** ESM 动态导入 import() 与 import.meta 的最低版本(取两者较高者) */
+const ESM_DYNAMIC = { min: { chrome: 64, safari: 11.1, firefox: 67 } }
+/** module Worker(new Worker(url, { type: 'module' }))最低版本 */
+const MODULE_WORKER = { min: { chrome: 80, safari: 15, firefox: 114 } }
+/** WebAssembly 最低版本 */
+const WASM = { min: { chrome: 57, safari: 11, firefox: 52 } }
 /** 正则后行断言:Safari 16.4+ 才支持,其余主流浏览器 Chrome 62 / Firefox 78 起支持 */
 const LOOKBEHIND = { re: /\(\?<[=!]/g, min: { chrome: 62, safari: 16.4, firefox: 78 } }
 
@@ -174,19 +187,95 @@ if (excludes.length) console.log(`已排除目录:${excludes.join(', ')}`)
 const jsFiles = files.filter((f) => /\.(m?js)$/.test(f))
 const cssFiles = files.filter((f) => f.endsWith('.css'))
 let failed = false
+/** 影响评估用:[问题名, 受影响区间列表] */
+const impactQueries = []
+
+/** 目标全部支持 ESM 动态导入时为 true(未给 --min 时不放行,保持严格) */
+const esmDynamicOk = targets.length > 0 && unsupportedBy(ESM_DYNAMIC.min, targets).length === 0
+/** 把 import( 与 import.meta 的 import 换成等长标识符,其余代码按 --ecma 照常检查,报错位置不偏移 */
+const ESM_DYNAMIC_RE = /(?<![.\w$])import(?=\s*\(|\s*\.\s*meta\b)/g
+/**
+ * Worker 判定:只认「被 new Worker( / new SharedWorker( 引用到的文件名」。
+ * 误判会把主线程的白屏级语法错误降成不计退出码的告警,所以不按内容(legacy 插件的 polyfills-legacy-*.js
+ * 内联了 SystemJS,本就含 importScripts()),也不按文件名(Vite 会把 src/utils/worker.ts 输出成 worker-<hash>.js)判定。
+ */
+// 按「文件名」匹配:引用写在 URL 字符串里才能识别;变量传入、内联 Blob 等写法识别不到时一律按主包检查(偏严);
+// 内联 Blob 字符串里恰好出现同名文件名时会被误收为引用(风险很低,且仅当产物里确有同名文件)
+const WORKER_REF_RE = /new\s+(?:Shared)?Worker\s*\(([\s\S]{0,300}?)\)/g
+const MODULE_WORKER_RE = /new\s+(?:Shared)?Worker\s*\([\s\S]{0,300}?type\s*:\s*["'`]module["'`]/
+const baseName = (f) => f.split(/[\\/]/).pop()
+const sources = new Map(jsFiles.map((f) => [f, readFileSync(f, 'utf8')]))
+const referencedWorkers = new Set()
+let moduleWorkerUsed = false
+for (const src of sources.values()) {
+  if (MODULE_WORKER_RE.test(src)) moduleWorkerUsed = true
+  for (const m of src.matchAll(WORKER_REF_RE)) {
+    for (const name of m[1].match(/[\w.-]+\.m?js\b/g) || []) referencedWorkers.add(name)
+  }
+}
+const isWorkerFile = (f) => referencedWorkers.has(baseName(f))
+/** 文件名像 Worker、但没有被 new Worker() 引用:按主包检查,只提示 */
+const WORKER_LIKE_RE = /(?:^|[._-])worker(?:s)?(?=[._-]|$)/i
+const workerLike = jsFiles.filter((f) => !isWorkerFile(f) && WORKER_LIKE_RE.test(baseName(f).replace(/\.m?js$/, '')))
 
 console.log(`\n== 1. JS 语法级别(ES${ecma}),共 ${jsFiles.length} 个文件`)
+let esmDynamicFiles = 0
+const workerIssues = []
+const workerFiles = []
 for (const f of jsFiles) {
-  const src = readFileSync(f, 'utf8')
+  const raw = sources.get(f)
+  const worker = isWorkerFile(f)
+  if (worker) workerFiles.push(relative(process.cwd(), f))
+  let src = raw
+  if (esmDynamicOk && ecma < 2020 && ESM_DYNAMIC_RE.test(raw)) {
+    src = raw.replace(ESM_DYNAMIC_RE, '_mport')
+    esmDynamicFiles++
+  }
+  ESM_DYNAMIC_RE.lastIndex = 0
   try {
     acorn.parse(src, { ecmaVersion: ecma, sourceType: 'module' })
   } catch (e) {
-    failed = true
     const pos = e.pos ?? 0
-    console.log(`  ✗ ${relative(process.cwd(), f)}: ${e.message}\n    …${src.slice(Math.max(0, pos - 40), pos + 40).replace(/\s+/g, ' ')}…`)
+    const detail = `${relative(process.cwd(), f)}: ${e.message}\n    …${raw.slice(Math.max(0, pos - 40), pos + 40).replace(/\s+/g, ' ')}…`
+    if (worker) {
+      workerIssues.push(detail)
+      continue
+    }
+    failed = true
+    console.log(`  ✗ ${detail}`)
   }
 }
-if (!failed) console.log(`  ✓ 全部可按 ES${ecma} 解析`)
+if (!failed) console.log(`  ✓ 主包全部可按 ES${ecma} 解析`)
+if (esmDynamicFiles) {
+  console.log(`  ✓ ${esmDynamicFiles} 个文件含 import() / import.meta:目标浏览器均原生支持 ESM 动态导入(Chrome 64 / Safari 11.1 / Firefox 67 起),已放行`)
+}
+
+// ---- 1″ Worker / WASM:只影响用到它的功能,不计入退出码 ----
+const wasmFiles = files.filter((f) => f.endsWith('.wasm'))
+if (workerFiles.length || workerLike.length || moduleWorkerUsed || wasmFiles.length) {
+  console.log('\n== 1″. Worker / WASM(功能级可用范围,不计入退出码,见 references/standard.md §9.6)')
+  if (workerFiles.length) {
+    console.log(`  按 Worker 处理的文件(${workerFiles.length} 个,判定依据:被 new Worker() / new SharedWorker() 引用):`)
+    for (const w of workerFiles) console.log(`    - ${w}`)
+  }
+  for (const d of workerIssues) console.log(`  ⚠ Worker 未按 ES${ecma} 转译:${d}`)
+  if (workerLike.length) {
+    console.log(`  ℹ ${workerLike.length} 个文件名含 worker 但没有被 new Worker() 引用,已按主包检查(语法错误会计入退出码):`)
+    for (const w of workerLike) console.log(`    - ${relative(process.cwd(), w)}`)
+    console.log('    → 若它们是 vendor 原样拷贝的 Worker(如 pdf.js 经 workerSrc 字符串加载),用 --exclude 跳过其目录并在兼容声明中单独记录')
+  }
+  const report = (name, feat) => {
+    const blocked = unsupportedBy(feat.min, targets)
+    const minText = Object.entries(feat.min).map(([b, v]) => `${b} ${v}`).join(' / ')
+    console.log(`  ${blocked.length ? '⚠' : targets.length ? '✓' : 'ℹ'} ${name}(需 ${minText})${targets.length ? '' : ',未给 --min,仅列出要求'}${blocked.length ? ` → ${blocked.map(([b, v]) => `${b} ${v}`).join('/')} 上该功能不可用,须有降级路径` : ''}`)
+    if (blocked.length) impactQueries.push([name, affectedRanges(feat.min, targets)])
+  }
+  if (moduleWorkerUsed) report('module Worker', MODULE_WORKER)
+  if (wasmFiles.length) report(`WebAssembly(${wasmFiles.length} 个 .wasm)`, WASM)
+  if (workerFiles.length || moduleWorkerUsed || wasmFiles.length) {
+    console.log('    → 在兼容声明中写「功能级可用范围」,并在低版本上运行验证降级路径(如预览失败回退为下载)')
+  }
+}
 
 /**
  * 区分两种出现位置(文本搜索分不清,会误报):
@@ -210,22 +299,21 @@ function scanLookbehind(src) {
   return { literals, inStrings: Math.max(0, total - literals) }
 }
 
-/** 影响评估用:[问题名, 受影响区间列表] */
-const impactQueries = []
-
 console.log('\n== 2. 正则后行断言 (?<= / (?<!')
 const lookbehindBlocked = unsupportedBy(LOOKBEHIND.min, targets)
 const blockedText = lookbehindBlocked.map(([b, v]) => `${b} ${v}`).join('/')
 let lookbehindFound = false
 for (const f of jsFiles) {
-  const { literals, inStrings } = scanLookbehind(readFileSync(f, 'utf8'))
+  const { literals, inStrings } = scanLookbehind(sources.get(f))
   const name = relative(process.cwd(), f)
   if (literals) {
     lookbehindFound = true
-    if (lookbehindBlocked.length) failed = true
+    if (lookbehindBlocked.length && !isWorkerFile(f)) failed = true
     console.log(
       lookbehindBlocked.length
-        ? `  ✗ ${name}: ${literals} 处正则字面量,目标 ${blockedText} 不支持 → 整包解析失败(白屏)`
+        ? isWorkerFile(f)
+          ? `  ⚠ ${name}: ${literals} 处正则字面量(Worker),目标 ${blockedText} 不支持 → 仅该 Worker 解析失败,影响用到它的功能,不计入退出码`
+          : `  ✗ ${name}: ${literals} 处正则字面量,目标 ${blockedText} 不支持 → 整包解析失败(白屏)`
         : `  ⚠ ${name}: ${literals} 处正则字面量(目标均支持;Safari 需 ≥ 16.4)`
     )
     if (lookbehindBlocked.length) impactQueries.push(['正则后行断言字面量', affectedRanges(LOOKBEHIND.min, targets)])
@@ -281,7 +369,7 @@ if (args.h5 || targets.some(([label]) => MOBILE_LABELS.includes(label))) {
   }
   // 遮罩型:横屏块内有 position:fixed(全屏提示层的特征);否则只是横屏下的布局调整
   const overlay = landscapeBlocks.some((b) => /position\s*:\s*fixed/i.test(b))
-  const lockApi = jsFiles.some((f) => /screen\.orientation\.lock/.test(readFileSync(f, 'utf8')))
+  const lockApi = jsFiles.some((f) => /screen\.orientation\.lock/.test(sources.get(f)))
   if (overlay) {
     console.log(`  ✓ 产物中发现横屏遮罩(@media orientation: landscape 内含 position:fixed,共 ${landscapeBlocks.length} 个横屏媒体查询)`)
     console.log('    仍需人工确认:横屏下遮罩是否真的显示且可关闭(「继续横屏使用」)、竖屏 / 平板横屏不显示(852×393、568×320、1024×768 实测)')
@@ -295,5 +383,5 @@ if (args.h5 || targets.some(([label]) => MOBILE_LABELS.includes(label))) {
   if (lockApi) console.log('  ⚠ JS 中含 screen.orientation.lock:它仅在全屏 / PWA 下可用,在 iOS Safari 与微信内基本无效,不能作为横屏策略')
 }
 
-console.log(`\n结果:${failed ? '✗ 未通过(存在会导致白屏的 JS 问题)' : '✓ JS 通过'}${targets.length ? ';CSS ⚠ 项为样式退化风险,不影响退出码' : ''}\n`)
+console.log(`\n结果:${failed ? '✗ 未通过(存在会导致白屏的 JS 问题)' : '✓ JS 通过'}${workerIssues.length ? ';Worker ⚠ 项影响对应功能,不影响退出码' : ''}${targets.length ? ';CSS ⚠ 项为样式退化风险,不影响退出码' : ''}\n`)
 process.exit(failed ? 1 : 0)

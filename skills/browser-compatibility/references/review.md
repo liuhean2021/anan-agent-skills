@@ -57,17 +57,19 @@ grep -rnE 'touchstart|touchmove|WeixinJSBridge|wx\.config|safe-area-inset|viewpo
 4. **配置与声明必须一致**：声明 Safari 14 但构建 target 为 `esnext` 且无 polyfill，等于没有兼容——记为 🔴 或 🟡（见 §4）。
 
 视口与显示范围（用于人工 / 运行验证；**只取 §0 判定的那一端**）：
-- PC：1280 / 1366 / 1440 / 1920 / 2560 宽；缩放 100% / 125% / 150%；Windows 与 macOS。
-- H5：320 / 360 / 375 / 390 / 414 / 430 宽；平板 768 / 820 / 1024；**默认竖屏，横屏策略为默认检查项（手机横屏 852×393、568×320，h5.md §5.1）**；DPR 2 / 3；刘海屏与底部安全区；系统字体放大；厂商强制暗色。
+- PC：1280 / 1366 / 1440 / 1920 / 2560 / 3440 宽；矮屏 1366×650（去掉浏览器工具栏）；缩放 100% / 125% / 150%（按实际 CSS 宽度）；Windows 与 macOS。
+- H5：280 / 344（折叠屏外屏）/ 320 / 360 / 375 / 390 / 414 / 430 宽；折叠屏展开约 700–900；平板 768 / 820 / 1024；异形屏（刘海 / 灵动岛 / 打孔 / Home 指示条，竖屏与横屏，screen-adaptation.md §3.1）；**默认竖屏，横屏策略为默认检查项（手机横屏 852×393、568×320，h5.md §5.1）**；DPR 2 / 3；刘海屏与底部安全区；系统字体放大；厂商强制暗色。
 
 ## 3. 审查步骤
 
 | 步骤 | 内容 | 依据 |
 |------|------|------|
-| ① 配置审查 | 构建目标、legacy 插件 / Babel / core-js、autoprefixer、PC 双核 meta、H5 head 配置是否与基线一致；所选方案能否达到硬下限 | standard.md §4；pc.md §2；h5.md §3 |
+| ① 配置审查 | 构建目标、legacy 插件 / Babel / core-js、autoprefixer、PC 双核 meta、H5 head 配置是否与基线一致（各处目标用 `npx browserslist` 核对为同一基线，`Android >= N` 不等于系统版本）；所选方案能否达到硬下限；基线以下有无兜底提示 | standard.md §4 / §9；pc.md §2；h5.md §3 |
 | ①′ 覆盖空间审查 | 基线是否已压到硬下限；standard.md §8 的扩大覆盖手段（DOM API polyfill、CSS 降级、依赖转译、端专项配置）是否已启用；用 browserslist 量化可多覆盖的比例 | standard.md §3 / §4 / §8 |
 | ② 产物检查 | 构建到临时目录，运行 `scripts/check-browser-compat.mjs` | SKILL.md「产物检查」 |
 | ③ 源码审查 | 对变更或全量源码逐项排查高发问题（下表） | standard.md §5；pc.md §3；h5.md §5 |
+| ③′ 屏幕尺寸适配与一致显示 | 识别适配方案（rem / vw / 流式），异形屏与折叠屏处理，查 PostCSS 转换坑、根字号上限与容器 `max-width` 一致、缩放后点击区域与字号下限、固定底栏与安全区、fixed 包含块、flex 溢出；按视口矩阵跑溢出检查；PC 查缩放后的实际宽度与最小宽度 | screen-adaptation.md |
+| ③″ 架构评估 | 按七层核对现状：目标是否一处声明、构建配置是否匹配技术栈、有无运行时兜底、安全区 / 固定栏 / 弹层是否收敛到公共组件、PC 与手机是否各有统一规则、有无 lint / CI / 截图回归守护；输出「架构与一致性建议」 | architecture.md |
 | ④ 运行验证 | preview / 测试环境 / 真机 / App 内实测；无法执行时标注「未运行验证」；微信内实测用 UA 含 `micromessenger` 确认环境并记录完整 UA（h5.md「识别微信环境」） | pc.md §6；h5.md §8 |
 | ⑤ 影响评估 | **每个发现**都要评估受影响浏览器区间、用户占比、实际表现，得出紧急度，供用户排修复优先级 | 本文 §4.1 |
 | ⑥ 体验层检查（H5 默认） | 逐项过 h5.md §5.3（兼容数据与错误上报、异步状态、**存储访问兜底**、防重复提交、微信缓存与 bfcache、标题、输入、性能、边缘手势等 11 项）；命中的写入同一张发现表；脚手架 / mock 阶段未接入的标「待接入时落实」 | h5.md §5.3 |
@@ -79,13 +81,25 @@ grep -rnE 'touchstart|touchmove|WeixinJSBridge|wx\.config|safe-area-inset|viewpo
 | `new Date\(['"\`]\d{4}-\d{2}-\d{2} ` | Safari / iOS 日期解析为 Invalid Date |
 | `/\(\?<[=!]` （正则字面量） | Safari / iOS < 16.4 白屏 |
 | `\.at\(\|structuredClone\|replaceAll\|Object\.hasOwn\|findLast` | 基线低于 standard.md §5.2 时需 polyfill |
-| `gap:\|:is\(\|:has\(\|aspect-ratio\|inset:\|@container\|color-mix` | CSS 退化（standard.md §5.3） |
+| `gap:\|:is\(\|:has\(\|aspect-ratio\|inset:\|@container\|color-mix` | CSS 退化（standard.md §5.3）；**以产物为准**：Vite 会把 `inset` 等可转换语法降级，源码命中而产物里已展开的不记发现 |
 | `100vh` | H5 底部被遮挡；同时核对与 `100dvh` 的书写顺序（`vh` 在前、`dvh` 在后才有回退效果） |
 | `:hover` 且无触屏入口 | H5 无法触发 |
 | `localStorage\|sessionStorage`（入口路径上无 `try/catch`） | **H5 白屏风险**：存储被禁用 / WebView 未开 DOM storage 时访问抛错，入口未保护默认 🟡，目标环境含这些情形（如基线 iOS ≤ 10、国产内嵌 WebView）升 🔴，见 h5.md §5.3 #3 |
 | `orientation:\s*landscape\|screen\.orientation\|rotate-tip` | **H5 默认竖屏**：无命中即为「未处理横屏」，按 h5.md §5.1 定级（项目声明支持横屏的除外）；有命中仍要运行验证遮罩的显示条件 |
 | `window\.open\|download=\|autoplay` | App 内 WebView 受限（h5.md §4） |
-| `navigator\.userAgent` | UA 判断失效（iPadOS 伪装 Mac） |
+| `wx\.config\|updateAppMessageShareData\|chooseWXPay\|snsapi_` | 微信分享 / 支付 / 授权：签名 URL（iOS 落地页）、安全域名、支付授权目录、`code` 复用，按 h5.md §4「微信能力接入要点」核对 |
+| `height:\s*100vh\|fill-available` | 一屏布局高度，按 screen-adaptation.md §3.2 分档；iOS < 15.4 只写 `100vh` 会被地址栏遮挡 |
+| `compositionstart\|isComposing`（无命中，且有输入即搜索 / 计数 / 格式化 / 回车提交） | 中文输入法拼音阶段触发逻辑，standard.md §10.1 |
+| `scrollBehavior\|ScrollRestoration\|KeepAlive\|keep-alive`（无命中，且有列表 → 详情 → 返回） | 返回后滚动位置丢失，standard.md §10.2 |
+| `new Worker\|\.wasm\|importScripts` | 功能级可用范围（module Worker 需 Chrome 80 / Safari 15），降级路径须运行验证，standard.md §9.6 |
+| `window\.(top\|parent)\|postMessage\|self !== top` | 被 iframe 嵌入：登录跳转、同源存储覆盖，standard.md §10.3 |
+| `<video` | 缺 `playsinline` 时 iOS 全屏播放、X5 视频盖住弹窗，h5.md §5.5 |
+| `ontouchstart\|addEventListener\(.touchstart`（无命中，且有 `:active` 样式） | iOS 按下态不生效，h5.md §5 |
+| `line-height`（与 `height` 相同值，用于按钮 / 标签居中） | Android 文字偏上，screen-adaptation.md §3.3 |
+| `<input\|<textarea`（底部输入栏所在页面） | 键盘弹出 / 收起：iOS 微信回位、厂商键盘模式，h5.md §5 / §5.4 |
+| `navigator\.userAgent` | UA 判断失效（iPadOS 伪装 Mac）；只可用于环境分流与日志 |
+| `CSS\.supports\(['"]gap\|@supports \(gap` | 用 gap 检测 flex gap 会误判（grid gap 支持即为 true，standard.md §9.4） |
+| `rootValue\|propList\|viewportWidth\|DESIGN_WIDTH` | rem / vw 转换配置：基准是否与设计稿（375 / 750）一致、组件库是否按文件区分，按 screen-adaptation.md §2.2 / §2.4 核对 |
 
 ## 4. 定级
 
@@ -163,6 +177,11 @@ npx browserslist@latest "--coverage=CN" "$AFFECTED"; npx browserslist@latest "--
 ### 影响汇总
 - 按紧急度排序列出各发现，并给出「建议修 / 可不修」的理由（结合占比、表现与修复代价）。
 - 数据局限：<公网统计与本项目用户群的差异；是否有项目访问统计>
+
+### 架构与一致性建议
+| # | 层 | 现状 | 建议 | 收益 | 代价 | 优先级 |
+|---|----|------|------|------|------|--------|
+（按 architecture.md §8 填写，只列收益最大的若干项；建议不等于修改，落地同样须确认）
 
 ### 未运行验证的高风险项
 - …

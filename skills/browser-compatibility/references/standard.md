@@ -86,9 +86,9 @@ legacy({
 ### 4.1.1 方案 C 在 Vite 8（rolldown）下的实测要点
 
 - 配置：`legacy({ targets: [硬下限], modernTargets: [支持 ESM 的最低版本], modernPolyfills: true })`，即默认模式（不设 `renderLegacyChunks: false`）；`modernTargets` 决定现代包的转译目标，未落入的浏览器走 `nomodule` 的 legacy 包。
-- 产物检查要**分开验证两类文件**：legacy 包（文件名含 `legacy`）按硬下限对应的 ES 版本（Chrome 51 / iOS 10 → `--ecma 2015`）；现代包按 `modernTargets` 的 ES 版本（Chrome 64 / iOS 11.3 → `--ecma 2018`）。用同一个 `--ecma` 扫整个目录会误报（legacy 包的输出是 **ES2015 而非 ES5**：`@vitejs/plugin-legacy` 8.x 用 oxc 压缩 legacy 产物且固定 `compress.target = 'es2015'`，见其 `dist/index.js` 的 `resolveLegacyOutputMinify(..., "es2015")`，所以产物里会出现模板字面量；ESM 探测代码 `__vite_legacy_guard` 含顶层 `import.meta`/`import()`，按 script 解析会报错，均属预期）。
+- 产物检查要**分开验证两类文件**：legacy 包（文件名含 `legacy`）按硬下限对应的 ES 版本（Chrome 51 / iOS 10 → `--ecma 2015`）；现代包按 `modernTargets` 的 ES 版本（Chrome 64 / iOS 11.3 → `--ecma 2018`）。用同一个 `--ecma` 扫整个目录会误报（legacy 包的输出是 **ES2015 而非 ES5**：`@vitejs/plugin-legacy` 8.x 用 oxc 压缩 legacy 产物且固定 `compress.target = 'es2015'`，见其 `dist/index.js` 的 `resolveLegacyOutputMinify(..., "es2015")`，所以产物里会出现模板字面量；ESM 探测代码 `__vite_legacy_guard` 含顶层 `import.meta` / `import()`：给了 `--min` 且目标都支持 ESM 动态导入时，检查脚本自动放行并单独计数；未给 `--min` 或目标含更低版本时仍会报出，属预期）。
 - 脚本须在项目目录（含 `node_modules`）运行；在别处运行只会打印「未找到 acorn」，用管道过滤输出时会被吞掉，务必先看原始输出。
-- 代价（实测，Vite 8.3 + 7 个页面的小项目）：产物约 +70%，构建时间由 < 1s 增至约 5–6s；**CSS 不会被降级**，flex `gap`、`inset` 等在老终端上仍会退化，须在已知限制中写明。
+- 代价（实测，Vite 8.3 + 7 个页面的小项目）：产物约 +70%，构建时间由 < 1s 增至约 5–6s；legacy 插件**不降级 CSS**；Vite 压缩 CSS 时按 `build.cssTarget` 只降级少数可转换的语法（如 `inset` → 四个方向，见 §8），flex `gap` 等仍会在老终端退化，须在已知限制中写明。
 
 ### 4.2 pnpm 10 项目的 CI 注意事项
 
@@ -148,6 +148,8 @@ core-js 等依赖带 postinstall 脚本。pnpm 10 默认拒绝依赖构建脚本
 | CSS 原生嵌套 `&` | 112 | 16.5 | 117 | 嵌套规则失效 |
 
 > 选择器类特性（`:is()` / `:has()` 等）不支持时，**整条规则**（含同组其他选择器）都会被丢弃。
+>
+> **以产物为准**：构建会降级部分 CSS（Vite 项目源码里的 `inset` 在产物中通常已展开为四个方向），对源码检索命中不等于产物里仍存在。判断是否退化看产物检查脚本「3. CSS 风险特性」的结果；flex `gap`、`:is()`、`:has()`、`:focus-visible`、`dvh`、`color-mix()`、`@container` 无法转换，会原样保留。
 
 ## 6. 通用检查清单
 
@@ -158,6 +160,8 @@ core-js 等依赖带 postinstall 脚本。pnpm 10 默认拒绝依赖构建脚本
 - [ ] 需要 API polyfill 时已启用（方案 B/C/D），DOM API 已单独确认
 - [ ] pnpm 10：新增依赖的构建脚本已处理（§4.2）
 - [ ] 端专项配置已完成（PC 见 pc.md §2，H5 见 h5.md §3）
+- [ ] browserslist / legacy targets / `build.target` 表达同一基线，`npx browserslist` 输出已核对；Android 老 WebView 用 `chrome >= N` 而非 `Android >= N`（§9.2）
+- [ ] 基线以下环境有 ES5 兜底提示，或已记录不加的理由（§9.3）
 
 **产物检查**
 - [ ] 检查脚本退出码为 0
@@ -170,6 +174,8 @@ core-js 等依赖带 postinstall 脚本。pnpm 10 默认拒绝依赖构建脚本
 - [ ] 基线含 Safari/iOS < 16.4 时，不在正则字面量中使用后行断言
 - [ ] 日期解析不用 `new Date('YYYY-MM-DD HH:mm')`（Safari/iOS 返回 Invalid Date），改用 ISO 格式或日期库
 - [ ] 平台判断用特性检测而非 UA
+- [ ] 输入即触发的逻辑有输入法组字判断，回车选词不提交（§10.1）
+- [ ] 列表 → 详情 → 返回保留滚动位置与已加载数据（§10.2）
 
 ## 7. 维护
 
@@ -186,10 +192,159 @@ core-js 等依赖带 postinstall 脚本。pnpm 10 默认拒绝依赖构建脚本
 | JS API | core-js 按用法注入（`modernPolyfills` / `useBuiltIns: 'usage'`） | 只覆盖 ES 特性 |
 | DOM API | 按需引入专门 polyfill（如 `resize-observer-polyfill`、`intersection-observer`），或用 `additionalModernPolyfills` / `additionalLegacyPolyfills` 注入 | 自动检测不覆盖 DOM API，须逐个确认基线是否原生支持（§5.2） |
 | CSS 前缀 | autoprefixer，browserslist 与基线一致 | 解决 `-webkit-` 等前缀缺失 |
-| CSS 新特性降级 | PostCSS 降级插件（如 `postcss-preset-env` 系列）或 Vite `css.transformer: 'lightningcss'` + `targets` | **各工具可降级的特性清单以其官方文档为准**；`:focus-visible` 等需配合 JS polyfill；flex `gap` 无通用转换，需改写（margin / 子元素间距）或 `@supports` 分支 |
+| CSS 新特性降级 | **Vite 默认已做一部分**：构建时 CSS 压缩按 `build.cssTarget` 降级可转换的语法（如 `inset` 展开为 `top/right/bottom/left`）；`build.cssTarget` 未设置时同 `build.target`，`@vitejs/plugin-legacy` 生成 legacy 包时会设为 `chrome61`。更多降级用 PostCSS 降级插件（如 `postcss-preset-env` 系列）或 Vite `css.transformer: 'lightningcss'` + `targets` | **各工具可降级的特性清单以其官方文档为准**；`:focus-visible` 等需配合 JS polyfill；flex `gap` 无通用转换，需改写（margin / 子元素间距）或 `@supports` 分支 |
 | CSS 手动降级 | `@supports` 分支、保留旧写法回退（如 `height: 100vh; height: 100dvh;`） | 关键布局优先 |
 | 第三方依赖 | 产物检查暴露的依赖新语法：确认已纳入转译（Vite 构建默认处理依赖；webpack 需 `transpileDependencies`），否则替换依赖 | 依赖自带新语法是常见白屏源 |
 | PC 端 | 双核浏览器强制 Chromium 内核（pc.md §2） | 国内 PC 收益最大的一项 |
 | H5 端 | 移动端 head 配置、App 内 WebView 替代路径（h5.md §3 / §4） | 国内须把 UC / QQ / 微信 X5 列为必测环境 |
 | 验证 | 基线最低版本真机 / 云真机 / 旧版 Chromium 实测 | 唯一能确认 CSS 退化程度的方式 |
 
+## 9. 多设备语法兼容：工具边界、目标声明与兜底
+
+### 9.1 各工具管什么、不管什么
+
+审查时按下表核对「问题由哪一层负责」，不要把某个工具当成万能兼容：
+
+| 层 | 工具 | 负责 | 不负责 |
+|----|------|------|--------|
+| JS 语法 | `@vitejs/plugin-legacy` / `@babel/preset-env` / `build.target` | 把新语法转成目标能解析的写法 | 补 API；`build.target` 本身**不注入任何 polyfill** |
+| ES API | core-js（`modernPolyfills` / `useBuiltIns: 'usage'`） | `flat`、`Promise.allSettled` 等 ES 内置 | DOM API（`ResizeObserver` 等须单独引入，§8） |
+| 框架运行时 | — | — | **无法补救**：Vue 3 依赖原生 `Proxy`，转译与 polyfill 都不能让不支持 `Proxy` 的内核跑起来；React 18+ 同理不支持 IE |
+| CSS 前缀 | autoprefixer | `-webkit-sticky`、`-webkit-backdrop-filter` 等前缀 | 不实现不支持的特性（flex `gap`、`:has()` 等） |
+| 宿主行为 | — | — | WebView 的下载、跳转、键盘、缓存等原生行为（h5.md §4），只能改写法或走宿主能力 |
+
+### 9.2 目标声明：一处定义、各处一致
+
+- `.browserslistrc`（或 `package.json` 的 `browserslist`）、`legacy({ targets, modernTargets })`、`build.target`、autoprefixer、`@babel/preset-env` **必须表达同一基线**；用 `npx browserslist` 输出实际命中的版本核对，不要只看查询字符串。
+- **`Android >= N` 不是 Android 系统版本**：browserslist 的 `android` 指 Android 自带浏览器 / WebView，4.4.4 之后的版本号直接对应最新 Chromium，`Android >= 7` 只命中最新一个版本（具体版本号随 browserslist / caniuse 数据更新而变化，用 `npx browserslist "Android >= 7"` 查看）。`and_chr` / `ChromeAndroid` 同样只含最新版。**老 Android WebView 要用 Chromium 版本表达**（`chrome >= 51`），iOS 用 `ios_saf >= 10` / `iOS >= 10`（按 iOS 版本，可信）。
+- `@vitejs/plugin-legacy`、`@vitejs/plugin-vue` / `@vitejs/plugin-react` 的主版本须与 Vite 主版本配套，Node 版本满足其 `engines`；不要从旧文章单独复制某个插件的版本号，以 `create-vite` / `create-vue` 当前生成的组合为准再合并配置。
+- `tsconfig.json` 的 `target` / `lib` 只影响类型检查，**不决定产物语法**（Vite 下由 `build.target` / legacy 决定），审查时不要据此判断兼容。
+
+### 9.3 基线以下的兜底提示
+
+基线以下的浏览器（如 Vue 3 项目遇到不支持 `Proxy` 的内核、或方案 B 遇到不支持 ESM 的内核）只会白屏，用户不知道原因。建议在 `index.html` `<head>` 中、所有模块脚本之前内联一段 **ES5** 检测脚本，不满足时显示升级提示（文案按项目调整）：
+
+```html
+<script>
+  // 必须是 ES5：不经构建转译，基线以下的内核也要能解析
+  (function () {
+    var ok = typeof Proxy === 'function' && typeof Promise === 'function'
+    if (ok) return
+    document.addEventListener('DOMContentLoaded', function () {
+      document.body.innerHTML = '<div style="padding:24px;font-size:16px;line-height:1.6;color:#333">当前浏览器版本过低，请升级系统或使用最新版浏览器 / 微信打开</div>'
+    })
+  })()
+</script>
+```
+
+- 检测条件取**技术栈硬下限依赖的关键能力**（Vue 3 → `Proxy`；方案 B 无 legacy 包 → 再加 `'noModule' in document.createElement('script')`），不要用 UA 版本号判断。
+- 未加兜底记 🟢；项目访问统计显示基线以下用户占比可观时升 🟡。改 `index.html` 属于修改，须经用户确认（review.md §6）。
+
+### 9.4 特性检测的常见误判
+
+基础样式先行、`@supports` / 特性检测再增强是正确思路，但以下写法会误判：
+
+| 写法 | 问题 | 正确做法 |
+|------|------|---------|
+| `CSS.supports('gap', '1px')`、`@supports (gap: 1px)` 判断 flex gap | 只要支持 **grid** gap（Chrome 66+ / Safari 12+）就返回 true，而 flex gap 要 Chrome 84 / Safari 14.1 | CSS 侧直接用 margin 回退写法；JS 侧用实测：建一个 `display:flex; flex-direction:column; gap:1px` 含两个空子元素的容器，挂到 `body` 后读 `scrollHeight`，为 `1` 即支持，测完移除 |
+| `@supports not (position: sticky)` | iOS < 13 只支持 `-webkit-sticky`，无前缀检测为不支持 | `@supports (position: sticky) or (position: -webkit-sticky)`；或依赖 autoprefixer 输出前缀 |
+| 只检测 `backdrop-filter` | Safari 需 `-webkit-backdrop-filter` | 两者 `or`；不支持时用不透明背景回退 |
+| `'xxx' in window` 判断后直接认为行为一致 | 存在 ≠ 行为一致（如 `visualViewport` 各 WebView 事件时序不同） | 关键交互仍须真机验证 |
+| 用 UA 判断能力 | iPadOS 伪装 Mac、iOS Safari 与 WKWebView UA 接近、国产内核版本不可推算 | UA 只用于环境分流、日志与提示；能力判断用特性检测，App 宿主由 Bridge 注入名称与版本 |
+
+### 9.5 兼容等级（写进兼容声明的「已知限制」）
+
+把「支持」拆成三档，避免把「能打开」误说成「完全一致」：
+
+1. **核心可用**：页面可打开、内容可读、核心流程可完成——基线内所有环境 MUST 达到。
+2. **体验完整**：键盘、滚动、弹层、安全区、横竖屏符合设计——基线内主流环境达到，偏差记入已知限制。
+3. **增强效果**：毛玻璃、复杂动效等按特性检测启用，缺失时回退。
+
+### 9.6 Worker / WASM / 第三方运行时资源：功能级可用范围
+
+构建兼容层只转译**主包**。以下资源不经过 legacy 插件 / Babel，常常比整站基线要求更高的浏览器版本：
+
+| 资源 | 常见来源 | 要求 |
+|------|---------|------|
+| module Worker（`new Worker(url, { type: 'module' })`） | 文档预览、压缩包解压、图片处理等引擎 | Chrome 80 / Safari 15 / Firefox 114 |
+| 依赖自带的 Worker 包（原样拷贝或单独打包） | pdf.js、xlsx、docx、libarchive 等 | 内部可能含 `?.`、`??`、`catch {}`、`Promise.withResolvers` 等，按其实际语法 |
+| WebAssembly（`.wasm`） | 解码、解压、渲染引擎 | Chrome 57 / Safari 11 / Firefox 52 |
+| 运行时从 CDN 加载的 SDK | 地图、统计、客服、验证码、支付 | 以 SDK 官方声明为准，产物检查扫不到 |
+
+处理方式：
+
+1. **产物检查脚本会把 Worker 单独列出**（「1″. Worker / WASM」，不计入退出码）：
+   - **判定规则**：只有被其他 JS 里 `new Worker()` / `new SharedWorker()` 引用到的文件才算 Worker。不按文件内容判断（legacy 插件的 `polyfills-legacy-*.js` 内联了 SystemJS，本身含 `importScripts`），也不按文件名判断（Vite 会把 `src/utils/worker.ts` 输出成 `worker-<hash>.js`）——判定一旦放宽，主线程的白屏级错误会被降成告警。
+   - **引用按文件名匹配**：识别的是 `new Worker()` 参数里的 `xxx.js` 文件名；Worker 地址由变量传入、内联 Blob 等识别不到引用的写法，一律按主包检查（偏严，不会漏报）。
+   - **文件名像 Worker 但没被引用**：按主包检查，语法错误计入退出码，并在输出里以 ℹ 列出。
+   - **vendor 原样拷贝的 Worker**（如 pdf.js 经 `workerSrc` 字符串加载）：不会被 `new Worker()` 引用识别，会按主包报 ✗；确认它只在 Worker 内运行后，用 `--exclude` 跳过其目录，并在兼容声明中单独记录它的最低版本。
+2. **在兼容声明中写「功能级可用范围」**（declaration-template.md）：整站基线不变，某个功能单独写最低版本与低于它时的表现，例如「附件在线预览需 Chrome / Edge ≥ 80、Safari ≥ 15，低于时回退为下载」。
+3. **降级路径本身必须运行验证**：只看代码里写了回退不够。常见漏洞：工具栏关掉了下载按钮、引擎内部出错不触发回退，导致用户没有任何出口。验证方法：在低版本浏览器上打开，或在现代浏览器里禁用 `Worker`（如 `delete window.Worker`）、注入加载失败，确认回退路径可用。
+4. 用户确认「低版本不可用时降级即可」后写入审查报告，不必为该功能把整站基线上调。
+
+## 10. 交互兼容（PC + H5 通用）
+
+### 10.1 中文输入法组字（拼音阶段触发逻辑）
+
+**问题**：用拼音、五笔等输入法打字时，组字过程中每个按键都会触发 `input` 事件。自己写的「输入即搜索」、字数统计、格式化（如手机号加空格）会拿拼音字母去处理；组字时按回车确认候选词，还会被当成「提交」。
+
+| 场景 | 是否已处理 |
+|------|-----------|
+| Vue 原生 `<input v-model>` | 已处理（组字结束才更新值），`v-model.lazy` 也不受影响 |
+| Vue 自定义组件的 `v-model`、直接监听 `@input` 做逻辑 | **未处理** |
+| React `onChange`（受控 / 非受控） | **未处理**：组字期间每次按键都会触发 |
+| 组件库输入框（Element Plus、Ant Design、Vant 等） | 多数已处理值更新，但业务在 `input` / `change` 回调里做的逻辑仍需自查 |
+
+**处理**（与框架无关）：
+
+```js
+let composing = false
+input.addEventListener('compositionstart', () => { composing = true })
+input.addEventListener('compositionend', (e) => { composing = false; handle(e.target.value) })
+input.addEventListener('input', (e) => {
+  if (composing || e.isComposing) return // 组字中不处理
+  handle(e.target.value)
+})
+input.addEventListener('keydown', (e) => {
+  // 组字中按回车是确认候选词，不是提交；Safari 在 compositionend 后的 keydown 里 isComposing 已为 false，要再判 keyCode 229
+  if (e.key === 'Enter' && (e.isComposing || e.keyCode === 229)) return
+  if (e.key === 'Enter') submit()
+})
+```
+
+- 各浏览器 `compositionend` 与最后一次 `input` 的先后顺序不同（Firefox 组字结束后还会再触发一次 `input`），`handle` 可能被调用两次，配合防抖或比较值去重。
+- React 用 `onCompositionStart` / `onCompositionEnd`，`onChange` 里判断 `e.nativeEvent.isComposing`。
+- 审查：`grep -rnE '@input=|onInput|onChange|addEventListener\(.input' src` 找到做搜索、计数、格式化、回车提交的输入框，确认有组字判断；缺失记 🟡（中文用户高频，搜索类必现）。
+- 验证：分别用 iOS 自带拼音、Android 搜狗 / 百度输入法、Windows 微软拼音、macOS 拼音输入一个词，确认只在上屏后触发逻辑、回车选词不会提交。
+
+### 10.2 返回上一页滚动位置
+
+**问题**：单页应用从列表进入详情再返回，列表回到顶部；或恢复了位置但数据还没加载完，又跳回顶部。
+
+| 情况 | 处理 |
+|------|------|
+| Vue Router | `scrollBehavior(to, from, savedPosition) { return savedPosition || { top: 0 } }`（Vue Router 3 为 `{ x: 0, y: 0 }`）；列表数据异步加载时，返回 `Promise` 在数据渲染后再 resolve，或用 `<KeepAlive>` 缓存列表页 |
+| React Router | 6.4+ 的数据路由用 `<ScrollRestoration />`；其他写法需在离开时保存 `scrollY`、返回后渲染完成再恢复 |
+| 页面内部滚动容器（不是 window 滚动） | 路由的滚动恢复只管 window，内部容器要自己按路由 key 保存 / 恢复 `scrollTop` |
+| 浏览器自动恢复干扰 | 手动管理时设 `history.scrollRestoration = 'manual'`，避免浏览器与代码各恢复一次产生跳动 |
+| 从 bfcache 恢复（iOS Safari / 微信返回） | 页面整体恢复、不重新执行入口，位置通常保留；需要刷新数据时在 `pageshow`（`persisted`）中处理，注意不要因刷新而重置滚动 |
+
+- 列表页带分页 / 无限滚动时，同时缓存已加载的数据与页码，只恢复位置不恢复数据会跳到空白处。
+- 审查：`grep -rnE 'scrollBehavior|ScrollRestoration|scrollRestoration|keep-alive|KeepAlive' src`；有「列表 → 详情 → 返回」流程却都没有 → 🟡。
+- 验证：列表滚到第 3 屏 → 进详情 → 返回（页面返回键、浏览器 / 系统返回、iOS 左滑返回、微信返回各一次），位置与已加载数据都保留。
+
+### 10.3 被 iframe 嵌入（微前端 / 壳应用 / 门户）
+
+应用被壳应用、门户或第三方页面用 iframe 嵌入时，运行环境与独立打开不同：
+
+| 问题 | 表现 | 处理 |
+|------|------|------|
+| 登录页拒绝被嵌入 | 鉴权失效后在 iframe 内跳转登录页，OAuth / SSO 登录页因 `X-Frame-Options` / `frame-ancestors` 拒绝显示，出现空白 | 嵌入时**不得**在 iframe 内自行跳转登录页（改 iframe 自身 `location` 同样不行）；通知壳应用（`postMessage` 或壳应用提供的 API）由壳处理；壳 API 不可用时只提示，不跳转 |
+| 同源存储互相覆盖 | iframe 与壳应用同源时共用 `localStorage` / Cookie，子应用写入登录态会覆盖壳应用自己的 | 嵌入时不写共享键，或按应用加前缀；token 由壳应用下发，不经 URL query 传递 |
+| 跨站 iframe 存储受限 | 第三方 Cookie 被拦截（Safari ITP 等）、访问 `localStorage` 抛 `SecurityError` | 存储读写统一 `try/catch`（h5.md §5.3 #3）；跨站场景的登录态不依赖第三方 Cookie |
+| 弹层与滚动 | 弹层只能盖住 iframe 区域；iframe 高度固定时出现双滚动条 | 全屏遮罩类交互交给壳应用；与壳约定高度策略（iframe 内滚动或由壳按内容高度调整） |
+| 视口与高度 | iframe 内 `100vh` 是 iframe 高度，不是屏幕高度；`env(safe-area-inset-*)` 一般为 0 | 安全区、一屏布局由外层页面负责 |
+| 本地开发代理 | 壳应用只把子应用前缀转发过来，子应用请求未带前缀时被壳的同名代理抢走 | 子应用 dev 代理前缀带上自身 `base`，且不与壳应用代理的路径重名（例：壳应用代理了 `/upload`，子应用本地别名就不能含 `/upload` 路径段；场景相对小众，仅壳应用 + 子应用联调时遇到） |
+
+- 判断是否被嵌入：`window.self !== window.top`（跨源访问 `top` 的属性会抛错，只比较引用）。
+- 审查：`grep -rnE 'window\.(top|parent)|postMessage|self !== top|location\.href\s*=' src`，确认鉴权失效、跳转、存储写入在嵌入与独立两种模式下各自正确；两种模式都要运行验证。
