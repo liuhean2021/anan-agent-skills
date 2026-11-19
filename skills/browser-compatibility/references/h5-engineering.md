@@ -74,7 +74,7 @@ export default defineConfig({
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
     <meta name="format-detection" content="telephone=no, email=no" />
     <title>页面标题（不要留工程名，微信导航栏会显示）</title>
     <script>
@@ -102,7 +102,7 @@ export default defineConfig({
 </html>
 ```
 
-不要加 `user-scalable=no` / `maximum-scale=1`；iOS 聚焦放大用输入框字号 ≥ 16px 解决（h5.md §3）。
+默认禁止页面缩放：viewport 带 `maximum-scale=1, user-scalable=no`，并配合 §4.2 的 `touch-action: pan-x pan-y` 与 `gesturestart` 兜底（iOS 10+ 忽略 viewport 里的禁止缩放，只靠 meta 不够，见 h5.md §3）；iOS 聚焦放大仍用输入框字号 ≥ 16px 解决。
 
 ### 3.4 源码编码约束
 
@@ -161,7 +161,7 @@ module.exports = {
 /* reset.css */
 html { font-size: 37.5px; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; } /* JS 前兜底，已被 selectorBlackList 排除 */
 html, body {
-  touch-action: manipulation;     /* 去掉双击缩放延迟，保留双指缩放；代替 user-scalable=no */
+  touch-action: pan-x pan-y;      /* 禁双指 / 双击缩放，保留滚动；iOS 忽略 meta 的 user-scalable=no，靠这一行 + gesturestart 兜底 */
   /* overscroll-behavior-y: none;  默认不开：只在页面自带下拉刷新、需要关掉浏览器原生下拉刷新 / 回弹时取消注释；必须写在根滚动元素上，写在不滚动的容器上无效 */
 }
 body { margin: 0; -webkit-tap-highlight-color: transparent; }
@@ -207,6 +207,11 @@ input, textarea, select { font-size: 16PX; } /* 缩放后仍 ≥ 16px，防 iOS 
 ### 4.3 运行时工具
 
 ```ts
+// src/utils/no-zoom.ts：iOS 忽略 meta 的 user-scalable=no，在 `src/main.ts` 创建应用之前调用一次 `disablePageZoom()`（可选，iOS 9–12 兜底）
+export function disablePageZoom(): void {
+  document.addEventListener('gesturestart', (e) => e.preventDefault())
+}
+
 // src/utils/feature-detect.ts
 function detectFlexGap(): boolean {
   // CSS.supports('gap', ...) 在只支持 grid gap 的内核上也返回 true，必须实测
@@ -311,6 +316,7 @@ webServer: { command: 'npm run preview -- --host 127.0.0.1 --port 4173', url: 'h
 - [ ] `DESIGN_WIDTH` 与设计稿一致（375 / 750）：375 宽视口下抽查元素宽度 = 375 稿标注值或 750 稿标注值 ÷ 2；组件库尺寸正常
 - [ ] 280 / 320 / 344 / 360 / 375 / 390 / 414 / 430 / 768 宽无横向溢出；根字号符合 `min(宽, MAX) / 10`；`max-width` 未被转成 rem
 - [ ] 768 / 884 宽下固定底栏、顶部栏、悬浮按钮的内容区与 `.page` 同宽居中
+- [ ] 禁止缩放：iOS 真机与 Android 微信内双指、双击均无法缩放页面，滚动正常；需放开的页面（协议 / 长文 / 图片预览）按预期可缩放
 - [ ] 安全区、固定底栏、软键盘、横屏遮罩真机确认
 - [ ] h5.md §5.3 体验层 11 项已过
 - [ ] 兼容声明已按 declaration-template.md 更新

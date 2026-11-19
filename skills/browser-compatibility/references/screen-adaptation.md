@@ -8,7 +8,7 @@
 按顺序处理，前一步不统一，后面的适配都会失准：
 
 1. **不照搬设计原型的画布**：原型常画在固定宽度的手机外壳里（如 375 宽画布），页面要用流式宽度铺满真实视口，不复刻外壳和固定画布宽度；设计稿宽度只用于换算（§2.4）。
-2. **统一 viewport**：全站同一份 `<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">`（h5.md §3）；不同页面 / 子应用各写一份、或缺 `width=device-width` 时，Android 会按 980 宽渲染并触发字体自动放大（Font Boosting）。
+2. **统一 viewport**：全站同一份 `<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">`（默认禁止页面缩放，iOS 还需 `touch-action` 兜底，h5.md §3）；不同页面 / 子应用各写一份、或缺 `width=device-width` 时，Android 会按 980 宽渲染并触发字体自动放大（Font Boosting）。
 3. **定尺寸方案**：rem / vw / 流式，及设计稿基准 375 / 750（§1、§2.4）。
 4. **定高度方案**：`100vh` 问题（§3.2）。
 5. **安全区与异形屏**（§3.1）、固定栏与弹层（§3）。

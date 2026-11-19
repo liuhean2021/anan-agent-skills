@@ -12,7 +12,7 @@
 | UI 组件库（`package.json`） | element-ui / element-plus / ant-design(-vue) / arco / naive-ui / vxe-table | vant / vant-weapp / mint-ui / nutui / cube-ui / vux / uview / antd-mobile |
 | 适配方案 | 固定宽度、`min-width`、无 rem | `postcss-px2rem` / `postcss-pxtorem` / `amfe-flexible` / `lib-flexible` / `vw` 适配 |
 | 交互与事件 | 悬停、右键、拖拽、表格 / 表单密集 | `touchstart` / `touchmove`、下拉刷新、底部 tabbar |
-| `index.html` head | 无移动端专属配置 | `viewport` 含 `user-scalable` / `viewport-fit=cover`、`apple-mobile-web-app-*` |
+| `index.html` head | 无移动端专属配置 | `viewport` 含 `user-scalable=no` / `viewport-fit=cover`、`apple-mobile-web-app-*` |
 | 路由 / 页面 | 后台、评审、管理、列表 + 弹窗 | 商品、表单填报、分享落地页 |
 | 运行环境线索 | 登录跳转 SSO / 内网门户 | 微信 / 企业微信 / 钉钉 JSSDK、`WeixinJSBridge`、UA 判断 |
 | 项目文档 | README / 需求写明「PC 端」 | 写明「H5」「小程序 web-view」 |
@@ -100,6 +100,7 @@ grep -rnE 'touchstart|touchmove|WeixinJSBridge|wx\.config|safe-area-inset|viewpo
 | `<input\|<textarea`（底部输入栏所在页面） | 键盘弹出 / 收起：iOS 微信回位、厂商键盘模式，h5.md §5 / §5.4 |
 | `navigator\.userAgent` | UA 判断失效（iPadOS 伪装 Mac）；只可用于环境分流与日志 |
 | `CSS\.supports\(['"]gap\|@supports \(gap` | 用 gap 检测 flex gap 会误判（grid gap 支持即为 true，standard.md §9.4） |
+| `user-scalable\|maximum-scale\|touch-action\|gesturestart` | H5 默认禁止缩放：meta 缺 `user-scalable=no` 或缺 `touch-action: pan-x pan-y` / `gesturestart` 兜底（iOS 10+ 忽略 meta，只靠 meta 仍可缩放），多页面 / 子应用不一致，记 🟢；h5.md §3 |
 | `rootValue\|propList\|viewportWidth\|DESIGN_WIDTH` | rem / vw 转换配置：基准是否与设计稿（375 / 750）一致、组件库是否按文件区分，按 screen-adaptation.md §2.2 / §2.4 核对 |
 
 ## 4. 定级
