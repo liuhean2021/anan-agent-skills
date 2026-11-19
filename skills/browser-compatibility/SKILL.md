@@ -97,7 +97,7 @@ node <本技能目录>/scripts/check-browser-compat.mjs --dir <产物目录> --e
 | 退出码 `0` / `1` / `2` | 通过 / 有白屏级问题 / 参数或环境错误 | 可接入 CI |
 | `== 4. 影响评估查询` | 每个问题的受影响区间与可直接运行的 browserslist 查询 | 用于 review.md §4.1 计算用户占比 |
 
-依赖 acorn：先从项目解析，找不到时经 ESLint 的 espree 获取（装了 ESLint 即无需安装）；都没有则 `npm i -D acorn`。
+依赖 acorn：先从项目解析，找不到时经 ESLint 的 espree 获取（装了 ESLint 即无需安装）；都没有则 `npm i -D --save-prefix='~' acorn`（依赖默认锁定主、次版本，仅允许补丁升级，见 references/standard.md §9.2）。
 
 静态检查不能替代**运行验证**：preview / 测试环境确认页面渲染与控制台无报错；H5 须在目标 App 内实测；能接触基线最低版本真机 / 云真机时用其确认 CSS 退化程度。
 

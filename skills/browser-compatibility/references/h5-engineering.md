@@ -1,7 +1,7 @@
 # 移动端 H5 工程方案：屏幕适配 + 机型语法兼容
 
 > 用于**新建或整改** H5 项目时直接落地的工程骨架，以 Vue 3 + Vite + TS + rem 为例，**375 与 750 设计稿都支持**（只改 §4.1 的 `DESIGN_WIDTH`）。Vite + React 只需把 `@vitejs/plugin-vue` 换成 `@vitejs/plugin-react`；webpack + Vue / React 的构建配置换成 architecture.md §3.2 对应行；`index.html`、适配、样式、验证部分各组合通用。整体分层与 PC / 手机统一规则见 architecture.md。
-> 所有改动属于「修改」，在已有项目上落地前 MUST 按 review.md §6 输出方案并经用户确认。版本号不在此固定：以 `create-vue` / `create-vite` 当前生成的 Vite 与插件组合为准，再合并本文配置（standard.md §9.2）。数据核对于 2026-11。
+> 所有改动属于「修改」，在已有项目上落地前 MUST 按 review.md §6 输出方案并经用户确认。版本号不在此固定：以 `create-vue` / `create-vite` 当前生成的 Vite 与插件组合为准，再合并本文配置（standard.md §9.2）；脚手架默认写的 `^` 范围要改成 `~主.次.补丁`，依赖默认锁定主、次版本、仅允许补丁升级。数据核对于 2026-11。
 
 ## 1. 目标与边界
 

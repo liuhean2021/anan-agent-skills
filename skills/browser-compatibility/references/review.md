@@ -91,6 +91,7 @@ grep -rnE 'touchstart|touchmove|WeixinJSBridge|wx\.config|safe-area-inset|viewpo
 | `height:\s*100vh\|fill-available` | 一屏布局高度，按 screen-adaptation.md §3.2 分档；iOS < 15.4 只写 `100vh` 会被地址栏遮挡 |
 | `compositionstart\|isComposing`（无命中，且有输入即搜索 / 计数 / 格式化 / 回车提交） | 中文输入法拼音阶段触发逻辑，standard.md §10.1 |
 | `scrollBehavior\|ScrollRestoration\|KeepAlive\|keep-alive`（无命中，且有列表 → 详情 → 返回） | 返回后滚动位置丢失，standard.md §10.2 |
+| `"\^\d\|"\*"\|"latest"`（package.json 依赖版本） | 依赖未锁定主、次版本，应为 `~主.次.补丁`，standard.md §9.2 |
 | `new Worker\|\.wasm\|importScripts` | 功能级可用范围（module Worker 需 Chrome 80 / Safari 15），降级路径须运行验证，standard.md §9.6 |
 | `window\.(top\|parent)\|postMessage\|self !== top` | 被 iframe 嵌入：登录跳转、同源存储覆盖，standard.md §10.3 |
 | `<video` | 缺 `playsinline` 时 iOS 全屏播放、X5 视频盖住弹窗，h5.md §5.5 |

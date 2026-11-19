@@ -218,6 +218,7 @@ core-js 等依赖带 postinstall 脚本。pnpm 10 默认拒绝依赖构建脚本
 - `.browserslistrc`（或 `package.json` 的 `browserslist`）、`legacy({ targets, modernTargets })`、`build.target`、autoprefixer、`@babel/preset-env` **必须表达同一基线**；用 `npx browserslist` 输出实际命中的版本核对，不要只看查询字符串。
 - **`Android >= N` 不是 Android 系统版本**：browserslist 的 `android` 指 Android 自带浏览器 / WebView，4.4.4 之后的版本号直接对应最新 Chromium，`Android >= 7` 只命中最新一个版本（具体版本号随 browserslist / caniuse 数据更新而变化，用 `npx browserslist "Android >= 7"` 查看）。`and_chr` / `ChromeAndroid` 同样只含最新版。**老 Android WebView 要用 Chromium 版本表达**（`chrome >= 51`），iOS 用 `ios_saf >= 10` / `iOS >= 10`（按 iOS 版本，可信）。
 - `@vitejs/plugin-legacy`、`@vitejs/plugin-vue` / `@vitejs/plugin-react` 的主版本须与 Vite 主版本配套，Node 版本满足其 `engines`；不要从旧文章单独复制某个插件的版本号，以 `create-vite` / `create-vue` 当前生成的组合为准再合并配置。
+- **依赖版本默认锁定主、次版本，仅允许升级补丁版本**：`package.json` 中依赖一律写 `~主.次.补丁`（如 `"vite": "~8.0.13"`），不用 `^` 和 `latest`（`create-vue` / `create-vite` 等脚手架默认生成 `^`，生成后要改成 `~`）；新增依赖用 `npm i -D --save-prefix='~' <包>`（pnpm 用 `pnpm add -D --save-prefix='~' <包>`，或在 `.npmrc` 写 `save-prefix=~`）。主、次版本升级是独立动作：先查官方迁移说明与 peer 依赖，更新基线与兼容声明，再复跑产物检查，不随依赖安装顺带升级；必须提交 lockfile。monorepo 在 catalog 中集中声明，并用脚本检查范围写法（architecture.md §2.1）。审查时发现 `^` / `*` / `latest` / 未锁定的依赖记 🟡。
 - `tsconfig.json` 的 `target` / `lib` 只影响类型检查，**不决定产物语法**（Vite 下由 `build.target` / legacy 决定），审查时不要据此判断兼容。
 
 ### 9.3 基线以下的兜底提示

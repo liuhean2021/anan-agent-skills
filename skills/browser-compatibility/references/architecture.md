@@ -29,7 +29,7 @@
 
 | 做法 | 说明 |
 |------|------|
-| 依赖版本按端集中管理 | 如 pnpm catalog 分 `catalog:pc` / `catalog:h5`，Vite、`@vitejs/plugin-legacy`、框架、组件库、terser 等同端一起升级；若约定只允许补丁升级（`~主.次.补丁`），用脚本检查范围写法是否被放宽 |
+| 依赖版本按端集中管理 | 如 pnpm catalog 分 `catalog:pc` / `catalog:h5`，Vite、`@vitejs/plugin-legacy`、框架、组件库、terser 等同端一起升级；默认锁定主、次版本、仅允许补丁升级（`~主.次.补丁`，见 standard.md §9.2），用脚本检查范围写法是否被放宽 |
 | 兼容配置与全局样式放进底座包 / 模板 | legacy 目标、`index.html` head、全局样式（安全区、`touch-action`、`text-size-adjust` 等）由底座或模板提供，应用不各写一份 |
 | 用测试守护不漂移 | 应用与底座之间需要保留副本时，加测试比对内容或哈希（如「底座全局样式与应用一致」），构建配置的关键项（legacy 目标、`base`、别名）也写测试断言 |
 | 新应用沿用已审基线 | 兼容声明写「沿用 <应用> 已审基线」并列出逐项比对依据；改动兼容目标、依赖版本、全局样式、`index.html` head 或引入新 JS / CSS 特性时，须重新做兼容审查（declaration-template.md） |
