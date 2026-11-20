@@ -825,7 +825,7 @@ IF 功能涉及 UI 组件、服务状态、任务生命周期、CLI 执行或多
 
 **退出条件**：原子任务列表已生成，并行任务已标记；若涉及前端交互需求，则前端任务已基于 `interaction-design.md` 拆解，且包含设计还原验证任务；IF 项目存在组件库或设计系统，THEN 已扫描现有组件并标注复用/扩展/新增。
 
-> **可选**：先执行 `specify extension add github` 安装 github 扩展（核心 `/speckit-taskstoissues` 自 spec-kit v1.1.0 起弃用），再执行 `/speckit-github-taskstoissues`（Codex：`$speckit-github-taskstoissues`）将 `tasks.md` 中的任务转为 GitHub Issues，便于在 GitHub 上跟踪实施进度。此步骤在 Phase 4 之后、Phase 6 实施之前执行；若团队使用其他任务跟踪工具，可跳过。
+> **可选**：先执行 `specify extension add github` 安装 github 扩展（核心 `/speckit-taskstoissues` 自 spec-kit v1.1.0 起弃用、v1.3.0 起已从核心移除），再执行 `/speckit-github-taskstoissues`（Codex：`$speckit-github-taskstoissues`）将 `tasks.md` 中的任务转为 GitHub Issues，便于在 GitHub 上跟踪实施进度。此步骤在 Phase 4 之后、Phase 6 实施之前执行；若团队使用其他任务跟踪工具，可跳过。
 
 ---
 

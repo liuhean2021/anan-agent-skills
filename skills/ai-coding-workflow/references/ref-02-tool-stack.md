@@ -89,7 +89,7 @@ specify self upgrade --tag "$TAG"                    # 升级 CLI 到最新稳�
 /speckit-plan "技术栈"           # 技术方案
 /speckit-checklist               # 需求质量 checklist（官方顺序：plan 之后、tasks 之前，检查需求完整性/清晰度/一致性，不是代码验收）
 /speckit-tasks                   # 任务拆解
-/speckit-github-taskstoissues   # 将 tasks.md 转为 GitHub Issues（可选，在 tasks 后、implement 前执行；需先 specify extension add github，另需 git 与 github-mcp-server；核心 /speckit-taskstoissues 自 v1.1.0 起弃用）
+/speckit-github-taskstoissues   # 将 tasks.md 转为 GitHub Issues（可选，在 tasks 后、implement 前执行；需先 specify extension add github，另需 git 与 github-mcp-server；核心 /speckit-taskstoissues 自 v1.1.0 起弃用、v1.3.0 起已从核心移除）
 /speckit-analyze                 # 跨文档一致性分析（tasks 后、implement 前运行）
 /speckit-implement               # 执行实现（若存在 checklists/ 会先检查勾选状态，有未勾选项会询问是否继续）
 /speckit-converge                # implement 之后运行：对照 spec/plan/tasks 评估代码，把未完成工作以新 Convergence 阶段追加到 tasks.md（只追加，不改代码与 spec/plan），随后再 implement
@@ -182,6 +182,8 @@ specify event run <script>           # 从 stdin 读取 payload 并执行
 > 核对记录（§10.6）：2026-10-23 核对 v1.2.0 → v1.2.3（读 v1.2.1~v1.2.3 release 说明，并在临时目录实测 `init --integration claude --non-interactive`、`self upgrade --tag --dry-run`、`extension add git`），官方命令清单与推荐顺序、`invoke_separator` 为 `-`、命令装在 `.claude/skills/`、`init` 默认不装扩展均无变化，已核对，无流程变化；新增 `init --integration none`（仅共享脚手架）、`.presetignore`、`specify mcp`/`artifact`/`event` 子命令，本技能暂不使用。
 >
 > 核对记录（§10.6）：2026-11-01 核对 v1.2.3 → v1.2.5（读 v1.2.4/v1.2.5 release 说明；CLI 实升 1.2.3→1.2.5；临时目录 `init --integration claude --non-interactive` 核对结构；并在一个 0.3.0 老项目上实测 `integration install claude`）。官方命令清单与推荐顺序、`invoke_separator` 为 `-`、命令装在 `.claude/skills/` 均无变化。新发现：① `/constitution` 自 #3790 起不再改写模板，改为运行时解析（见 §10.1 说明）；② `self check` 不再依赖 `~/.specify/auth.json`（#4960 支持 gh 凭据）；③ `bundle` 子命令族（v1.2.x，v1.2.4 起支持 bundle 嵌套引用）、`preset update`、`workflow` 完整子命令集已补入 §10.1；④ `speckit-taskstoissues` 在 1.2.5 中标记为 Deprecated。老项目升级路径（install 而非 init --force、脚本必须同步、`feature.json` 必需、manifest 哈希同步）已写入 §10.6 第 6 条。
+
+> 核对记录（§10.6）：2026-11-20 核对 v1.2.5 → v1.4.3（读 v1.2.6~v1.4.3 release 说明；CLI 实升 1.2.5→1.4.3；空临时目录 `init --integration claude --non-interactive` 核对结构，`--help` 选项核对）。官方命令清单与推荐顺序（constitution → specify → plan → tasks → implement → converge；clarify、analyze、checklist 为可选增强）、`invoke_separator` 为 `-`、命令装在 `.claude/skills/`、`init` 默认不装扩展均无变化，已核对，无流程变化；唯一破坏性变更：v1.3.0 起核心 `taskstoissues` 已移除（技能本就走 `github` 扩展，仅更新措辞）；其余多为 `workflow` 子系统增强（custom pipe filters、per-step reasoning effort、Lark 表达式解析等）与 `init-options.json`/`integration.json` 新增 `version`/`speckit_version` 字段，本技能暂不使用；`gitleaks` 8.30.1 已是最新。
 
 ### 10.3 其他工具
 
