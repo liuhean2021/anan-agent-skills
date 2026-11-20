@@ -43,6 +43,7 @@
 
 - [ ] `specify init . --integration <agent-key>` 初始化 spec-kit（Codex CLI 常用 `--integration codex --integration-options="--skills"`）
 - [ ] `/speckit-constitution` 建立项目原则
+- [ ] 在 `.specify/templates/overrides/` 放置中文版 `spec`/`plan`/`tasks`/`checklist` 模板，并用 `resolve-template.sh <name> --json` 确认解析结果为中文（`ref-03 § Phase 0` 第 3 步）
 - [ ] 补充 `AGENTS.md`/`CLAUDE.md`
 
 ### 6.2 每个功能开始前
@@ -52,6 +53,7 @@
 - [ ] IF 涉及陌生库、新版本 SDK、或近期变化的工具行为：先查官方文档，再进入规格/方案动作
 - [ ] IF 方向已定且需求明确：执行 `/speckit-specify` + `/speckit-clarify`，锁定规格（变更须回 Phase 2 正式修改）
 - [ ] `spec.md`、`plan.md` 等文档满足"中文为主、英文为辅"原则：大量英文名词已追加中文标注，未标注的 MUST 返回补充
+- [ ] `spec.md`、`plan.md`、`tasks.md` 与 `checklists/*.md` 的章节标题、标签均为中文（可用「中文（English）」形式保留流程依赖的术语）；若出现英文标题，说明中文模板覆盖缺失或失效，MUST 先回 Phase 0 补齐再继续
 - [ ] `spec.md` 中已包含边界情况章节，或明确标注不适用
 - [ ] `spec.md` 中已包含关键实体（Key Entities）章节（IF 涉及多个业务概念）
 - [ ] IF 验收标准数量较多（≥ 8 条）：建议为每条分配编号（如 AC-001），方便逐项勾选追踪

@@ -171,10 +171,15 @@ IF 组件存在多状态流转（如加载→空→数据→错误→重试）�
 **必做动作**：
 1. 执行 `specify init . --integration <agent-key>`（分布式团队避免编号冲突，需同时设 `.specify/init-options.json` 的 `feature_numbering: "timestamp"`（规格目录）与 git 扩展 `.specify/extensions/git/git-config.yml` 的 `branch_numbering: timestamp`（分支，先 `specify extension add git`）；`init` 已无 `--branch-numbering` 选项；Codex CLI 常用 `--integration codex --integration-options="--skills"`），初始化 `.specify/` 目录
 2. 执行 `/speckit-constitution`，生成 `constitution.md`（已安装 `git` 扩展时，`before_constitution` hook 会先初始化仓库）
-3. 补充 `AGENTS.md`/`CLAUDE.md`，写入项目规范（SHOULD 包含项目验证命令，供 `ref-08` Gate Function 使用）；可选安装 `agent-context` 扩展，在 specify/plan 之后按 hook 提示刷新该文件中的 SPECKIT 托管区块
-4. 验证纪律内置生效，无需单独安装或检查外部插件（详见 `ref-02-tool-stack.md § 10.4`）
+3. **中文化 spec-kit 模板**（MUST）：`init` 生成的 `.specify/templates/*.md` 是英文，`/speckit-specify`、`/speckit-plan`、`/speckit-tasks`、`/speckit-checklist` 直接按它们产出，标题与标签会是英文，违反「中文优先」。在 `.specify/templates/overrides/` 下放同名中文模板 `spec-template.md`、`plan-template.md`、`tasks-template.md`、`checklist-template.md`（项目级覆盖，整体替换核心模板，优先级最高，`init` 与升级不会覆盖）：
+   - 标题与标签译为中文；被命令流程引用的术语用「中文（English）」形式保留英文，如「功能需求（Functional Requirements）」「宪章检查（Constitution Check）」「技术上下文（Technical Context）」
+   - 机器与流程依赖的标记 MUST 原样保留：`[P]`、`[US1]`、`T001`、`CHK001`、`FR-001`、`SC-001`、`[NEEDS CLARIFICATION]`、`$ARGUMENTS`、tasks 模板的 frontmatter 与复选框格式
+   - 校验：`bash .specify/scripts/bash/resolve-template.sh spec-template --json`（对四个模板各跑一次），`TEMPLATE_CONTENT` 应为中文（用 `bash` 而非 `sh`）
+   - `constitution-template.md` 不覆盖（由 `/speckit-constitution` 与本节最小模板生成）
+4. 补充 `AGENTS.md`/`CLAUDE.md`，写入项目规范（SHOULD 包含项目验证命令，供 `ref-08` Gate Function 使用）；可选安装 `agent-context` 扩展，在 specify/plan 之后按 hook 提示刷新该文件中的 SPECKIT 托管区块
+5. 验证纪律内置生效，无需单独安装或检查外部插件（详见 `ref-02-tool-stack.md § 10.4`）
 
-**产出物**：`.specify/memory/constitution.md`、`AGENTS.md`（或 `CLAUDE.md`）
+**产出物**：`.specify/memory/constitution.md`、`.specify/templates/overrides/` 下四个中文模板、`AGENTS.md`（或 `CLAUDE.md`）
 
 **constitution.md 最小模板**：
 

@@ -273,6 +273,7 @@ brew outdated gitleaks 2>/dev/null
    - 对技能里用到的每条 CLI 命令跑 `--help`，确认选项仍存在（如 `--branch-numbering` 已移除）
 3. **对照官方命令模板与内置工作流**：新版本 tag 下的 `templates/commands/*.md`（核心命令及其 handoffs、前后置要求）、`extensions/*/commands/`（内置扩展）、`workflows/*/workflow.yml`（官方流程与人工关卡）
 4. **回写本技能**：逐项比对 `SKILL.md` 命令映射与阶段摘要、`ref-01` 路由、`ref-02` 命令块、`ref-03` 各 Phase 步骤与退出条件、`ref-04` 清单；顺序或行为与官方不一致时以官方为准，技能自有扩展（见 § 2.3）须明确标注
+   - 项目级中文模板覆盖（`.specify/templates/overrides/`）不会随官方模板更新：对比新版本 `templates/*.md` 的结构变化（新增章节、占位符、标记），同步到覆盖文件后再用 `resolve-template.sh` 校验
 5. **留痕**：在提交说明或审查文档中写明核对的版本区间与发现的变化；无变化也要写明“已核对，无变化”
 6. **老项目（缺 `.specify/integration.json`）优先 `integration install`，不要直接 `init --force`**：0.3.x 等早期版本创建的项目没有 manifest，`specify integration status` 会报 `integration-state-missing`。`init --here --force` 虽是官方文档点名的 escape hatch，但它**不做 manifest 检查就覆盖共享文件**，会冲掉本地定制（例如被翻译成中文的 `.specify/templates/*.md`）。实测更安全的顺序：
    ```bash
